@@ -1,0 +1,800 @@
+<!doctype html>
+<html class="dark" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Hanken+Grotesk:wght@600;700&amp;family=JetBrains+Mono:wght@500&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings:
+          "FILL" 0,
+          "wght" 400,
+          "GRAD" 0,
+          "opsz" 24;
+        vertical-align: middle;
+      }
+      .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+      }
+      .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+
+      /* Subtle Blue Highlight for interactive elements in dark mode */
+      .blue-glow-focus:focus-within {
+        box-shadow:
+          0 0 0 1px #acc7ff,
+          0 0 0 3px rgba(172, 199, 255, 0.2);
+      }
+
+      .tonal-layer-1 {
+        background-color: #102034;
+        border: 1px solid #263247;
+      }
+      .tonal-layer-2 {
+        background-color: #172033;
+        border: 1px solid #263247;
+      }
+    </style>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-container-highest": "#26364a",
+              "inverse-primary": "#2a5dac",
+              danger: "#EF4444",
+              secondary: "#95ccff",
+              "on-tertiary-fixed-variant": "#004b6f",
+              "tertiary-fixed": "#c9e6ff",
+              "surface-tint": "#acc7ff",
+              "on-secondary-fixed": "#001d32",
+              "surface-container": "#102034",
+              "inverse-surface": "#d3e4fe",
+              "on-surface": "#d3e4fe",
+              "primary-fixed-dim": "#acc7ff",
+              "on-error": "#690005",
+              "surface-dim": "#031427",
+              "bg-light": "#F8FAFC",
+              "on-tertiary-fixed": "#001e2f",
+              "surface-container-lowest": "#000f21",
+              "secondary-container": "#2497e3",
+              "on-secondary": "#003352",
+              "on-primary-fixed-variant": "#004492",
+              "surface-variant": "#26364a",
+              "on-primary-container": "#cbdaff",
+              tertiary: "#8aceff",
+              "surface-light": "#FFFFFF",
+              "surface-dark": "#111827",
+              "surface-container-high": "#1b2b3f",
+              "on-secondary-container": "#002c48",
+              "surface-bright": "#2a3a4f",
+              "on-primary-fixed": "#001a40",
+              "secondary-fixed-dim": "#95ccff",
+              surface: "#031427",
+              "error-container": "#93000a",
+              outline: "#8d909d",
+              "border-light": "#E2E8F0",
+              "on-background": "#d3e4fe",
+              "secondary-fixed": "#cde5ff",
+              "primary-fixed": "#d7e2ff",
+              "text-light": "#0F172A",
+              "tertiary-fixed-dim": "#8aceff",
+              error: "#ffb4ab",
+              "on-error-container": "#ffdad6",
+              primary: "#acc7ff",
+              "tertiary-container": "#006694",
+              "on-surface-variant": "#c3c6d3",
+              "outline-variant": "#434751",
+              success: "#22C55E",
+              "on-tertiary": "#00344e",
+              "border-dark": "#263247",
+              "on-tertiary-container": "#b9dfff",
+              "bg-dark": "#0B1220",
+              "inverse-on-surface": "#213145",
+              "on-secondary-fixed-variant": "#004a75",
+              background: "#031427",
+              "card-dark": "#172033",
+              "surface-container-low": "#0b1c30",
+              "on-primary": "#002f68",
+              "primary-container": "#2c5ead",
+              warning: "#F59E0B",
+            },
+            borderRadius: {
+              DEFAULT: "0.25rem",
+              lg: "8px",
+              xl: "0.75rem",
+              full: "9999px",
+            },
+            spacing: {
+              xs: "4px",
+              "max-width-dashboard": "1440px",
+              lg: "24px",
+              md: "16px",
+              sm: "8px",
+              unit: "4px",
+              gutter: "20px",
+              "sidebar-width": "260px",
+              xl: "32px",
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body class="bg-surface text-on-surface font-body-md selection:bg-primary/30">
+    <!-- Background Content Mockup (Dashboard Context) -->
+    <div class="fixed inset-0 z-0 flex overflow-hidden">
+      <!-- SideNavBar (Predicted from JSON) -->
+      <aside
+        class="w-[260px] h-screen sticky top-0 left-0 bg-surface-container border-r border-border-dark flex flex-col py-lg px-md h-full"
+      >
+        <div class="flex items-center gap-sm mb-xl">
+          <div
+            class="w-8 h-8 rounded bg-primary-container flex items-center justify-center"
+          >
+            <span
+              class="material-symbols-outlined text-on-primary-container"
+              style="font-variation-settings: &quot;FILL&quot; 1"
+              >layers</span
+            >
+          </div>
+          <div>
+            <h1
+              class="font-headline-md text-headline-md font-bold text-primary"
+            >
+              ProjectFlow
+            </h1>
+            <p class="font-label-sm text-label-sm text-on-surface-variant">
+              Enterprise Tier
+            </p>
+          </div>
+        </div>
+        <nav class="flex-1 space-y-xs">
+          <div
+            class="flex items-center gap-md px-md py-sm rounded-lg text-primary font-semibold border-r-2 border-primary bg-surface-variant transition-colors"
+          >
+            <span class="material-symbols-outlined">folder_open</span>
+            <span class="font-body-md text-body-md">Projects</span>
+          </div>
+          <div
+            class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-variant transition-colors cursor-pointer"
+          >
+            <span class="material-symbols-outlined">assignment</span>
+            <span class="font-body-md text-body-md">Tasks</span>
+          </div>
+          <div
+            class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-variant transition-colors cursor-pointer"
+          >
+            <span class="material-symbols-outlined">group</span>
+            <span class="font-body-md text-body-md">Members</span>
+          </div>
+          <div
+            class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-variant transition-colors cursor-pointer"
+          >
+            <span class="material-symbols-outlined">bar_chart</span>
+            <span class="font-body-md text-body-md">Analytics</span>
+          </div>
+        </nav>
+        <div class="mt-auto space-y-xs pt-lg border-t border-border-dark">
+          <div
+            class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-variant transition-colors cursor-pointer"
+          >
+            <span class="material-symbols-outlined">settings</span>
+            <span class="font-body-md text-body-md">Settings</span>
+          </div>
+        </div>
+      </aside>
+      <main class="flex-1 flex flex-col">
+        <!-- TopAppBar -->
+        <header
+          class="h-16 w-full sticky top-0 z-40 bg-surface border-b border-border-dark flex justify-between items-center px-lg w-full max-w-max-width-dashboard mx-auto"
+        >
+          <div class="flex items-center gap-md">
+            <span
+              class="font-headline-sm text-headline-sm font-bold text-primary"
+              >Dashboard</span
+            >
+            <div class="h-8 w-[1px] bg-border-dark mx-sm"></div>
+            <div
+              class="flex items-center gap-sm bg-surface-container-low border border-border-dark px-sm py-xs rounded"
+            >
+              <span
+                class="material-symbols-outlined text-on-surface-variant text-[18px]"
+                >search</span
+              >
+              <span class="text-on-surface-variant text-body-sm"
+                >Search projects...</span
+              >
+            </div>
+          </div>
+          <div class="flex items-center gap-md">
+            <span
+              class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer transition-colors"
+              >notifications</span
+            >
+            <span
+              class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer transition-colors"
+              >contrast</span
+            >
+            <img
+              alt="User Profile"
+              class="w-8 h-8 rounded-full border border-primary/20"
+              data-alt="A professional close-up portrait of a tech executive in a dark navy studio. The lighting is dramatic and moody with a subtle blue rim light, emphasizing the modern, high-end corporate aesthetic of a high-performance software environment. The person has a calm, confident expression, fitting the authoritative and precise brand identity of the Azure Stratum design system."
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBQa2D9lN48TJ1WzNx-flcVjg_5-pTRNMKCsPWRRXjStkrHk_4RolvRK-nOTQEsH7PLDwW4rU9hOhLOCULZNbcJ-_pSH5laQy-K2TfTDjWC6ApYmY79buUQXBh2UrF2WVxEOXZVqcFsUqr5ZMiJWR6Pg94oRD97Zy6J_XTotkuzkMUEk4FW91VEuMFe79rPEaWeQUbEdXPFeGYDfu0IueG7UvpsTRh0SixbNramjGg2sTWly1qpVNlkVljGDFpYTHO342mY1u8q5zO1"
+            />
+          </div>
+        </header>
+        <!-- Content Background Mock -->
+        <div class="p-xl grid grid-cols-3 gap-lg">
+          <div
+            class="h-64 rounded-lg bg-surface-container-high border border-border-dark animate-pulse"
+          ></div>
+          <div
+            class="h-64 rounded-lg bg-surface-container-high border border-border-dark animate-pulse"
+          ></div>
+          <div
+            class="h-64 rounded-lg bg-surface-container-high border border-border-dark animate-pulse"
+          ></div>
+        </div>
+      </main>
+    </div>
+    <!-- Modal Overlay -->
+    <div
+      class="fixed inset-0 z-50 flex items-center justify-center bg-surface-container-lowest/80 backdrop-blur-sm p-md"
+      id="modal-overlay"
+    >
+      <!-- Modal Container -->
+      <div
+        class="w-full max-w-5xl h-[921px] bg-surface-container rounded-lg border border-border-dark shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-300"
+      >
+        <!-- Modal Header -->
+        <header
+          class="h-16 flex items-center justify-between px-lg border-b border-border-dark bg-surface-container-high"
+        >
+          <div class="flex items-center gap-sm">
+            <div
+              class="px-2 py-1 bg-primary/10 rounded text-primary text-label-md font-label-md tracking-wider"
+            >
+              PF-128
+            </div>
+            <span
+              class="material-symbols-outlined text-on-surface-variant text-[16px]"
+              >chevron_right</span
+            >
+            <h2 class="font-headline-sm text-headline-sm text-on-surface">
+              Dashboard API
+            </h2>
+          </div>
+          <div class="flex items-center gap-md">
+            <button
+              class="flex items-center gap-xs px-sm py-1.5 rounded hover:bg-surface-variant transition-colors text-on-surface-variant text-body-sm"
+            >
+              <span class="material-symbols-outlined text-[18px]">share</span>
+              Share
+            </button>
+            <button
+              class="flex items-center gap-xs px-sm py-1.5 rounded hover:bg-surface-variant transition-colors text-on-surface-variant text-body-sm"
+            >
+              <span class="material-symbols-outlined text-[18px]"
+                >more_horiz</span
+              >
+            </button>
+            <div class="w-[1px] h-6 bg-border-dark"></div>
+            <button
+              class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
+              onclick="
+                document.getElementById('modal-overlay').classList.add('hidden')
+              "
+            >
+              close
+            </button>
+          </div>
+        </header>
+        <!-- Modal Content Body -->
+        <div class="flex-1 flex overflow-hidden">
+          <!-- Main Scrollable Column -->
+          <div
+            class="flex-1 overflow-y-auto p-lg scrollbar-hide flex flex-col gap-xl"
+          >
+            <!-- Task Title Section -->
+            <section>
+              <h1
+                class="font-display-lg text-display-lg text-on-surface leading-tight"
+              >
+                Finalize dashboard API integration
+              </h1>
+              <div class="mt-md flex flex-wrap gap-md items-center">
+                <!-- Status -->
+                <div
+                  class="flex items-center gap-sm px-md py-2 bg-surface-container-highest border border-border-dark rounded-lg cursor-pointer hover:border-primary transition-colors"
+                >
+                  <div
+                    class="w-2.5 h-2.5 rounded-full bg-warning shadow-[0_0_8px_rgba(245,158,11,0.4)]"
+                  ></div>
+                  <span class="font-body-md text-body-md text-on-surface"
+                    >In Progress</span
+                  >
+                  <span
+                    class="material-symbols-outlined text-[16px] text-on-surface-variant"
+                    >expand_more</span
+                  >
+                </div>
+                <!-- Priority -->
+                <div
+                  class="flex items-center gap-sm px-md py-2 bg-surface-container-highest border border-border-dark rounded-lg cursor-pointer hover:border-primary transition-colors"
+                >
+                  <span
+                    class="material-symbols-outlined text-danger text-[18px]"
+                    >priority_high</span
+                  >
+                  <span class="font-body-md text-body-md text-on-surface"
+                    >High Priority</span
+                  >
+                </div>
+                <!-- Due Date -->
+                <div
+                  class="flex items-center gap-sm px-md py-2 bg-surface-container-highest border border-border-dark rounded-lg"
+                >
+                  <span
+                    class="material-symbols-outlined text-on-surface-variant text-[18px]"
+                    >calendar_today</span
+                  >
+                  <span class="font-body-md text-body-md text-on-surface"
+                    >Oct 12, 2023</span
+                  >
+                </div>
+              </div>
+            </section>
+            <!-- Description Section -->
+            <section class="space-y-md">
+              <div class="flex items-center gap-sm text-on-surface-variant">
+                <span class="material-symbols-outlined text-[18px]"
+                  >subject</span
+                >
+                <span class="font-headline-sm text-headline-sm"
+                  >Description</span
+                >
+              </div>
+              <div
+                class="tonal-layer-2 p-lg rounded-lg border border-border-dark"
+              >
+                <div
+                  class="prose prose-invert max-w-none font-body-md text-body-md text-on-surface-variant space-y-md"
+                >
+                  <p>
+                    The current implementation of the analytics dashboard is
+                    using static mock data. We need to finalize the connection
+                    to the GraphQL staging environment to enable real-time
+                    tracking.
+                  </p>
+                  <p><strong>Key Requirements:</strong></p>
+                  <ul class="list-disc pl-md space-y-sm">
+                    <li>
+                      Map the
+                      <code class="bg-surface-container-highest px-1 rounded"
+                        >UserActivity</code
+                      >
+                      nodes to the D3.js chart components.
+                    </li>
+                    <li>
+                      Implement the refresh token logic in the middleware layer.
+                    </li>
+                    <li>
+                      Add error boundary wrappers for the data fetching hooks to
+                      prevent dashboard crashes during intermittent
+                      connectivity.
+                    </li>
+                  </ul>
+                </div>
+                <div
+                  class="mt-lg pt-md border-t border-border-dark flex gap-md"
+                >
+                  <div
+                    class="flex items-center gap-sm bg-surface-container-highest border border-border-dark rounded px-sm py-1 cursor-pointer hover:bg-surface-variant transition-colors"
+                  >
+                    <span
+                      class="material-symbols-outlined text-[16px] text-primary"
+                      >attach_file</span
+                    >
+                    <span class="text-label-md font-label-md"
+                      >api-schema-v2.json</span
+                    >
+                  </div>
+                  <div
+                    class="flex items-center gap-sm bg-surface-container-highest border border-border-dark rounded px-sm py-1 cursor-pointer hover:bg-surface-variant transition-colors"
+                  >
+                    <span
+                      class="material-symbols-outlined text-[16px] text-primary"
+                      >link</span
+                    >
+                    <span class="text-label-md font-label-md"
+                      >Design Specs</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </section>
+            <!-- Activity & Comments Section -->
+            <section class="space-y-lg mt-md">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-sm text-on-surface-variant">
+                  <span class="material-symbols-outlined text-[18px]"
+                    >forum</span
+                  >
+                  <span class="font-headline-sm text-headline-sm"
+                    >Activity</span
+                  >
+                </div>
+                <div
+                  class="flex gap-xs bg-surface-container-highest p-1 rounded-lg border border-border-dark"
+                >
+                  <button
+                    class="px-sm py-1 text-label-md font-label-md rounded bg-surface-container text-primary shadow-sm"
+                  >
+                    All
+                  </button>
+                  <button
+                    class="px-sm py-1 text-label-md font-label-md rounded text-on-surface-variant hover:text-on-surface"
+                  >
+                    Comments
+                  </button>
+                  <button
+                    class="px-sm py-1 text-label-md font-label-md rounded text-on-surface-variant hover:text-on-surface"
+                  >
+                    History
+                  </button>
+                </div>
+              </div>
+              <!-- Comment Input -->
+              <div class="flex gap-md">
+                <img
+                  alt="User"
+                  class="w-8 h-8 rounded-full border border-border-dark"
+                  data-alt="A studio portrait of a software engineer in a high-tech dark environment. Sharp, cold studio lighting highlights facial features and creates a professional, focused atmosphere consistent with a clean, high-performance UI. The palette is dominated by dark blues and grays."
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNG1SGvimxTV_fSTO0H_1kYWVLg1VeikytYvn74BAVsUoX9rSQ5-XWtn5Zj5mV80d38o13QH4riBQTCPdWIsXTZ-jL35a3ZJ8eY0W5dYqzd4xrls3it98sQQ90W_OL4jMSVJ0A1xLKBApP7XWjFXZwFSX2mCS1lmsTy0wewXQdxYSNrHAITzL9Q8Ch02fvxzrgoNSPJoB7orXXm8WwT-lpSLrxCC9gX50EUOF4672nOw999r9AwLq70tycMQI8UhrhlMqt7GqQ3jBg"
+                />
+                <div class="flex-1 relative blue-glow-focus rounded-lg">
+                  <textarea
+                    class="w-full bg-surface-container-high border border-border-dark rounded-lg p-md font-body-md text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-primary transition-all resize-none"
+                    id="comment-input"
+                    placeholder="Post a comment... use @ to mention"
+                    rows="3"
+                  ></textarea>
+                  <!-- Micro-interaction: @mention suggestion popover (Hidden by default) -->
+                  <div
+                    class="absolute left-0 bottom-full mb-2 w-48 bg-surface-container-highest border border-border-dark rounded-lg shadow-xl hidden overflow-hidden z-10"
+                    id="mention-suggestions"
+                  >
+                    <div
+                      class="px-md py-sm bg-primary/10 border-l-2 border-primary flex items-center gap-sm"
+                    >
+                      <div
+                        class="w-5 h-5 rounded-full bg-secondary text-[10px] flex items-center justify-center text-on-secondary font-bold"
+                      >
+                        AR
+                      </div>
+                      <span class="text-body-sm font-semibold text-primary"
+                        >Ayesha Rahman</span
+                      >
+                    </div>
+                    <div
+                      class="px-md py-sm hover:bg-surface-variant flex items-center gap-sm cursor-pointer transition-colors"
+                    >
+                      <div
+                        class="w-5 h-5 rounded-full bg-tertiary text-[10px] flex items-center justify-center text-on-tertiary font-bold"
+                      >
+                        MK
+                      </div>
+                      <span class="text-body-sm text-on-surface-variant"
+                        >Marcus Kane</span
+                      >
+                    </div>
+                  </div>
+                  <div
+                    class="absolute right-md bottom-md flex items-center gap-md"
+                  >
+                    <span
+                      class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer text-[18px]"
+                      >mood</span
+                    >
+                    <span
+                      class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer text-[18px]"
+                      >alternate_email</span
+                    >
+                    <button
+                      class="bg-primary hover:bg-primary-container text-on-primary font-semibold px-md py-1.5 rounded-lg text-body-sm transition-all shadow-lg shadow-primary/10 active:scale-95"
+                    >
+                      Post
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <!-- Activity List -->
+              <div class="space-y-lg pl-12 border-l border-border-dark ml-4">
+                <!-- Comment 1 -->
+                <div class="relative">
+                  <div
+                    class="absolute -left-[45px] top-0 w-8 h-8 rounded-full border-2 border-surface-container bg-surface-container-highest overflow-hidden"
+                  >
+                    <img
+                      alt="Ayesha"
+                      class="w-full h-full object-cover"
+                      data-alt="A high-resolution headshot of a female developer in a contemporary workspace with neon blue accent lighting in the background. The mood is determined and intelligent, fitting a high-priority task assignee character. The overall aesthetic is dark-mode corporate with sharp contrasts."
+                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuBEKVbi26iHu1hwVDdRACOKVwic-F2sVRQxnbfv3AOKaGW6tOtrlXcmrhgq_yJYSer631vfS4retB4Y9rqr1dSDRGouFgR9n-U6THidR1VD9MEpvH2WOoSADu2Ds1nKmRtPj8e89TnqIKr2_KmWTkL1MuD2Y3YMIgOMNmHOO_U_zvfFqXEajnwYIqN7ddYQ29lqCh8K5H0xt9K4jaY4QoYvixlAC2aU6NN-ywjzwW5mGFktvS2gGBH5KLnvyg_PxMDAPGQ87heRdqgw"
+                    />
+                  </div>
+                  <div class="space-y-xs">
+                    <div class="flex items-center gap-sm">
+                      <span class="font-semibold text-on-surface text-body-md"
+                        >Ayesha Rahman</span
+                      >
+                      <span class="text-label-sm text-on-surface-variant"
+                        >2 hours ago</span
+                      >
+                    </div>
+                    <p class="text-body-md text-on-surface-variant">
+                      I've verified the schema.
+                      <span class="text-primary font-semibold">@Alex</span>, can
+                      you double check the staging endpoint? I think the CORS
+                      policy might need an update for our local dev
+                      environments.
+                    </p>
+                    <div class="flex items-center gap-md mt-sm">
+                      <button
+                        class="flex items-center gap-xs text-label-sm text-on-surface-variant hover:text-primary transition-colors"
+                      >
+                        <span class="material-symbols-outlined text-[14px]"
+                          >thumb_up</span
+                        >
+                        2
+                      </button>
+                      <button
+                        class="text-label-sm text-on-surface-variant hover:text-primary transition-colors"
+                      >
+                        Reply
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <!-- System Activity 1 -->
+                <div class="relative flex items-center gap-md">
+                  <div
+                    class="absolute -left-[41px] w-6 h-6 rounded-full border-2 border-surface-container bg-surface-container-high flex items-center justify-center"
+                  >
+                    <span
+                      class="material-symbols-outlined text-[14px] text-on-surface-variant"
+                      >edit</span
+                    >
+                  </div>
+                  <div class="text-body-sm text-on-surface-variant">
+                    <span class="font-semibold text-on-surface">System</span>
+                    moved this task from
+                    <span
+                      class="px-1.5 py-0.5 rounded bg-surface-variant text-on-surface"
+                      >To Do</span
+                    >
+                    to
+                    <span
+                      class="px-1.5 py-0.5 rounded bg-surface-variant text-on-surface"
+                      >In Progress</span
+                    >
+                    <span class="ml-sm text-label-sm opacity-60"
+                      >4 hours ago</span
+                    >
+                  </div>
+                </div>
+                <!-- Comment 2 (Mention Example) -->
+                <div class="relative">
+                  <div
+                    class="absolute -left-[45px] top-0 w-8 h-8 rounded-full border-2 border-surface-container bg-surface-container-highest overflow-hidden"
+                  >
+                    <div
+                      class="w-full h-full bg-tertiary flex items-center justify-center text-on-tertiary font-bold text-xs"
+                    >
+                      MK
+                    </div>
+                  </div>
+                  <div class="space-y-xs">
+                    <div class="flex items-center gap-sm">
+                      <span class="font-semibold text-on-surface text-body-md"
+                        >Marcus Kane</span
+                      >
+                      <span class="text-label-sm text-on-surface-variant"
+                        >5 hours ago</span
+                      >
+                    </div>
+                    <p class="text-body-md text-on-surface-variant">
+                      Starting the D3 integration now. Should have the first
+                      draft of the charts by EOD.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+          <!-- Sidebar Details Column -->
+          <aside
+            class="w-80 bg-surface-container-high border-l border-border-dark p-lg space-y-xl overflow-y-auto scrollbar-hide"
+          >
+            <!-- Assignee -->
+            <div class="space-y-sm">
+              <h4
+                class="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-widest"
+              >
+                Assignee
+              </h4>
+              <div
+                class="flex items-center gap-md p-md rounded-lg bg-surface-container border border-border-dark hover:border-primary transition-colors cursor-pointer group"
+              >
+                <img
+                  class="w-10 h-10 rounded-full border-2 border-primary/40 group-hover:border-primary transition-all"
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKsMHpRjix06XexLD9hnnUJ2eMFW5SbFtFonT5TW4kJd4zPK6odDVpLLboxTP9ZyB_XqmzN1HBnIUGoyyDqAHUkeH7960cLofBF98TPSJfGywHnpFbHdQ_WG7JZV5WKirEeXq9hWE80CMlDkXh9meMyNlEgNvJhLT5quuCg9JBOrK0akG3cDoOCVqenpAsGwITbD75oZithWJRqPX2SAkNCvRefbLgPu9K2z-5ROqJd1SkGL_VnUJk6LBGZoE0hZ-1oexdspHTy27M"
+                />
+                <div>
+                  <p
+                    class="text-body-md font-semibold text-on-surface leading-tight"
+                  >
+                    Ayesha Rahman
+                  </p>
+                  <p class="text-label-sm text-on-surface-variant">
+                    Lead Frontend Engineer
+                  </p>
+                </div>
+              </div>
+            </div>
+            <!-- Project/Labels -->
+            <div class="space-y-sm">
+              <h4
+                class="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-widest"
+              >
+                Metadata
+              </h4>
+              <div class="space-y-md">
+                <div class="flex justify-between items-center text-body-md">
+                  <span class="text-on-surface-variant">Project</span>
+                  <span
+                    class="text-primary font-semibold hover:underline cursor-pointer"
+                    >Enterprise Dashboard</span
+                  >
+                </div>
+                <div class="flex justify-between items-center text-body-md">
+                  <span class="text-on-surface-variant">Sprint</span>
+                  <span class="text-on-surface">Cycle 12: Precision Ops</span>
+                </div>
+                <div class="flex justify-between items-start text-body-md">
+                  <span class="text-on-surface-variant">Labels</span>
+                  <div class="flex flex-wrap justify-end gap-xs max-w-[140px]">
+                    <span
+                      class="px-1.5 py-0.5 rounded-full bg-primary-container/20 text-primary text-[10px] font-bold border border-primary/20"
+                      >API</span
+                    >
+                    <span
+                      class="px-1.5 py-0.5 rounded-full bg-secondary-container/20 text-secondary text-[10px] font-bold border border-secondary/20"
+                      >FRONTEND</span
+                    >
+                    <span
+                      class="px-1.5 py-0.5 rounded-full bg-tertiary-container/20 text-tertiary text-[10px] font-bold border border-tertiary/20"
+                      >Q4-REACH</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Progress -->
+            <div class="space-y-sm">
+              <h4
+                class="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-widest"
+              >
+                Execution Progress
+              </h4>
+              <div class="space-y-sm">
+                <div class="flex justify-between text-label-md">
+                  <span class="text-on-surface">Subtasks</span>
+                  <span class="text-on-surface-variant">2/4</span>
+                </div>
+                <div
+                  class="h-1.5 w-full bg-surface-container border border-border-dark rounded-full overflow-hidden"
+                >
+                  <div
+                    class="h-full bg-gradient-to-r from-primary to-secondary w-1/2"
+                  ></div>
+                </div>
+              </div>
+            </div>
+            <!-- Notifications Setting -->
+            <div
+              class="pt-xl border-t border-border-dark flex items-center justify-between"
+            >
+              <div class="flex items-center gap-sm text-on-surface-variant">
+                <span class="material-symbols-outlined text-[18px]"
+                  >notifications_active</span
+                >
+                <span class="text-body-sm">Notifications</span>
+              </div>
+              <div
+                class="w-10 h-5 bg-primary/20 rounded-full relative cursor-pointer border border-primary/30"
+              >
+                <div
+                  class="absolute right-0.5 top-0.5 w-3.5 h-3.5 bg-primary rounded-full shadow-sm"
+                ></div>
+              </div>
+            </div>
+            <!-- Action Buttons -->
+            <div class="grid grid-cols-2 gap-sm pt-md">
+              <button
+                class="flex items-center justify-center gap-xs bg-surface-container-highest hover:bg-surface-variant border border-border-dark p-2 rounded-lg text-body-sm transition-colors text-on-surface-variant"
+              >
+                <span class="material-symbols-outlined text-[18px]"
+                  >content_copy</span
+                >
+                Duplicate
+              </button>
+              <button
+                class="flex items-center justify-center gap-xs bg-surface-container-highest hover:bg-error-container/20 border border-border-dark p-2 rounded-lg text-body-sm transition-colors text-danger"
+              >
+                <span class="material-symbols-outlined text-[18px]"
+                  >delete</span
+                >
+                Delete
+              </button>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+    <script>
+      // Simple micro-interaction for @mentions
+      const commentInput = document.getElementById("comment-input");
+      const suggestions = document.getElementById("mention-suggestions");
+
+      commentInput.addEventListener("input", (e) => {
+        const val = e.target.value;
+        const lastChar = val.slice(-1);
+
+        if (lastChar === "@") {
+          suggestions.classList.remove("hidden");
+        } else if (val.length === 0 || !val.includes("@")) {
+          suggestions.classList.add("hidden");
+        }
+      });
+
+      // Close suggestions on click outside or selection
+      document.addEventListener("click", (e) => {
+        if (
+          !commentInput.contains(e.target) &&
+          !suggestions.contains(e.target)
+        ) {
+          suggestions.classList.add("hidden");
+        }
+      });
+
+      suggestions.addEventListener("click", () => {
+        const currentVal = commentInput.value;
+        commentInput.value = currentVal + "Ayesha Rahman ";
+        suggestions.classList.add("hidden");
+        commentInput.focus();
+      });
+
+      // Atmospheric micro-interaction for task cards/buttons
+      document.querySelectorAll(".tonal-layer-2").forEach((card) => {
+        card.addEventListener("mouseenter", () => {
+          card.style.borderColor = "#2c5ead";
+        });
+        card.addEventListener("mouseleave", () => {
+          card.style.borderColor = "#263247";
+        });
+      });
+    </script>
+  </body>
+</html>

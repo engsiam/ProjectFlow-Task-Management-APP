@@ -1,0 +1,212 @@
+// Smart Project & Task Collaboration System - Prisma Schema
+// Database: MongoDB
+// Provider: prisma-client-js (compatible with Deno via npm: specifier)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// USERS & AUTH
+// ============================================================
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  email     String   @unique
+  password  String
+  name      String
+  username  String   @unique
+  avatar    String?
+  bio       String?
+  status    String   @default("ACTIVE") // ACTIVE, DISABLED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ownedProjects       Project[]        @relation("ProjectOwner")
+  memberships         ProjectMember[]
+  sentInvitations     Invitation[]     @relation("InvitedBy")
+  receivedInvitations Invitation[]     @relation("InvitedUser")
+  assignedTasks       Task[]           @relation("TaskAssignee")
+  createdTasks        Task[]           @relation("TaskCreator")
+  comments            Comment[]
+  mentions            Mention[]
+  notifications       Notification[]
+  refreshTokens       RefreshToken[]
+  activityLogs        ActivityLog[]    @relation("ActivityActor")
+}
+
+model RefreshToken {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  tokenHash String   @unique
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  userAgent String?
+  ipAddress String?
+
+  @@index([expiresAt])
+}
+
+// ============================================================
+// PROJECTS
+// ============================================================
+
+model Project {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  color       String    @default("#6366f1")
+  status      String    @default("ACTIVE") // ACTIVE, COMPLETED, ARCHIVED
+  ownerId     String    @db.ObjectId
+  owner       User      @relation("ProjectOwner", fields: [ownerId], references: [id])
+  members     ProjectMember[]
+  invitations Invitation[]
+  tasks       Task[]
+  activities  ActivityLog[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  archivedAt  DateTime?
+  completedAt DateTime?
+
+  @@index([status])
+}
+
+model ProjectMember {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  projectId String   @db.ObjectId
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String   @default("MEMBER") // OWNER, MANAGER, MEMBER, VIEWER
+  joinedAt  DateTime @default(now())
+
+  @@unique([projectId, userId])
+}
+
+model Invitation {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  projectId    String   @db.ObjectId
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  email        String
+  role         String   @default("MEMBER") // OWNER, MANAGER, MEMBER, VIEWER
+  token        String   @unique
+  status       String   @default("PENDING") // PENDING, ACCEPTED, REJECTED, EXPIRED, CANCELLED
+  invitedById  String   @db.ObjectId
+  invitedBy    User     @relation("InvitedBy", fields: [invitedById], references: [id])
+  invitedUserId String? @db.ObjectId
+  invitedUser  User?    @relation("InvitedUser", fields: [invitedUserId], references: [id])
+  message      String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([email])
+  @@index([invitedUserId])
+}
+
+// ============================================================
+// TASKS
+// ============================================================
+
+model Task {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  projectId   String     @db.ObjectId
+  project     Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  status      String     @default("TODO") // TODO, IN_PROGRESS, REVIEW, DONE
+  priority    String     @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  assigneeId  String?    @db.ObjectId
+  assignee    User?      @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  creatorId   String     @db.ObjectId
+  creator     User       @relation("TaskCreator", fields: [creatorId], references: [id])
+  dueDate     DateTime?
+  labels      String[]
+  order       Int        @default(0)
+  comments    Comment[]
+  activities  ActivityLog[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  completedAt DateTime?
+
+  @@index([status])
+  @@index([priority])
+  @@index([projectId, status, order])
+}
+
+// ============================================================
+// COMMENTS & MENTIONS
+// ============================================================
+
+model Comment {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  content   String
+  authorId  String    @db.ObjectId
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  taskId    String    @db.ObjectId
+  task      Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  mentions  Mention[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  edited    Boolean   @default(false)
+}
+
+model Mention {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  commentId String   @db.ObjectId
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  username  String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ============================================================
+// NOTIFICATIONS
+// ============================================================
+
+model Notification {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  message   String
+  data      Json?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
+}
+
+// ============================================================
+// ACTIVITY LOG
+// ============================================================
+
+model ActivityLog {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  actorId    String   @db.ObjectId
+  actor      User     @relation("ActivityActor", fields: [actorId], references: [id])
+  action     String
+  entityType String
+  entityId   String   @db.ObjectId
+  projectId  String?  @db.ObjectId
+  project    Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  taskId     String?  @db.ObjectId
+  task       Task?    @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([projectId, createdAt])
+  @@index([entityType, entityId])
+}

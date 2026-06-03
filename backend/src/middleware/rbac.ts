@@ -1,0 +1,57 @@
+// Project-scoped role-based access control middleware.
+// Resolves the caller's role on the given project and enforces a minimum.
+
+import type { Context, MiddlewareHandler, Next } from "hono";
+import type { AppVariables } from "../types/context.ts";
+import { prisma } from "../prisma/client.ts";
+import { isValidObjectId } from "../utils/id.ts";
+import {
+  BadRequestError,
+  ForbiddenError,
+  NotFoundError,
+  UnauthorizedError,
+} from "../utils/errors.ts";
+import { isRoleAtLeast, type RoleType } from "../types/domain.ts";
+
+export const requireProjectRole = (
+  minRole: RoleType,
+  paramName = "projectId",
+): MiddlewareHandler<{ Variables: AppVariables }> => {
+  return async (c: Context, next: Next) => {
+    const user = c.get("user");
+    if (!user) throw new UnauthorizedError();
+    const projectId = c.req.param(paramName);
+    if (!projectId || !isValidObjectId(projectId)) {
+      throw new BadRequestError(`Invalid ${paramName}`);
+    }
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
+      select: { id: true, ownerId: true, status: true },
+    });
+    if (!project) throw new NotFoundError("Project not found");
+    if (project.ownerId === user.id) {
+      c.set("projectRole" as never, "OWNER" as RoleType);
+      await next();
+      return;
+    }
+    const member = await prisma.projectMember.findUnique({
+      where: { projectId_userId: { projectId, userId: user.id } },
+      select: { role: true },
+    });
+    if (!member) throw new ForbiddenError("You are not a member of this project");
+    if (!isRoleAtLeast(member.role as RoleType, minRole)) {
+      throw new ForbiddenError(`Requires role ${minRole} or higher`);
+    }
+    c.set("projectRole" as never, member.role as RoleType);
+    await next();
+  };
+};
+
+export const requireProjectMember = (paramName = "projectId") =>
+  requireProjectRole("VIEWER", paramName);
+export const requireProjectContributor = (paramName = "projectId") =>
+  requireProjectRole("MEMBER", paramName);
+export const requireProjectManager = (paramName = "projectId") =>
+  requireProjectRole("MANAGER", paramName);
+export const requireProjectOwner = (paramName = "projectId") =>
+  requireProjectRole("OWNER", paramName);

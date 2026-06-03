@@ -1,0 +1,7 @@
+Build the backend using backend.md requirements.
+
+Use Deno + Hono + Prisma ORM + MongoDB.
+Implement all APIs, validation, JWT auth, role-based access, seed data, health endpoint, and Swagger docs.
+
+All APIs must be testable from /docs.
+Do not use placeholder logic.

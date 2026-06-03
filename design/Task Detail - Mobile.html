@@ -1,0 +1,554 @@
+<!doctype html>
+<html class="dark" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Task Detail - ProjectFlow</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Hanken+Grotesk:wght@600;700;800&amp;family=JetBrains+Mono:wght@500&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@100..900&amp;family=Inter:wght@100..900&amp;family=JetBrains+Mono:wght@100..900&amp;display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings:
+          "FILL" 0,
+          "wght" 400,
+          "GRAD" 0,
+          "opsz" 24;
+        vertical-align: middle;
+      }
+      /* Custom scrollbar for a cleaner technical look */
+      ::-webkit-scrollbar {
+        width: 4px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #263247;
+        border-radius: 10px;
+      }
+      .bottom-sheet-drag-handle {
+        width: 32px;
+        height: 4px;
+        background-color: #434751;
+        border-radius: 2px;
+        margin: 8px auto;
+      }
+    </style>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-light": "#FFFFFF",
+              success: "#22C55E",
+              danger: "#EF4444",
+              "primary-fixed-dim": "#acc7ff",
+              "bg-light": "#F8FAFC",
+              "on-tertiary-fixed": "#001e2f",
+              "on-surface-variant": "#c3c6d3",
+              primary: "#acc7ff",
+              "surface-bright": "#2a3a4f",
+              warning: "#F59E0B",
+              "tertiary-fixed-dim": "#8aceff",
+              "secondary-fixed": "#cde5ff",
+              "on-error": "#690005",
+              "surface-container-highest": "#26364a",
+              "text-light": "#0F172A",
+              "on-surface": "#d3e4fe",
+              "on-error-container": "#ffdad6",
+              "on-secondary-fixed": "#001d32",
+              "surface-container-high": "#1b2b3f",
+              "on-secondary": "#003352",
+              surface: "#031427",
+              "tertiary-fixed": "#c9e6ff",
+              outline: "#8d909d",
+              "on-tertiary-container": "#b9dfff",
+              "card-dark": "#172033",
+              "text-dark": "#F8FAFC",
+              "border-light": "#E2E8F0",
+              "on-secondary-fixed-variant": "#004a75",
+              "on-primary-fixed-variant": "#004492",
+              background: "#031427",
+              "bg-dark": "#0B1220",
+              "on-primary-container": "#cbdaff",
+              "surface-container-low": "#0b1c30",
+              "primary-container": "#2c5ead",
+              "outline-variant": "#434751",
+              "on-tertiary": "#00344e",
+              "on-secondary-container": "#002c48",
+              "primary-fixed": "#d7e2ff",
+              "secondary-container": "#2497e3",
+              "surface-container-lowest": "#000f21",
+              "surface-variant": "#26364a",
+              "on-background": "#d3e4fe",
+              "surface-dark": "#111827",
+              "secondary-fixed-dim": "#95ccff",
+              "on-primary-fixed": "#001a40",
+              secondary: "#95ccff",
+              "error-container": "#93000a",
+              "border-dark": "#263247",
+              "inverse-surface": "#d3e4fe",
+              error: "#ffb4ab",
+              "inverse-on-surface": "#213145",
+              "surface-container": "#102034",
+              "surface-dim": "#031427",
+              "on-primary": "#002f68",
+              "on-tertiary-fixed-variant": "#004b6f",
+              tertiary: "#8aceff",
+              "surface-tint": "#acc7ff",
+              "inverse-primary": "#2a5dac",
+              "tertiary-container": "#006694",
+            },
+            borderRadius: {
+              DEFAULT: "0.25rem",
+              lg: "0.5rem",
+              xl: "0.75rem",
+              full: "9999px",
+            },
+            spacing: {
+              gutter: "20px",
+              xl: "32px",
+              lg: "24px",
+              xs: "4px",
+              unit: "4px",
+              "max-width-dashboard": "1440px",
+              md: "16px",
+              sm: "8px",
+              "sidebar-width": "260px",
+            },
+            fontFamily: {
+              "body-lg": ["Inter"],
+              "display-lg": ["Hanken Grotesk"],
+              "body-sm": ["Inter"],
+              "headline-sm": ["Hanken Grotesk"],
+              "label-sm": ["JetBrains Mono"],
+              "label-md": ["JetBrains Mono"],
+              "body-md": ["Inter"],
+              "headline-md": ["Hanken Grotesk"],
+            },
+            fontSize: {
+              "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+              "display-lg": [
+                "36px",
+                {
+                  lineHeight: "44px",
+                  letterSpacing: "-0.02em",
+                  fontWeight: "700",
+                },
+              ],
+              "body-sm": ["13px", { lineHeight: "18px", fontWeight: "400" }],
+              "headline-sm": [
+                "18px",
+                { lineHeight: "24px", fontWeight: "600" },
+              ],
+              "label-sm": ["10px", { lineHeight: "14px", fontWeight: "500" }],
+              "label-md": [
+                "12px",
+                {
+                  lineHeight: "16px",
+                  letterSpacing: "0.02em",
+                  fontWeight: "500",
+                },
+              ],
+              "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+              "headline-md": [
+                "24px",
+                {
+                  lineHeight: "32px",
+                  letterSpacing: "-0.01em",
+                  fontWeight: "600",
+                },
+              ],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        min-height: max(884px, 100dvh);
+      }
+    </style>
+  </head>
+  <body class="bg-background text-on-surface font-body-md overflow-hidden">
+    <!-- Mobile Background Canvas (Simulating a main dashboard behind) -->
+    <div class="fixed inset-0 bg-surface-container-lowest opacity-40 z-0">
+      <div class="p-lg">
+        <div
+          class="h-8 w-1/3 bg-surface-container-highest rounded-lg mb-md"
+        ></div>
+        <div class="space-y-md">
+          <div class="h-32 bg-surface-container-high rounded-xl"></div>
+          <div class="h-32 bg-surface-container-high rounded-xl"></div>
+        </div>
+      </div>
+    </div>
+    <!-- Backdrop Overlay -->
+    <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"></div>
+    <!-- Mobile Full-Screen Bottom Sheet / Screen -->
+    <div
+      class="fixed inset-x-0 bottom-0 top-8 bg-surface-container z-50 rounded-t-xl flex flex-col shadow-2xl border-t border-border-dark animate-slide-up"
+      id="task-modal"
+    >
+      <!-- Drag Handle / Header Area -->
+      <div class="flex flex-col flex-shrink-0">
+        <div class="bottom-sheet-drag-handle"></div>
+        <header
+          class="flex justify-between items-center px-lg py-sm border-b border-border-dark"
+        >
+          <div class="flex items-center gap-sm">
+            <span
+              class="font-label-md text-label-md text-primary bg-primary-container/20 px-sm py-xs rounded"
+              >PF-204</span
+            >
+            <span class="font-body-sm text-body-sm text-on-surface-variant"
+              >ProjectFlow Core</span
+            >
+          </div>
+          <div class="flex items-center gap-md">
+            <button
+              class="text-on-surface-variant hover:text-primary transition-colors"
+            >
+              <span class="material-symbols-outlined">share</span>
+            </button>
+            <button
+              class="text-on-surface-variant hover:text-primary transition-colors"
+            >
+              <span class="material-symbols-outlined">more_vert</span>
+            </button>
+            <button
+              class="text-on-surface-variant hover:text-danger transition-colors"
+            >
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
+        </header>
+      </div>
+      <!-- Main Scrollable Content -->
+      <main class="flex-1 overflow-y-auto px-lg py-md space-y-lg">
+        <!-- Title Section -->
+        <section class="space-y-sm">
+          <div class="flex items-center gap-sm">
+            <div class="w-1.5 h-6 bg-danger rounded-full"></div>
+            <h1
+              class="font-headline-md text-headline-md text-on-surface tracking-tight"
+            >
+              Refactor API Authentication Middleware
+            </h1>
+          </div>
+          <!-- Status & Metadata Chips -->
+          <div class="flex flex-wrap gap-sm">
+            <div
+              class="flex items-center gap-xs px-sm py-1 bg-surface-container-highest rounded-full border border-border-dark"
+            >
+              <span class="w-2 h-2 rounded-full bg-warning"></span>
+              <span class="font-label-md text-label-md">In Progress</span>
+              <span class="material-symbols-outlined text-[14px]"
+                >expand_more</span
+              >
+            </div>
+            <div
+              class="flex items-center gap-xs px-sm py-1 bg-surface-container-highest rounded-full border border-border-dark"
+            >
+              <span
+                class="material-symbols-outlined text-danger text-[16px]"
+                style="font-variation-settings: &quot;FILL&quot; 1"
+                >priority_high</span
+              >
+              <span class="font-label-md text-label-md">High Priority</span>
+            </div>
+          </div>
+        </section>
+        <!-- Metadata Grid -->
+        <section
+          class="grid grid-cols-2 gap-md p-md bg-surface-container-low rounded-xl border border-border-dark/50"
+        >
+          <div class="space-y-xs">
+            <span
+              class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider"
+              >Assignee</span
+            >
+            <div class="flex items-center gap-sm">
+              <img
+                alt="Assignee"
+                class="w-6 h-6 rounded-full border border-border-dark"
+                data-alt="A professional headshot of a software engineer with short dark hair and a neutral expression, set against a blurred office background with cool blue tones. The lighting is crisp and modern, matching a corporate tech environment with high-end digital aesthetics."
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBIFg6PcgOxZtMY4cYnqDPxfENriw7HZi8uZBVlyviGCpBS4dlLVBleKEl-o-pMgBr5Ub7L1jv8VMaQ0FyJRCMPUtZ-xugowu_mewpIiX4v4OwbN9hKcRIxPPG27FeaJ-8kggrGeE45l8mrD2MF6lEE1aHrtE7fVlYFPhj7wVTUiNIaFueshmWPVO_JZKZJIk0LrwTY1NfCjGhQm5monLlWamdz-wFsT0ecbvTPQQjtkMy7nyYo4ikWK_g-YIChCcEZ7LqvbcnnfzdX"
+              />
+              <span class="font-body-md text-body-md">Alex Rivera</span>
+            </div>
+          </div>
+          <div class="space-y-xs">
+            <span
+              class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider"
+              >Due Date</span
+            >
+            <div class="flex items-center gap-sm">
+              <span
+                class="material-symbols-outlined text-on-surface-variant text-[18px]"
+                >calendar_today</span
+              >
+              <span class="font-body-md text-body-md text-danger"
+                >Oct 24, 2023</span
+              >
+            </div>
+          </div>
+        </section>
+        <!-- Description -->
+        <section class="space-y-sm">
+          <div class="flex items-center justify-between">
+            <h2 class="font-headline-sm text-headline-sm">Description</h2>
+            <button class="text-primary font-label-md text-label-md">
+              Edit
+            </button>
+          </div>
+          <div class="prose prose-invert max-w-none">
+            <p
+              class="font-body-md text-body-md text-on-surface-variant leading-relaxed"
+            >
+              Currently, our authentication middleware is bloated with legacy
+              checks. We need to transition to the new JWT-based verification
+              system and implement proper scoped-based access control (RBAC).
+            </p>
+            <ul
+              class="mt-sm space-y-xs list-disc list-inside font-body-md text-body-md text-on-surface-variant"
+            >
+              <li>Remove obsolete session-cookie logic</li>
+              <li>Implement OIDC token validation</li>
+              <li>Add unit tests for edge cases (expired tokens)</li>
+            </ul>
+          </div>
+        </section>
+        <!-- Attachments -->
+        <section class="space-y-sm">
+          <h2 class="font-headline-sm text-headline-sm">Attachments (2)</h2>
+          <div class="flex gap-md overflow-x-auto pb-sm scrollbar-hide">
+            <div class="flex-shrink-0 w-48 group">
+              <div
+                class="aspect-video bg-surface-container-highest rounded-lg overflow-hidden border border-border-dark relative"
+              >
+                <img
+                  alt="Auth Flow Diagram"
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  data-alt="A complex software architecture diagram showing data flow between multiple server nodes and client applications. The visual style is technical and clean, using a dark navy and electric blue color scheme. Fine lines and glowing nodes represent the interconnected nature of modern cloud-native systems."
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuA82jtcGBe0_E0YIEBX_NwbhuZvYda7MlYcFFlZe5dr_kJhIlnPlqfAt8VJiV18RIcablCQObAhiHc6vUVhtTnp-nhTZQ6C_ry1tik1Hiw4rs6kXQ4ewFHRR4JZMf3rTh6uPBqCLw_okGAAsM_eY4Jv8kL8PjUAg5Nzx9L4MBWlXwOoN6XAUEb69jZIoRd_1YbLekyTeM5E08X2oWtpL5KuFfr-03dJdilheA_7nK4_AzlA729PvJAtAhJgHEPDgMMq0eknLrV3Gdre"
+                />
+                <div
+                  class="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors"
+                ></div>
+              </div>
+              <p class="mt-xs font-label-md text-label-md truncate">
+                auth_flow_v2.png
+              </p>
+            </div>
+            <div
+              class="flex-shrink-0 w-12 h-[108px] bg-surface-container-highest rounded-lg border border-dashed border-border-dark flex items-center justify-center"
+            >
+              <span class="material-symbols-outlined text-on-surface-variant"
+                >add</span
+              >
+            </div>
+          </div>
+        </section>
+        <!-- Activity / Comments -->
+        <section class="space-y-md border-t border-border-dark pt-lg">
+          <div class="flex items-center justify-between">
+            <h2 class="font-headline-sm text-headline-sm">Activity</h2>
+            <div
+              class="flex items-center gap-xs font-label-md text-label-md text-on-surface-variant"
+            >
+              <span>Newest</span>
+              <span class="material-symbols-outlined text-[16px]"
+                >expand_more</span
+              >
+            </div>
+          </div>
+          <!-- Comment 1 -->
+          <div class="flex gap-md">
+            <img
+              alt="User"
+              class="w-8 h-8 rounded-full flex-shrink-0 border border-border-dark"
+              data-alt="A professional portrait of a woman with a confident expression, her hair styled in a modern bob. The background is a minimalist studio setting with soft directional lighting that emphasizes the rich textures of her professional attire. The color palette is composed of sophisticated dark blues and warm skin tones."
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRRhvD6kTfAaEmrgxSSNnMJam-p1A2-4IiKTyYCW7xdMk_pBF0Lm7SLRYMdNCCJD1lqBJu3y5-1zb79ugrB-cnpwz1BG_na69WcGfWLufzHNNNsIXAR03Yb-OeVXngHbA1c7ZdVQihhDTqP7VfSRxS1rC6b3JZbHgoQtAzmAsynNbjwyOqUV1mmTejQsP5L1Mzqtjv8uOdRPh_LUxPsOU-8jy5RppsxtkgPhqczB0Z7HSmp2vXuYhOTNbLy-DRIKDOkUE5B4kZEuak"
+            />
+            <div class="space-y-xs flex-1">
+              <div class="flex items-center justify-between">
+                <span class="font-headline-sm text-[14px]">Sarah Chen</span>
+                <span
+                  class="font-label-sm text-label-sm text-on-surface-variant"
+                  >2h ago</span
+                >
+              </div>
+              <div
+                class="p-md bg-surface-container-highest rounded-xl rounded-tl-none border border-border-dark"
+              >
+                <p class="font-body-md text-body-md">
+                  I've pushed the initial PR for the token validation module.
+                  Please review the middleware ordering.
+                </p>
+              </div>
+              <div class="flex gap-md pl-sm">
+                <button
+                  class="flex items-center gap-xs text-on-surface-variant font-label-md hover:text-primary"
+                >
+                  <span class="material-symbols-outlined text-[16px]"
+                    >thumb_up</span
+                  >
+                  <span>2</span>
+                </button>
+                <button
+                  class="text-on-surface-variant font-label-md hover:text-primary"
+                >
+                  Reply
+                </button>
+              </div>
+            </div>
+          </div>
+          <!-- System Event -->
+          <div class="flex items-center gap-md pl-10 py-xs">
+            <div class="w-1 h-1 bg-on-surface-variant rounded-full"></div>
+            <p class="font-body-sm text-body-sm text-on-surface-variant italic">
+              <span class="font-semibold text-on-surface not-italic"
+                >Alex Rivera</span
+              >
+              changed status to
+              <span
+                class="bg-warning/10 text-warning px-sm py-0.5 rounded text-[11px] font-bold"
+                >IN PROGRESS</span
+              >
+            </p>
+          </div>
+          <!-- Comment 2 -->
+          <div class="flex gap-md">
+            <img
+              alt="User"
+              class="w-8 h-8 rounded-full flex-shrink-0 border border-border-dark"
+              data-alt="Close-up of a man with spectacles and a friendly, intelligent look. He is wearing a dark navy knit sweater. The lighting is warm and cinematic, creating a professional yet approachable aesthetic suitable for a high-end collaborative software environment."
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBpcUNQLxHxc9r6OJPxF9xqmoB4Ws5q4Enz_p2PaKw6JMXcS_MrNsK1yDiMrvZ5XpD4wkvCZcZa3__oLO-RcUu0Vzhre4DxintUTpftg23UXs89gfkBnAd6IeKiRDtu1L9YGz_To4F3dNEd5Pjw4AQp4VQvAwofSedlniQBtOmqrRiFAP_TssqpRTLXf-xfXvzrrXHg_TsuclEvG4jDhnKMP4o3inrOEhOnxZ5KPcnumfHhJkKHlV9aCXDMvs2cS7N5qc7BQRIeIk99"
+            />
+            <div class="space-y-xs flex-1">
+              <div class="flex items-center justify-between">
+                <span class="font-headline-sm text-[14px]">Marcus Thorne</span>
+                <span
+                  class="font-label-sm text-label-sm text-on-surface-variant"
+                  >5m ago</span
+                >
+              </div>
+              <div
+                class="p-md bg-surface-container-highest rounded-xl rounded-tl-none border border-border-dark"
+              >
+                <p class="font-body-md text-body-md">
+                  Looks good, but check the rate-limiting interaction.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+        <!-- Padding for sticky footer -->
+        <div class="h-24"></div>
+      </main>
+      <!-- Sticky Bottom Comment Input -->
+      <footer
+        class="absolute bottom-0 inset-x-0 p-md bg-surface-container border-t border-border-dark backdrop-blur-md"
+      >
+        <div
+          class="flex items-center gap-md bg-surface-container-low border border-border-dark rounded-full px-lg py-2 focus-within:border-primary transition-all shadow-inner"
+        >
+          <input
+            class="bg-transparent border-none focus:ring-0 flex-1 font-body-md text-on-surface placeholder:text-on-surface-variant"
+            placeholder="Add a comment..."
+            type="text"
+          />
+          <div class="flex items-center gap-sm">
+            <button class="text-on-surface-variant hover:text-primary">
+              <span class="material-symbols-outlined">alternate_email</span>
+            </button>
+            <button class="text-on-surface-variant hover:text-primary">
+              <span class="material-symbols-outlined">attach_file</span>
+            </button>
+            <div class="w-[1px] h-4 bg-border-dark mx-1"></div>
+            <button
+              class="bg-primary text-on-primary-fixed p-1 rounded-full flex items-center justify-center"
+            >
+              <span
+                class="material-symbols-outlined text-[20px]"
+                style="font-variation-settings: &quot;FILL&quot; 1"
+                >send</span
+              >
+            </button>
+          </div>
+        </div>
+        <!-- SafeArea padding for iOS -->
+        <div class="h-4"></div>
+      </footer>
+    </div>
+    <!-- Micro-interaction Scripts -->
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const modal = document.getElementById("task-modal");
+        let startY = 0;
+        let currentY = 0;
+
+        // Simple drag down to close simulation for the drag handle
+        const handle = document.querySelector(".bottom-sheet-drag-handle");
+
+        handle.addEventListener("touchstart", (e) => {
+          startY = e.touches[0].clientY;
+        });
+
+        handle.addEventListener("touchmove", (e) => {
+          currentY = e.touches[0].clientY;
+          const diff = currentY - startY;
+          if (diff > 0) {
+            modal.style.transform = `translateY(${diff}px)`;
+          }
+        });
+
+        handle.addEventListener("touchend", () => {
+          const diff = currentY - startY;
+          if (diff > 150) {
+            // Logic to "close" (simulate with alert for now)
+            modal.classList.remove("animate-slide-up");
+            modal.classList.add("translate-y-full");
+            modal.style.transition = "transform 0.3s ease-out";
+          } else {
+            modal.style.transform = `translateY(0)`;
+            modal.style.transition = "transform 0.2s ease-out";
+          }
+        });
+      });
+    </script>
+    <style>
+      @keyframes slide-up {
+        from {
+          transform: translateY(100%);
+        }
+        to {
+          transform: translateY(0);
+        }
+      }
+      .animate-slide-up {
+        animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+      }
+      .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+    </style>
+  </body>
+</html>

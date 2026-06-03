@@ -1,0 +1,592 @@
+<!doctype html>
+<html class="dark" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>ProjectFlow - Mobile Project Detail</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Hanken+Grotesk:wght@600;700;800&amp;family=JetBrains+Mono:wght@500&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings:
+          "FILL" 0,
+          "wght" 400,
+          "GRAD" 0,
+          "opsz" 24;
+        display: inline-block;
+        line-height: 1;
+        text-transform: none;
+        letter-spacing: normal;
+        word-wrap: normal;
+        white-space: nowrap;
+        direction: ltr;
+      }
+      /* Custom Scrollbar for Tab Row */
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      /* Subtle progress bar gradient */
+      .progress-gradient {
+        background: linear-gradient(90deg, #2c5ead 0%, #8aceff 100%);
+      }
+    </style>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-light": "#FFFFFF",
+              success: "#22C55E",
+              danger: "#EF4444",
+              "primary-fixed-dim": "#acc7ff",
+              "bg-light": "#F8FAFC",
+              "on-tertiary-fixed": "#001e2f",
+              "on-surface-variant": "#c3c6d3",
+              primary: "#acc7ff",
+              "surface-bright": "#2a3a4f",
+              warning: "#F59E0B",
+              "tertiary-fixed-dim": "#8aceff",
+              "secondary-fixed": "#cde5ff",
+              "on-error": "#690005",
+              "surface-container-highest": "#26364a",
+              "text-light": "#0F172A",
+              "on-surface": "#d3e4fe",
+              "on-error-container": "#ffdad6",
+              "on-secondary-fixed": "#001d32",
+              "surface-container-high": "#1b2b3f",
+              "on-secondary": "#003352",
+              surface: "#031427",
+              "tertiary-fixed": "#c9e6ff",
+              outline: "#8d909d",
+              "on-tertiary-container": "#b9dfff",
+              "card-dark": "#172033",
+              "text-dark": "#F8FAFC",
+              "border-light": "#E2E8F0",
+              "on-secondary-fixed-variant": "#004a75",
+              "on-primary-fixed-variant": "#004492",
+              background: "#031427",
+              "bg-dark": "#0B1220",
+              "on-primary-container": "#cbdaff",
+              "surface-container-low": "#0b1c30",
+              "primary-container": "#2c5ead",
+              "outline-variant": "#434751",
+              "on-tertiary": "#00344e",
+              "on-secondary-container": "#002c48",
+              "primary-fixed": "#d7e2ff",
+              "secondary-container": "#2497e3",
+              "surface-container-lowest": "#000f21",
+              "surface-variant": "#26364a",
+              "on-background": "#d3e4fe",
+              "surface-dark": "#111827",
+              "secondary-fixed-dim": "#95ccff",
+              "on-primary-fixed": "#001a40",
+              secondary: "#95ccff",
+              "error-container": "#93000a",
+              "border-dark": "#263247",
+              "inverse-surface": "#d3e4fe",
+              error: "#ffb4ab",
+              "inverse-on-surface": "#213145",
+              "surface-container": "#102034",
+              "surface-dim": "#031427",
+              "on-primary": "#002f68",
+              "on-tertiary-fixed-variant": "#004b6f",
+              tertiary: "#8aceff",
+              "surface-tint": "#acc7ff",
+              "inverse-primary": "#2a5dac",
+              "tertiary-container": "#006694",
+            },
+            borderRadius: {
+              DEFAULT: "0.25rem",
+              lg: "0.5rem",
+              xl: "0.75rem",
+              full: "9999px",
+            },
+            spacing: {
+              gutter: "20px",
+              xl: "32px",
+              lg: "24px",
+              xs: "4px",
+              unit: "4px",
+              "max-width-dashboard": "1440px",
+              md: "16px",
+              sm: "8px",
+              "sidebar-width": "260px",
+            },
+            fontFamily: {
+              "body-lg": ["Inter"],
+              "display-lg": ["Hanken Grotesk"],
+              "body-sm": ["Inter"],
+              "headline-sm": ["Hanken Grotesk"],
+              "label-sm": ["JetBrains Mono"],
+              "label-md": ["JetBrains Mono"],
+              "body-md": ["Inter"],
+              "headline-md": ["Hanken Grotesk"],
+            },
+            fontSize: {
+              "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+              "display-lg": [
+                "36px",
+                {
+                  lineHeight: "44px",
+                  letterSpacing: "-0.02em",
+                  fontWeight: "700",
+                },
+              ],
+              "body-sm": ["13px", { lineHeight: "18px", fontWeight: "400" }],
+              "headline-sm": [
+                "18px",
+                { lineHeight: "24px", fontWeight: "600" },
+              ],
+              "label-sm": ["10px", { lineHeight: "14px", fontWeight: "500" }],
+              "label-md": [
+                "12px",
+                {
+                  lineHeight: "16px",
+                  letterSpacing: "0.02em",
+                  fontWeight: "500",
+                },
+              ],
+              "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+              "headline-md": [
+                "24px",
+                {
+                  lineHeight: "32px",
+                  letterSpacing: "-0.01em",
+                  fontWeight: "600",
+                },
+              ],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        min-height: max(884px, 100dvh);
+      }
+    </style>
+  </head>
+  <body
+    class="bg-background text-on-background min-h-screen flex flex-col font-body-md text-body-md overflow-x-hidden"
+  >
+    <!-- Top Navigation Anchor (As per Shared Components JSON for Dashboard context) -->
+    <header
+      class="h-16 w-full sticky top-0 z-40 bg-surface dark:bg-surface border-b border-border-dark flex justify-between items-center px-md"
+    >
+      <div class="flex items-center gap-sm">
+        <button
+          class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-surface-variant transition-colors"
+        >
+          <span class="material-symbols-outlined text-primary">arrow_back</span>
+        </button>
+        <h1 class="font-headline-sm text-headline-sm font-bold text-primary">
+          Dashboard
+        </h1>
+      </div>
+      <div class="flex items-center gap-sm">
+        <button
+          class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-surface-variant transition-colors"
+        >
+          <span class="material-symbols-outlined text-on-surface-variant"
+            >notifications</span
+          >
+        </button>
+        <div
+          class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center overflow-hidden border border-border-dark"
+        >
+          <img
+            alt="User profile menu"
+            class="w-full h-full object-cover"
+            data-alt="A stylized professional headshot of a young creative professional with a modern aesthetic, set against a dark, deep navy background that matches the app corporate identity. The lighting is crisp and cinematic, emphasizing a focused, authoritative yet calm expression. The overall style is minimalist and high-end."
+            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtwWpoe4HbrXdNN6wxhFhncyJNich_G2xHu2nJvsJukN0pIH2d467W0pG--AT_9xRUI0ErqWh1LHXNY_ZHh18WU05W8zpaumFWEXMPr88WDMv64BlZazmTig9gwlP1BizoCWHPVZY4gRyz0RVzJOClYaSaVupEOEh2O2aeO-UMhbvekBCFEuXhfXfPtEPF4ndUVeptDXUy1YTtzdwPBsKRA92FM7xsLstAOAk3YmUR6QDsSMXzIElFmeuueeXRtUlf8EVIWGEz1WaL"
+          />
+        </div>
+      </div>
+    </header>
+    <!-- Main Content Canvas -->
+    <main class="flex-1 w-full pb-20">
+      <!-- Project Hero Header -->
+      <section
+        class="px-md pt-lg pb-md border-b border-border-dark bg-surface-container-low"
+      >
+        <div class="flex justify-between items-start mb-sm">
+          <div>
+            <span class="font-label-md text-label-md text-secondary mb-xs block"
+              >PROJ-824</span
+            >
+            <h2
+              class="font-headline-md text-headline-md font-extrabold text-on-surface tracking-tight"
+            >
+              Phoenix System Relaunch
+            </h2>
+          </div>
+          <div
+            class="px-sm py-xs bg-success/10 border border-success/20 rounded-full"
+          >
+            <span class="text-success font-label-sm text-label-sm uppercase"
+              >Active</span
+            >
+          </div>
+        </div>
+        <p
+          class="text-on-surface-variant font-body-sm text-body-sm leading-relaxed mb-md"
+        >
+          Modernizing the legacy cloud architecture for enterprise-scale
+          reliability. Focus on 99.99% uptime and zero-latency data pipelines.
+        </p>
+        <!-- Mobile Optimized Metrics Row (Vertical Stack or Scroll) -->
+        <div class="grid grid-cols-2 gap-sm">
+          <div
+            class="bg-surface-container p-sm rounded-lg border border-border-dark"
+          >
+            <span
+              class="text-on-surface-variant font-label-sm text-label-sm mb-xs block"
+              >Completion</span
+            >
+            <div class="flex items-baseline gap-xs">
+              <span
+                class="font-headline-sm text-headline-sm font-bold text-primary"
+                >68%</span
+              >
+            </div>
+            <div
+              class="w-full h-1 bg-surface-variant rounded-full mt-sm overflow-hidden"
+            >
+              <div class="h-full progress-gradient w-[68%]"></div>
+            </div>
+          </div>
+          <div
+            class="bg-surface-container p-sm rounded-lg border border-border-dark"
+          >
+            <span
+              class="text-on-surface-variant font-label-sm text-label-sm mb-xs block"
+              >Due Date</span
+            >
+            <div class="flex items-center gap-xs">
+              <span class="material-symbols-outlined text-warning text-[18px]"
+                >event</span
+              >
+              <span class="font-body-md text-body-md font-semibold"
+                >Oct 24</span
+              >
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- Sticky Scrollable Tabs -->
+      <nav
+        class="sticky top-16 z-30 bg-surface border-b border-border-dark overflow-x-auto no-scrollbar flex items-center px-md h-12 gap-lg shadow-sm"
+      >
+        <a
+          class="h-full flex items-center whitespace-nowrap border-b-2 border-primary text-primary font-semibold text-body-md px-1"
+          href="#"
+          >Overview</a
+        >
+        <a
+          class="h-full flex items-center whitespace-nowrap border-b-2 border-transparent text-on-surface-variant font-medium text-body-md px-1"
+          href="#"
+          >Board</a
+        >
+        <a
+          class="h-full flex items-center whitespace-nowrap border-b-2 border-transparent text-on-surface-variant font-medium text-body-md px-1"
+          href="#"
+          >Tasks</a
+        >
+        <a
+          class="h-full flex items-center whitespace-nowrap border-b-2 border-transparent text-on-surface-variant font-medium text-body-md px-1"
+          href="#"
+          >Members</a
+        >
+        <a
+          class="h-full flex items-center whitespace-nowrap border-b-2 border-transparent text-on-surface-variant font-medium text-body-md px-1"
+          href="#"
+          >Files</a
+        >
+      </nav>
+      <!-- Tab Content: Overview -->
+      <div class="px-md py-lg space-y-lg">
+        <!-- Recent Activity Card -->
+        <div>
+          <h3
+            class="font-headline-sm text-headline-sm font-bold text-on-surface mb-md"
+          >
+            Recent Activity
+          </h3>
+          <div class="space-y-md">
+            <div class="flex gap-md group">
+              <div class="relative">
+                <div
+                  class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center z-10 relative"
+                >
+                  <span
+                    class="material-symbols-outlined text-[16px] text-on-secondary-container"
+                    >edit</span
+                  >
+                </div>
+                <div
+                  class="absolute top-8 bottom-[-16px] left-1/2 -translate-x-1/2 w-px bg-border-dark"
+                ></div>
+              </div>
+              <div class="flex-1 pb-md">
+                <p class="font-body-md text-body-md text-on-surface">
+                  <span class="font-bold">Sarah Chen</span> updated
+                  <span class="text-primary font-medium"
+                    >API Documentation</span
+                  >
+                </p>
+                <span
+                  class="text-on-surface-variant font-label-sm text-label-sm"
+                  >2 hours ago</span
+                >
+              </div>
+            </div>
+            <div class="flex gap-md group">
+              <div class="relative">
+                <div
+                  class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center z-10 relative"
+                >
+                  <span
+                    class="material-symbols-outlined text-[16px] text-on-primary-container"
+                    >check_circle</span
+                  >
+                </div>
+                <div
+                  class="absolute top-8 bottom-[-16px] left-1/2 -translate-x-1/2 w-px bg-border-dark"
+                ></div>
+              </div>
+              <div class="flex-1 pb-md">
+                <p class="font-body-md text-body-md text-on-surface">
+                  <span class="font-bold">Jordan Lee</span> completed
+                  <span class="text-primary font-medium"
+                    >Database Migration</span
+                  >
+                </p>
+                <span
+                  class="text-on-surface-variant font-label-sm text-label-sm"
+                  >5 hours ago</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Team Section -->
+        <div>
+          <div class="flex justify-between items-center mb-md">
+            <h3
+              class="font-headline-sm text-headline-sm font-bold text-on-surface"
+            >
+              Team
+            </h3>
+            <button
+              class="text-primary font-body-sm text-body-sm font-semibold"
+            >
+              View All
+            </button>
+          </div>
+          <div
+            class="bg-surface-container rounded-xl border border-border-dark p-md flex gap-sm overflow-x-auto no-scrollbar"
+          >
+            <div class="flex-shrink-0 flex flex-col items-center gap-xs">
+              <div class="w-12 h-12 rounded-full border-2 border-primary p-0.5">
+                <img
+                  class="w-full h-full rounded-full bg-surface-variant"
+                  data-alt="A portrait of Sarah, a team lead with a professional and approachable look, wearing modern business-casual attire. The background is a clean, dark navy blue environment, ensuring consistency with the overall project dashboard aesthetic. Lighting is sharp and professional."
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuDXwMqqbrZimOdmeZyKKsd430GVjhdX2JjhVFf03cgfSQciV5qX-FRtNeVvwrlQFDveBPpxD2G3Wbj2U4taoIcuS6AwsiZPfITIG77xVkeKruwDYvpkuzP4iD5xFVqxZrUhT6WTxh0HmXaeitsYOmLZBdGdghy6LnUJqy0Ci3-9wiGL4NHNaxyPzjN9URX_4TZj21V_U3TqA_gRqDw8Mwe7K4V7cRZYhNUYHuQre4q77oXP5K7HQJPDzHa9TxhDip6s5Q6QWYsNOsu9"
+                />
+              </div>
+              <span class="font-label-sm text-label-sm text-on-surface-variant"
+                >Chen (L)</span
+              >
+            </div>
+            <div class="flex-shrink-0 flex flex-col items-center gap-xs">
+              <div class="w-12 h-12 rounded-full border border-border-dark">
+                <img
+                  class="w-full h-full rounded-full bg-surface-variant"
+                  data-alt="A portrait of Marcus, a senior developer, with a professional and focused look. The setting is a minimalist office environment with a dark, high-end navy palette. The lighting is soft and modern, highlighting a corporate professional aesthetic."
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBmI7bBjHxbahvUvRbjPLqIejsUvhoiUBtn0PgpypuhRkeAznfNdhlemmUDddDEilwdaJZctZZlvveWyKxlxPg759QfXuy3HIU_OqHjJJBTQOtUA8bq3Lq90xCpk2BNEDT1Aca_oU0oDJmJiQXR5yj74toT1TlmgaPkZpQg4zPWAvyf8Xyy9A9nTxoxs6is_ebWQZ4Ib93DCKCXQPO0QH1Iqh-e6-aW-oif7Hw6b7ftrApnEQSL59aO_s_KQxUkwqfDL3mQ_71NZ6Pf"
+                />
+              </div>
+              <span class="font-label-sm text-label-sm text-on-surface-variant"
+                >Marcus</span
+              >
+            </div>
+            <div class="flex-shrink-0 flex flex-col items-center gap-xs">
+              <div class="w-12 h-12 rounded-full border border-border-dark">
+                <img
+                  class="w-full h-full rounded-full bg-surface-variant"
+                  data-alt="A portrait of Aria, a product designer, looking creative and professional. The background is a sophisticated deep navy, matching the corporate modern UI style. The lighting is bright and technical, emphasizing clarity and precision."
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCgsakot3oIl9ic233liCn1bgnvRC--36f-Z3RHMqfA6iZZ4qDbP1EX1qQ7SCCEjM2_crh-Ow4Tv3FlixAN5co8VhtnPYLRU2DZYaS-fLCYvheZjm5PZlmhAY_LdTuxin9K6hoejWal2l7kT_Dw80pY9rNceeEw-mJus9aQLmPiUHWBozex3XhVGy-bim93GiAVF-kHggjQYLx-fxCV-x32tL3LjxHLNnKVkhW_jGvlPNv4AVJsW18zg4KLYrhzPvTypuqyPTbKMLO"
+                />
+              </div>
+              <span class="font-label-sm text-label-sm text-on-surface-variant"
+                >Aria</span
+              >
+            </div>
+            <div class="flex-shrink-0 flex flex-col items-center gap-xs">
+              <div class="w-12 h-12 rounded-full border border-border-dark">
+                <img
+                  class="w-full h-full rounded-full bg-surface-variant"
+                  data-alt="A professional portrait of Sam, a project manager, with a calm and authoritative expression. The image is set against a dark blue background to maintain visual cohesion with the dashboard's professional blue identity."
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuC9A_8Ce_k3YYgOHse793lXMA5cm4RckXiZY7ij5wkbCmv_YsiqJCpVDMBEDqE5U9xyp07mXjmJEsSddI_klC-fsGqMgKITLS7ned5vHFkFwn07tsjdRxiB1BywEE928S_iqtpVDMe1rXV-ihkAJzZRrrbHE6cj7HIfrGw6uibHR0hi4jPc_MaEn87Llhir8hBTW9L_tC82p4GZY2bV8ilHxwJAXJXeTODGIe9EHFbgd7pwpZkWAm6UD-x05CbGVwPV1qxbre9dFSjF"
+                />
+              </div>
+              <span class="font-label-sm text-label-sm text-on-surface-variant"
+                >Sam</span
+              >
+            </div>
+            <button
+              class="flex-shrink-0 w-12 h-12 rounded-full border border-dashed border-border-dark flex items-center justify-center text-on-surface-variant"
+            >
+              <span class="material-symbols-outlined">add</span>
+            </button>
+          </div>
+        </div>
+        <!-- Detailed Task Breakdown (Bento Style Preview) -->
+        <div class="grid grid-cols-1 gap-md">
+          <div
+            class="bg-surface-container rounded-xl border border-border-dark p-md flex items-center justify-between"
+          >
+            <div>
+              <h4 class="font-body-md text-body-md font-bold text-on-surface">
+                Backend Overhaul
+              </h4>
+              <p class="font-label-md text-label-md text-on-surface-variant">
+                12 of 15 tasks completed
+              </p>
+            </div>
+            <div
+              class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center"
+            >
+              <span class="material-symbols-outlined text-primary"
+                >analytics</span
+              >
+            </div>
+          </div>
+          <div
+            class="bg-surface-container rounded-xl border border-border-dark p-md flex items-center justify-between"
+          >
+            <div>
+              <h4 class="font-body-md text-body-md font-bold text-on-surface">
+                UI Kit Refresh
+              </h4>
+              <p class="font-label-md text-label-md text-on-surface-variant">
+                Pending Review
+              </p>
+            </div>
+            <div
+              class="w-12 h-12 rounded-full bg-tertiary/10 flex items-center justify-center"
+            >
+              <span class="material-symbols-outlined text-tertiary"
+                >palette</span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <!-- Floating Action Button (FAB) - Contextual -->
+    <button
+      class="fixed bottom-20 right-md w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center z-50 transition-transform active:scale-90"
+    >
+      <span
+        class="material-symbols-outlined text-[28px]"
+        style="font-variation-settings: &quot;FILL&quot; 1"
+        >add</span
+      >
+    </button>
+    <!-- Bottom Navigation Shell (Mobile Pivot) -->
+    <nav
+      class="h-16 w-full fixed bottom-0 left-0 bg-surface border-t border-border-dark flex justify-around items-center z-50 md:hidden"
+    >
+      <a
+        class="flex flex-col items-center justify-center gap-1 text-primary font-semibold"
+        href="#"
+      >
+        <span
+          class="material-symbols-outlined"
+          style="font-variation-settings: &quot;FILL&quot; 1"
+          >folder_open</span
+        >
+        <span class="font-label-sm text-[10px]">Projects</span>
+      </a>
+      <a
+        class="flex flex-col items-center justify-center gap-1 text-on-surface-variant"
+        href="#"
+      >
+        <span class="material-symbols-outlined">assignment</span>
+        <span class="font-label-sm text-[10px]">Tasks</span>
+      </a>
+      <a
+        class="flex flex-col items-center justify-center gap-1 text-on-surface-variant"
+        href="#"
+      >
+        <span class="material-symbols-outlined">group</span>
+        <span class="font-label-sm text-[10px]">Members</span>
+      </a>
+      <a
+        class="flex flex-col items-center justify-center gap-1 text-on-surface-variant"
+        href="#"
+      >
+        <span class="material-symbols-outlined">bar_chart</span>
+        <span class="font-label-sm text-[10px]">Analytics</span>
+      </a>
+      <a
+        class="flex flex-col items-center justify-center gap-1 text-on-surface-variant"
+        href="#"
+      >
+        <span class="material-symbols-outlined">settings</span>
+        <span class="font-label-sm text-[10px]">Settings</span>
+      </a>
+    </nav>
+    <script>
+      // Simple Interaction logic
+      document.querySelectorAll("nav a").forEach((link) => {
+        link.addEventListener("click", (e) => {
+          // Not a real router, just a UI feedback
+          if (link.parentElement.classList.contains("sticky")) {
+            document.querySelectorAll("nav.sticky a").forEach((a) => {
+              a.classList.remove(
+                "border-primary",
+                "text-primary",
+                "font-semibold",
+              );
+              a.classList.add(
+                "border-transparent",
+                "text-on-surface-variant",
+                "font-medium",
+              );
+            });
+            link.classList.remove(
+              "border-transparent",
+              "text-on-surface-variant",
+              "font-medium",
+            );
+            link.classList.add(
+              "border-primary",
+              "text-primary",
+              "font-semibold",
+            );
+          }
+        });
+      });
+
+      // Atmosphere: Subtle parallax or fade effects could go here
+    </script>
+  </body>
+</html>

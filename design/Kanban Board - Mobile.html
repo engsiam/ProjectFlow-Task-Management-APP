@@ -1,0 +1,585 @@
+<!doctype html>
+<html class="dark" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>ProjectFlow Kanban Mobile</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Hanken+Grotesk:wght@600;700;800&amp;family=JetBrains+Mono:wght@500&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-light": "#FFFFFF",
+              success: "#22C55E",
+              danger: "#EF4444",
+              "primary-fixed-dim": "#acc7ff",
+              "bg-light": "#F8FAFC",
+              "on-tertiary-fixed": "#001e2f",
+              "on-surface-variant": "#c3c6d3",
+              primary: "#acc7ff",
+              "surface-bright": "#2a3a4f",
+              warning: "#F59E0B",
+              "tertiary-fixed-dim": "#8aceff",
+              "secondary-fixed": "#cde5ff",
+              "on-error": "#690005",
+              "surface-container-highest": "#26364a",
+              "text-light": "#0F172A",
+              "on-surface": "#d3e4fe",
+              "on-error-container": "#ffdad6",
+              "on-secondary-fixed": "#001d32",
+              "surface-container-high": "#1b2b3f",
+              "on-secondary": "#003352",
+              surface: "#031427",
+              "tertiary-fixed": "#c9e6ff",
+              outline: "#8d909d",
+              "on-tertiary-container": "#b9dfff",
+              "card-dark": "#172033",
+              "text-dark": "#F8FAFC",
+              "border-light": "#E2E8F0",
+              "on-secondary-fixed-variant": "#004a75",
+              "on-primary-fixed-variant": "#004492",
+              background: "#031427",
+              "bg-dark": "#0B1220",
+              "on-primary-container": "#cbdaff",
+              "surface-container-low": "#0b1c30",
+              "primary-container": "#2c5ead",
+              "outline-variant": "#434751",
+              "on-tertiary": "#00344e",
+              "on-secondary-container": "#002c48",
+              "primary-fixed": "#d7e2ff",
+              "secondary-container": "#2497e3",
+              "surface-container-lowest": "#000f21",
+              "surface-variant": "#26364a",
+              "on-background": "#d3e4fe",
+              "surface-dark": "#111827",
+              "secondary-fixed-dim": "#95ccff",
+              "on-primary-fixed": "#001a40",
+              secondary: "#95ccff",
+              "error-container": "#93000a",
+              "border-dark": "#263247",
+              "inverse-surface": "#d3e4fe",
+              error: "#ffb4ab",
+              "inverse-on-surface": "#213145",
+              "surface-container": "#102034",
+              "surface-dim": "#031427",
+              "on-primary": "#002f68",
+              "on-tertiary-fixed-variant": "#004b6f",
+              tertiary: "#8aceff",
+              "surface-tint": "#acc7ff",
+              "inverse-primary": "#2a5dac",
+              "tertiary-container": "#006694",
+            },
+            borderRadius: {
+              DEFAULT: "0.25rem",
+              lg: "0.5rem",
+              xl: "0.75rem",
+              full: "9999px",
+            },
+            spacing: {
+              gutter: "20px",
+              xl: "32px",
+              lg: "24px",
+              xs: "4px",
+              unit: "4px",
+              "max-width-dashboard": "1440px",
+              md: "16px",
+              sm: "8px",
+              "sidebar-width": "260px",
+            },
+            fontFamily: {
+              "body-lg": ["Inter"],
+              "display-lg": ["Hanken Grotesk"],
+              "body-sm": ["Inter"],
+              "headline-sm": ["Hanken Grotesk"],
+              "label-sm": ["JetBrains Mono"],
+              "label-md": ["JetBrains Mono"],
+              "body-md": ["Inter"],
+              "headline-md": ["Hanken Grotesk"],
+            },
+            fontSize: {
+              "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+              "display-lg": [
+                "36px",
+                {
+                  lineHeight: "44px",
+                  letterSpacing: "-0.02em",
+                  fontWeight: "700",
+                },
+              ],
+              "body-sm": ["13px", { lineHeight: "18px", fontWeight: "400" }],
+              "headline-sm": [
+                "18px",
+                { lineHeight: "24px", fontWeight: "600" },
+              ],
+              "label-sm": ["10px", { lineHeight: "14px", fontWeight: "500" }],
+              "label-md": [
+                "12px",
+                {
+                  lineHeight: "16px",
+                  letterSpacing: "0.02em",
+                  fontWeight: "500",
+                },
+              ],
+              "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+              "headline-md": [
+                "24px",
+                {
+                  lineHeight: "32px",
+                  letterSpacing: "-0.01em",
+                  fontWeight: "600",
+                },
+              ],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      .column-snap {
+        scroll-snap-type: x mandatory;
+      }
+      .column-snap > div {
+        scroll-snap-align: center;
+      }
+      .material-symbols-outlined {
+        font-variation-settings:
+          "FILL" 0,
+          "wght" 400,
+          "GRAD" 0,
+          "opsz" 24;
+      }
+    </style>
+    <style>
+      body {
+        min-height: max(884px, 100dvh);
+      }
+    </style>
+  </head>
+  <body
+    class="bg-background text-on-surface font-body-md overflow-hidden h-screen flex flex-col"
+  >
+    <!-- Top Navigation Anchor -->
+    <header
+      class="h-16 w-full sticky top-0 z-40 bg-surface border-b border-border-dark flex justify-between items-center px-md"
+    >
+      <div class="flex items-center gap-sm">
+        <span class="material-symbols-outlined text-primary font-bold"
+          >folder_open</span
+        >
+        <h1 class="font-headline-sm text-headline-sm font-bold text-primary">
+          Dashboard
+        </h1>
+      </div>
+      <div class="flex items-center gap-md">
+        <span
+          class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-opacity duration-200"
+          >notifications</span
+        >
+        <span
+          class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-opacity duration-200"
+          >contrast</span
+        >
+        <div
+          class="w-8 h-8 rounded-full overflow-hidden border border-border-dark"
+        >
+          <img
+            alt="User profile"
+            data-alt="A professional user profile avatar for a corporate software platform. The avatar is a stylized 3D illustration of a friendly male executive in a blue suite, set against a clean, minimalist studio background with soft sky-blue lighting that matches the corporate modern aesthetic of the application."
+            src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8vvC92Smr55Lxei8cEP-Vyw_ng3SDGjwbDuxIkDPkUAGea3sPkhUBLOxk79vf91MjQKuQ2TU31txZxmhaHIXKz-B2B8RLZ4XndKIsSO7Fy1eGTL4UfxBlygeDo2IqmeJMRNZUNo4grtzZb9ci5w4tGXsyTOKblA8KTff4f4X6YIHyI9o9Uc8-j7RqMBmP4bEFT0J_nNOCtwKviv318wZHyuew1BGsX84kPlkPx_2E_RK98b8S4uv0rOAgLGD9Wl5tg63_FsvYVLTv"
+          />
+        </div>
+      </div>
+    </header>
+    <!-- Project Identity & Filter Section -->
+    <section
+      class="px-md py-sm bg-surface-container-low border-b border-border-dark"
+    >
+      <div class="flex justify-between items-end">
+        <div>
+          <p
+            class="font-label-sm text-label-sm text-primary uppercase tracking-wider"
+          >
+            ProjectFlow Enterprise
+          </p>
+          <h2
+            class="font-headline-md text-headline-md font-bold text-on-surface"
+          >
+            Mobile App Dev
+          </h2>
+        </div>
+        <button
+          class="bg-primary-container text-on-primary-container px-sm py-xs rounded-lg flex items-center gap-xs font-body-md"
+        >
+          <span class="material-symbols-outlined text-[18px]">add</span>
+          <span>Task</span>
+        </button>
+      </div>
+      <!-- Column Indicators / Tabs -->
+      <div class="flex gap-sm mt-md overflow-x-auto no-scrollbar py-1">
+        <button
+          class="whitespace-nowrap px-md py-xs rounded-full bg-primary text-on-primary font-semibold text-body-sm shadow-sm transition-all duration-200"
+          onclick="scrollToColumn(0)"
+        >
+          To Do <span class="ml-1 opacity-70">4</span>
+        </button>
+        <button
+          class="whitespace-nowrap px-md py-xs rounded-full bg-surface-container-highest text-on-surface-variant font-medium text-body-sm transition-all duration-200"
+          onclick="scrollToColumn(1)"
+        >
+          In Progress <span class="ml-1 opacity-70">2</span>
+        </button>
+        <button
+          class="whitespace-nowrap px-md py-xs rounded-full bg-surface-container-highest text-on-surface-variant font-medium text-body-sm transition-all duration-200"
+          onclick="scrollToColumn(2)"
+        >
+          Done <span class="ml-1 opacity-70">12</span>
+        </button>
+      </div>
+    </section>
+    <!-- Kanban Canvas (Horizontal Swipe) -->
+    <main
+      class="flex-1 overflow-x-auto overflow-y-hidden flex column-snap no-scrollbar bg-background"
+      id="kanban-scroll"
+    >
+      <!-- Column: To Do -->
+      <div class="min-w-full h-full flex flex-col p-md">
+        <div class="flex items-center justify-between mb-sm">
+          <h3
+            class="font-headline-sm text-headline-sm flex items-center gap-sm"
+          >
+            <span class="w-2 h-2 rounded-full bg-warning"></span>
+            To Do
+          </h3>
+          <span class="material-symbols-outlined text-on-surface-variant"
+            >more_vert</span
+          >
+        </div>
+        <div class="flex-1 overflow-y-auto space-y-sm pb-xl no-scrollbar">
+          <!-- Task Card 1 -->
+          <div
+            class="bg-card-dark border border-border-dark rounded-xl p-md relative overflow-hidden shadow-sm hover:border-secondary transition-colors duration-200 group active:scale-[0.98]"
+          >
+            <div class="absolute left-0 top-0 bottom-0 w-1 bg-danger"></div>
+            <div class="flex justify-between items-start mb-xs">
+              <span class="font-label-md text-label-md text-on-surface-variant"
+                >PF-102</span
+              >
+              <div class="flex -space-x-2">
+                <img
+                  alt="Assignee"
+                  class="w-6 h-6 rounded-full border-2 border-card-dark"
+                  data-alt="A portrait of a professional female project manager with glasses, styled in a modern 3D corporate avatar aesthetic. The lighting is soft and professional, using a cool blue and dark navy palette consistent with a high-performance software interface."
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuAxusaT5lPS5XA137hHQx7kRzidWVO1-hTXJgi8SrBpuso23PPrMEyWwqZuWuiWFfyjt1pCLCLpNWVS3Ba_MVUKO0jmcTaRf8O5D8TSev5M1XLMNtP2YrFp2mgAPtryW85SzmLqZXR0wa364wxqk6qnv_cljcRw98HzgIhac3W1g7D9394l0_wnmD3t0ybWXdMl_2v8m7mfqN3gNbODUC_gGwbkdC3sWgqzwNUFmLr6slWoyLRghJ9RktcRyjmGWCBjjx_QIuy61bVW"
+                />
+              </div>
+            </div>
+            <h4
+              class="font-body-lg text-body-lg font-semibold text-on-surface leading-tight mb-sm"
+            >
+              Integrate Stripe Connect for marketplace payments
+            </h4>
+            <div class="flex flex-wrap gap-xs mb-md">
+              <span
+                class="bg-surface-container-high text-tertiary px-xs py-[2px] rounded font-label-sm text-label-sm"
+                >API</span
+              >
+              <span
+                class="bg-surface-container-high text-tertiary px-xs py-[2px] rounded font-label-sm text-label-sm"
+                >Finance</span
+              >
+            </div>
+            <div
+              class="flex items-center justify-between text-on-surface-variant"
+            >
+              <div class="flex items-center gap-xs">
+                <span class="material-symbols-outlined text-[16px]"
+                  >calendar_today</span
+                >
+                <span class="text-body-sm">Oct 12</span>
+              </div>
+              <div class="flex items-center gap-xs">
+                <span class="material-symbols-outlined text-[16px]"
+                  >chat_bubble</span
+                >
+                <span class="text-body-sm">4</span>
+              </div>
+            </div>
+          </div>
+          <!-- Task Card 2 -->
+          <div
+            class="bg-card-dark border border-border-dark rounded-xl p-md relative overflow-hidden shadow-sm active:scale-[0.98]"
+          >
+            <div class="absolute left-0 top-0 bottom-0 w-1 bg-warning"></div>
+            <div class="flex justify-between items-start mb-xs">
+              <span class="font-label-md text-label-md text-on-surface-variant"
+                >PF-105</span
+              >
+              <span
+                class="material-symbols-outlined text-on-surface-variant text-[18px]"
+                >attachment</span
+              >
+            </div>
+            <h4
+              class="font-body-lg text-body-lg font-semibold text-on-surface leading-tight mb-md"
+            >
+              Fix layout shifts on mobile navigation drawer
+            </h4>
+            <div
+              class="w-full bg-surface-container-highest rounded-full h-1.5 mb-sm overflow-hidden"
+            >
+              <div
+                class="bg-gradient-to-r from-primary to-secondary h-full w-2/3"
+              ></div>
+            </div>
+            <div
+              class="flex items-center justify-between text-on-surface-variant"
+            >
+              <span class="text-body-sm">66% Done</span>
+              <div class="flex items-center gap-xs">
+                <span class="material-symbols-outlined text-[16px]"
+                  >checklist</span
+                >
+                <span class="text-body-sm">2/3</span>
+              </div>
+            </div>
+          </div>
+          <!-- Task Card 3 -->
+          <div
+            class="bg-card-dark border border-border-dark rounded-xl p-md relative overflow-hidden shadow-sm active:scale-[0.98]"
+          >
+            <div class="absolute left-0 top-0 bottom-0 w-1 bg-success"></div>
+            <div class="flex justify-between items-start mb-xs">
+              <span class="font-label-md text-label-md text-on-surface-variant"
+                >PF-108</span
+              >
+            </div>
+            <h4
+              class="font-body-lg text-body-lg font-semibold text-on-surface leading-tight mb-md"
+            >
+              Update documentation for v2.4 release
+            </h4>
+            <div class="flex items-center gap-sm">
+              <div class="flex -space-x-2">
+                <img
+                  alt="Assignee"
+                  class="w-6 h-6 rounded-full border-2 border-card-dark"
+                  data-alt="A tech-savvy developer avatar with headphones, presented in a sleek, high-contrast digital art style. The color scheme features deep navy and sharp sky blue highlights, conveying a focused and professional tech environment."
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBnYUzc_dwnK5wJZzzcwVjq5PmQnV3_Ru-uF097wuk-xegJlU9uYHabGWft5J_Tth2xygcUWj11_ge8MxOBl_A4z-TE9ddcf7TMRHdgJKrr9J2AS30baB1gMJkfqL91cneUiLxpKZLhszF-p5Ur2WHKYlFfxzKniPnl4urCml3k087xoJ7XWDJPQTT2RaAngSDAUZcwp3VOBELi9FZ0JVu0qNW5p4LTD95JDuCIgEeuUeDLT5340dwO3f2NSw_Ts9uJsrNnQAeQL-8k"
+                />
+              </div>
+              <span class="text-body-sm text-on-surface-variant"
+                >Assigned to Zoe</span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Column: In Progress -->
+      <div class="min-w-full h-full flex flex-col p-md">
+        <div class="flex items-center justify-between mb-sm">
+          <h3
+            class="font-headline-sm text-headline-sm flex items-center gap-sm"
+          >
+            <span class="w-2 h-2 rounded-full bg-primary"></span>
+            In Progress
+          </h3>
+          <span class="material-symbols-outlined text-on-surface-variant"
+            >more_vert</span
+          >
+        </div>
+        <div class="flex-1 overflow-y-auto space-y-sm pb-xl no-scrollbar">
+          <!-- Task Card 4 -->
+          <div
+            class="bg-card-dark border border-border-dark rounded-xl p-md relative overflow-hidden shadow-sm active:scale-[0.98]"
+          >
+            <div class="absolute left-0 top-0 bottom-0 w-1 bg-danger"></div>
+            <div class="flex justify-between items-start mb-xs">
+              <span class="font-label-md text-label-md text-on-surface-variant"
+                >PF-98</span
+              >
+              <span
+                class="material-symbols-outlined text-primary text-[18px]"
+                style="font-variation-settings: &quot;FILL&quot; 1"
+                >bolt</span
+              >
+            </div>
+            <h4
+              class="font-body-lg text-body-lg font-semibold text-on-surface leading-tight mb-sm"
+            >
+              Refactor state management with Signals
+            </h4>
+            <p class="text-body-sm text-on-surface-variant mb-md line-clamp-2">
+              Moving away from complex Redux patterns to lightweight signals for
+              better performance on low-end devices.
+            </p>
+            <div
+              class="flex items-center justify-between text-on-surface-variant"
+            >
+              <div
+                class="flex items-center gap-xs bg-error-container/20 text-error px-2 py-0.5 rounded text-label-md font-label-md uppercase"
+              >
+                Emergency
+              </div>
+              <div class="flex items-center gap-xs">
+                <span class="material-symbols-outlined text-[16px]"
+                  >visibility</span
+                >
+                <span class="text-body-sm">12</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Column: Done -->
+      <div class="min-w-full h-full flex flex-col p-md">
+        <div class="flex items-center justify-between mb-sm">
+          <h3
+            class="font-headline-sm text-headline-sm flex items-center gap-sm"
+          >
+            <span class="w-2 h-2 rounded-full bg-success"></span>
+            Done
+          </h3>
+          <span class="material-symbols-outlined text-on-surface-variant"
+            >more_vert</span
+          >
+        </div>
+        <div class="flex-1 overflow-y-auto space-y-sm pb-xl no-scrollbar">
+          <div
+            class="opacity-60 bg-surface-container border border-border-dark rounded-xl p-md grayscale-[0.5]"
+          >
+            <h4
+              class="font-body-lg text-body-lg font-semibold text-on-surface line-through"
+            >
+              Draft v1.0 Roadmap
+            </h4>
+            <div class="mt-md flex justify-between items-center">
+              <span class="text-success text-body-sm flex items-center gap-xs">
+                <span class="material-symbols-outlined text-[16px]"
+                  >check_circle</span
+                >
+                Completed
+              </span>
+              <span class="text-on-surface-variant text-body-sm">Oct 05</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <!-- Bottom Navigation Bar (The Anchor) -->
+    <nav
+      class="h-16 w-full bg-surface-container flex items-center justify-around px-md border-t border-border-dark z-40 md:hidden"
+    >
+      <div
+        class="flex flex-col items-center gap-xs text-on-surface-variant transition-colors duration-200"
+      >
+        <span class="material-symbols-outlined">folder_open</span>
+        <span class="text-label-sm font-label-sm">Projects</span>
+      </div>
+      <!-- Active Tab Logic: Tasks maps to Kanban -->
+      <div
+        class="flex flex-col items-center gap-xs text-primary font-semibold border-t-2 border-primary pt-1 -mt-[2px] transition-colors duration-200"
+      >
+        <span
+          class="material-symbols-outlined"
+          style="font-variation-settings: &quot;FILL&quot; 1"
+          >assignment</span
+        >
+        <span class="text-label-sm font-label-sm">Tasks</span>
+      </div>
+      <div
+        class="flex flex-col items-center gap-xs text-on-surface-variant transition-colors duration-200"
+      >
+        <span class="material-symbols-outlined">group</span>
+        <span class="text-label-sm font-label-sm">Members</span>
+      </div>
+      <div
+        class="flex flex-col items-center gap-xs text-on-surface-variant transition-colors duration-200"
+      >
+        <span class="material-symbols-outlined">bar_chart</span>
+        <span class="text-label-sm font-label-sm">Analytics</span>
+      </div>
+      <div
+        class="flex flex-col items-center gap-xs text-on-surface-variant transition-colors duration-200"
+      >
+        <span class="material-symbols-outlined">settings</span>
+        <span class="text-label-sm font-label-sm">Settings</span>
+      </div>
+    </nav>
+    <!-- FAB Suppression: On Detail/Task views this would hide, but on Board it stays -->
+    <button
+      class="fixed right-md bottom-20 w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center z-50 transition-transform hover:scale-105 active:scale-95"
+    >
+      <span class="material-symbols-outlined text-[28px]">add</span>
+    </button>
+    <script>
+      const scrollContainer = document.getElementById("kanban-scroll");
+      const buttons = document.querySelectorAll("section button");
+
+      function scrollToColumn(index) {
+        const width = window.innerWidth;
+        scrollContainer.scrollTo({
+          left: index * width,
+          behavior: "smooth",
+        });
+        updateIndicators(index);
+      }
+
+      function updateIndicators(activeIndex) {
+        const indicators = document.querySelectorAll(
+          "section div.flex.gap-sm.mt-md button",
+        );
+        indicators.forEach((btn, idx) => {
+          if (idx === activeIndex) {
+            btn.classList.replace("bg-surface-container-highest", "bg-primary");
+            btn.classList.replace("text-on-surface-variant", "text-on-primary");
+            btn.classList.add("font-semibold");
+            btn.classList.remove("font-medium");
+          } else {
+            btn.classList.replace("bg-primary", "bg-surface-container-highest");
+            btn.classList.replace("text-on-primary", "text-on-surface-variant");
+            btn.classList.remove("font-semibold");
+            btn.classList.add("font-medium");
+          }
+        });
+      }
+
+      // Snap detection for indicator updates
+      scrollContainer.addEventListener("scroll", () => {
+        const index = Math.round(
+          scrollContainer.scrollLeft / window.innerWidth,
+        );
+        updateIndicators(index);
+      });
+
+      // Haptic feedback simulation
+      document
+        .querySelectorAll(".active\\:scale-\\[0\\.98\\]")
+        .forEach((card) => {
+          card.addEventListener("touchstart", () => {
+            if (window.navigator.vibrate) window.navigator.vibrate(5);
+          });
+        });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,753 @@
+<!doctype html>
+<html class="dark" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>ProjectFlow | Orion Product Launch</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Hanken+Grotesk:wght@600;700;800&amp;family=JetBrains+Mono:wght@500&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background-color: #031427;
+        color: #d3e4fe;
+        -webkit-font-smoothing: antialiased;
+      }
+      .material-symbols-outlined {
+        font-variation-settings:
+          "FILL" 0,
+          "wght" 400,
+          "GRAD" 0,
+          "opsz" 24;
+        vertical-align: middle;
+      }
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+        height: 4px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: #102034;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #26364a;
+        border-radius: 10px;
+      }
+    </style>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-container-highest": "#26364a",
+              "inverse-primary": "#2a5dac",
+              danger: "#EF4444",
+              secondary: "#95ccff",
+              "on-tertiary-fixed-variant": "#004b6f",
+              "tertiary-fixed": "#c9e6ff",
+              "surface-tint": "#acc7ff",
+              "text-dark": "#F8FAFC",
+              "on-secondary-fixed": "#001d32",
+              "surface-container": "#102034",
+              "inverse-surface": "#d3e4fe",
+              "on-surface": "#d3e4fe",
+              "primary-fixed-dim": "#acc7ff",
+              "on-error": "#690005",
+              "surface-dim": "#031427",
+              "bg-light": "#F8FAFC",
+              "on-tertiary-fixed": "#001e2f",
+              "surface-container-lowest": "#000f21",
+              "secondary-container": "#2497e3",
+              "on-secondary": "#003352",
+              "on-primary-fixed-variant": "#004492",
+              "surface-variant": "#26364a",
+              "on-primary-container": "#cbdaff",
+              tertiary: "#8aceff",
+              "surface-light": "#FFFFFF",
+              "surface-dark": "#111827",
+              "surface-container-high": "#1b2b3f",
+              "on-secondary-container": "#002c48",
+              "surface-bright": "#2a3a4f",
+              "on-primary-fixed": "#001a40",
+              "secondary-fixed-dim": "#95ccff",
+              surface: "#031427",
+              "error-container": "#93000a",
+              outline: "#8d909d",
+              "border-light": "#E2E8F0",
+              "on-background": "#d3e4fe",
+              "secondary-fixed": "#cde5ff",
+              "primary-fixed": "#d7e2ff",
+              "text-light": "#0F172A",
+              "tertiary-fixed-dim": "#8aceff",
+              error: "#ffb4ab",
+              "on-error-container": "#ffdad6",
+              primary: "#acc7ff",
+              "tertiary-container": "#006694",
+              "on-surface-variant": "#c3c6d3",
+              "outline-variant": "#434751",
+              success: "#22C55E",
+              "on-tertiary": "#00344e",
+              "border-dark": "#263247",
+              "on-tertiary-container": "#b9dfff",
+              "bg-dark": "#0B1220",
+              "inverse-on-surface": "#213145",
+              "on-secondary-fixed-variant": "#004a75",
+              background: "#031427",
+              "card-dark": "#172033",
+              "surface-container-low": "#0b1c30",
+              "on-primary": "#002f68",
+              "primary-container": "#2c5ead",
+              warning: "#F59E0B",
+            },
+            borderRadius: {
+              DEFAULT: "0.25rem",
+              lg: "0.5rem",
+              xl: "0.75rem",
+              full: "9999px",
+            },
+            spacing: {
+              xs: "4px",
+              "max-width-dashboard": "1440px",
+              lg: "24px",
+              md: "16px",
+              sm: "8px",
+              unit: "4px",
+              gutter: "20px",
+              "sidebar-width": "260px",
+              xl: "32px",
+            },
+            fontFamily: {
+              "body-sm": ["Inter"],
+              "label-sm": ["JetBrains Mono"],
+              "body-lg": ["Inter"],
+              "display-lg": ["Hanken Grotesk"],
+              "body-md": ["Inter"],
+              "headline-md": ["Hanken Grotesk"],
+              "headline-sm": ["Hanken Grotesk"],
+              "label-md": ["JetBrains Mono"],
+            },
+            fontSize: {
+              "body-sm": ["13px", { lineHeight: "18px", fontWeight: "400" }],
+              "label-sm": ["10px", { lineHeight: "14px", fontWeight: "500" }],
+              "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+              "display-lg": [
+                "36px",
+                {
+                  lineHeight: "44px",
+                  letterSpacing: "-0.02em",
+                  fontWeight: "700",
+                },
+              ],
+              "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+              "headline-md": [
+                "24px",
+                {
+                  lineHeight: "32px",
+                  letterSpacing: "-0.01em",
+                  fontWeight: "600",
+                },
+              ],
+              "headline-sm": [
+                "18px",
+                { lineHeight: "24px", fontWeight: "600" },
+              ],
+              "label-md": [
+                "12px",
+                {
+                  lineHeight: "16px",
+                  letterSpacing: "0.02em",
+                  fontWeight: "500",
+                },
+              ],
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body class="flex min-h-screen">
+    <!-- Sidebar Navigation -->
+    <aside
+      class="w-[260px] h-screen sticky top-0 left-0 bg-surface-container border-r border-border-dark flex flex-col py-lg px-md z-50"
+    >
+      <div class="mb-xl px-sm">
+        <h1 class="font-headline-md text-headline-md font-bold text-primary">
+          ProjectFlow
+        </h1>
+        <p class="font-label-md text-label-md text-on-surface-variant">
+          Enterprise Tier
+        </p>
+      </div>
+      <button
+        class="mb-lg mx-sm bg-primary-container text-white py-sm px-md rounded-lg flex items-center justify-center gap-xs font-body-md text-body-md hover:bg-opacity-90 transition-all"
+      >
+        <span class="material-symbols-outlined text-[20px]">add</span>
+        New Project
+      </button>
+      <nav class="flex-1 space-y-xs">
+        <!-- Active: Projects -->
+        <a
+          class="flex items-center gap-md px-md py-sm rounded-lg text-primary font-semibold border-r-2 border-primary bg-surface-variant transition-colors group"
+          href="#"
+        >
+          <span class="material-symbols-outlined" data-icon="folder_open"
+            >folder_open</span
+          >
+          <span class="font-body-md text-body-md">Projects</span>
+        </a>
+        <a
+          class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-variant transition-colors group"
+          href="#"
+        >
+          <span class="material-symbols-outlined" data-icon="assignment"
+            >assignment</span
+          >
+          <span class="font-body-md text-body-md">Tasks</span>
+        </a>
+        <a
+          class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-variant transition-colors group"
+          href="#"
+        >
+          <span class="material-symbols-outlined" data-icon="group">group</span>
+          <span class="font-body-md text-body-md">Members</span>
+        </a>
+        <a
+          class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-variant transition-colors group"
+          href="#"
+        >
+          <span class="material-symbols-outlined" data-icon="bar_chart"
+            >bar_chart</span
+          >
+          <span class="font-body-md text-body-md">Analytics</span>
+        </a>
+        <a
+          class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-variant transition-colors group"
+          href="#"
+        >
+          <span class="material-symbols-outlined" data-icon="notifications"
+            >notifications</span
+          >
+          <span class="font-body-md text-body-md">Notifications</span>
+        </a>
+      </nav>
+      <div class="mt-auto space-y-xs pt-lg border-t border-border-dark">
+        <a
+          class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-variant transition-colors"
+          href="#"
+        >
+          <span
+            class="material-symbols-outlined"
+            data-icon="signal_cellular_alt"
+            >signal_cellular_alt</span
+          >
+          <span class="font-body-md text-body-md">System Status</span>
+        </a>
+        <a
+          class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-variant transition-colors"
+          href="#"
+        >
+          <span class="material-symbols-outlined" data-icon="settings"
+            >settings</span
+          >
+          <span class="font-body-md text-body-md">Settings</span>
+        </a>
+      </div>
+    </aside>
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col min-w-0">
+      <!-- Top App Bar -->
+      <header
+        class="h-16 w-full sticky top-0 z-40 bg-surface border-b border-border-dark flex justify-between items-center px-lg"
+      >
+        <div class="flex items-center gap-lg flex-1">
+          <h2 class="font-headline-sm text-headline-sm font-bold text-primary">
+            Orion Product Launch
+          </h2>
+          <div
+            class="hidden md:flex items-center bg-surface-container-high rounded-full px-md py-1.5 w-full max-w-md border border-border-dark"
+          >
+            <span
+              class="material-symbols-outlined text-on-surface-variant text-[20px] mr-2"
+              >search</span
+            >
+            <input
+              class="bg-transparent border-none focus:ring-0 text-body-sm text-on-surface placeholder:text-on-surface-variant w-full"
+              placeholder="Search tasks, docs, and assets..."
+              type="text"
+            />
+          </div>
+        </div>
+        <div class="flex items-center gap-md ml-lg">
+          <button
+            class="text-on-surface-variant hover:text-primary transition-opacity"
+          >
+            <span class="material-symbols-outlined" data-icon="contrast"
+              >contrast</span
+            >
+          </button>
+          <button
+            class="relative text-on-surface-variant hover:text-primary transition-opacity"
+          >
+            <span class="material-symbols-outlined" data-icon="notifications"
+              >notifications</span
+            >
+            <span
+              class="absolute top-0 right-0 w-2 h-2 bg-danger rounded-full"
+            ></span>
+          </button>
+          <div
+            class="h-8 w-8 rounded-full bg-secondary-container flex items-center justify-center border-2 border-surface-container-highest overflow-hidden"
+          >
+            <img
+              class="w-full h-full object-cover"
+              data-alt="Close-up professional portrait of a senior project manager with a calm and confident expression. The lighting is sophisticated and moody, consistent with a high-end enterprise software aesthetic using deep blues and cool tones. The person has short dark hair and is wearing a crisp charcoal suit against a minimalist studio background."
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCKyatNIm_0TQ6_1tw0JyO9VEUSZGVaWUJunVio1Hg36K6tOXrT_VH_iI51NW67TGnc9O32QceF1fU0sb3NmjtraFIeVZgB7wHQvP9z0OlYF4e2JX3bkmdNm90aACnPiETD0cGDsxGmMzzkKnpJXGjdyzPBaijtSOYE3rm4YObB8C3PuNidK3drdWPm9fOk1oP1x41uZVOD4K6n9m-oEo-ZG38NyeXkaHZvkOP0K7gzPMmVNu6it-VM9nm-POCOc8-cxnSWIswX-HkA"
+            />
+          </div>
+        </div>
+      </header>
+      <!-- Project Detail Canvas -->
+      <div
+        class="flex-1 p-lg max-w-max-width-dashboard mx-auto w-full overflow-y-auto custom-scrollbar"
+      >
+        <!-- Hero Header Section -->
+        <section
+          class="mb-xl flex flex-col md:flex-row md:items-end justify-between gap-lg"
+        >
+          <div class="flex-1">
+            <nav
+              class="flex items-center gap-xs text-on-surface-variant font-label-md text-label-md mb-xs"
+            >
+              <span>Projects</span>
+              <span class="material-symbols-outlined text-[14px]"
+                >chevron_right</span
+              >
+              <span class="text-primary">Orion Product Launch</span>
+            </nav>
+            <h1 class="font-display-lg text-display-lg text-on-surface mb-md">
+              Orion Product Launch
+            </h1>
+            <div class="flex flex-wrap items-center gap-lg">
+              <div class="flex items-center gap-sm">
+                <span
+                  class="bg-primary/10 text-primary px-sm py-xs rounded-full font-label-md text-label-md flex items-center gap-xs"
+                >
+                  <span
+                    class="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"
+                  ></span>
+                  In Progress
+                </span>
+                <span class="text-on-surface-variant font-body-sm text-body-sm"
+                  >Created Oct 24, 2023</span
+                >
+              </div>
+              <div class="flex items-center gap-md">
+                <div class="flex -space-x-3">
+                  <div
+                    class="w-8 h-8 rounded-full border-2 border-background overflow-hidden"
+                    title="Daniel Chen"
+                  >
+                    <img
+                      class="w-full h-full object-cover"
+                      data-alt="Professional avatar portrait of Daniel Chen, a male team member with glasses and a friendly smile. The image is styled with high contrast and a cool blue color palette to match the corporate professional theme. Lighting is soft yet defined, highlighting clear skin and professional attire."
+                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuCCNqFbIq4rZMdE08uoxzAP-fcYXHGsNo4erRk-KNw0cm2DkV1eub1WpNFT9lCgs0x3OJldAtyJ9K0gxflvVU0eb5wXRKD04QYNsAp79AyfSFYoFUBArMiBxGaMThBMWaslIaMxaLR7zV0_cU0sZ-bUSZteSNMlTQBKIU1stnXJXmM7AnY7KiqFTDDAMST5oSmfdZitls47xSnQ-TK6N74lve_dJAwNT0o_nwRQWZ1v-bg17M0G1HRrENVATc0KWA4d4L41P0eV0gUK"
+                    />
+                  </div>
+                  <div
+                    class="w-8 h-8 rounded-full border-2 border-background overflow-hidden"
+                    title="Maria Islam"
+                  >
+                    <img
+                      class="w-full h-full object-cover"
+                      data-alt="Professional avatar portrait of Maria Islam, a female team member with a confident and approachable gaze. The lighting is studio-quality with subtle blue highlights on the edges of her profile, fitting a dark-mode modern interface. The background is a deep, blurred navy blue."
+                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxBxFEsbDYz5XSmVeen5e1y8mDG_FfoKp5nGLc3W7fntgOhNAZZ6a3igb4Rb6L0PL5-MXLYngEi_e4xnOAkTj25KsOUE59LnJqVtWtbPuswi_xVB0B3uU_DkZUMw0eBq8WxsCKI_GxshEcOYeOJH3Gwy1nabxLPB3XL4fs5-xM2PlGilvzHhhn5TesYuAcNIIYKBMmaF6Dqg3GtuMpk_TJhvbApeFoDURYyyjR4FdV3JYlzaINK2YEvfhk1Qc5saUAzeX7MomqgvZX"
+                    />
+                  </div>
+                  <div
+                    class="w-8 h-8 rounded-full border-2 border-background overflow-hidden"
+                    title="Ayesha Rahman"
+                  >
+                    <img
+                      class="w-full h-full object-cover"
+                      data-alt="Professional headshot of Ayesha Rahman, a female tech professional. She is looking directly at the camera with a slight smile. The photography follows a sleek, enterprise aesthetic with sharp focus and a sophisticated lighting setup that complements the Azure Stratum theme's blue and navy tones."
+                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuBf9U3JSb3OvDIK6ZnHK0QXLu1YJK1gyVzOG3D3yF_N-lIEl7JMB01MMIYpDx_T0wUWinZojXOK9yVnel2F3Qbnd11_K5jRAoyUs9PUhtbTyItxwgYAtLNBafqU8o05VbwWV5StCgvNOTs1ivlsWZe1bbjUR8Ku6O_hUlX9vDyy_w9ztZi-0Ew-sBaHYSvYHHnW2hFjU77MpsM7_C8P67iJHJvwwBwCB2aaQXms7MFrYGinNe1XyRUHScFWM9jB4fCxjKWQZGmHutMv"
+                    />
+                  </div>
+                  <div
+                    class="w-8 h-8 rounded-full border-2 border-background bg-surface-container-highest flex items-center justify-center text-label-sm text-on-surface-variant"
+                  >
+                    +12
+                  </div>
+                </div>
+                <span
+                  class="text-on-surface-variant font-label-md text-label-md"
+                  >15 Members</span
+                >
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center gap-md">
+            <button
+              class="bg-surface-container border border-border-dark px-md py-sm rounded-lg font-body-md text-body-md text-on-surface hover:bg-surface-variant transition-colors flex items-center gap-xs"
+            >
+              <span class="material-symbols-outlined text-[18px]">group</span>
+              Manage Team
+            </button>
+            <button
+              class="bg-surface-container border border-border-dark px-md py-sm rounded-lg font-body-md text-body-md text-on-surface hover:bg-surface-variant transition-colors flex items-center gap-xs"
+            >
+              <span class="material-symbols-outlined text-[18px]"
+                >settings</span
+              >
+              Project Settings
+            </button>
+          </div>
+        </section>
+        <!-- Global Progress Bar -->
+        <div
+          class="mb-xl bg-surface-container-low border border-border-dark rounded-xl p-md"
+        >
+          <div class="flex justify-between items-center mb-sm">
+            <span class="font-headline-sm text-headline-sm text-on-surface"
+              >Overall Completion</span
+            >
+            <span class="font-label-md text-label-md text-primary">75%</span>
+          </div>
+          <div
+            class="w-full bg-surface-container-highest h-2 rounded-full overflow-hidden"
+          >
+            <div
+              class="h-full bg-gradient-to-r from-primary to-secondary w-3/4"
+            ></div>
+          </div>
+        </div>
+        <!-- Tab Navigation -->
+        <div class="border-b border-border-dark flex gap-lg mb-lg">
+          <button
+            class="pb-md px-xs font-body-md text-body-md text-primary border-b-2 border-primary transition-all"
+          >
+            Overview
+          </button>
+          <button
+            class="pb-md px-xs font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-all"
+          >
+            Board
+          </button>
+          <button
+            class="pb-md px-xs font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-all"
+          >
+            Tasks
+          </button>
+          <button
+            class="pb-md px-xs font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-all"
+          >
+            Members
+          </button>
+          <button
+            class="pb-md px-xs font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-all"
+          >
+            Activity
+          </button>
+          <button
+            class="pb-md px-xs font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-all"
+          >
+            Analytics
+          </button>
+        </div>
+        <!-- Overview Content - Bento Grid Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
+          <!-- Left Column: Description & Strategy -->
+          <div class="lg:col-span-2 space-y-lg">
+            <div
+              class="bg-surface-container rounded-xl p-lg border border-border-dark shadow-sm"
+            >
+              <h3
+                class="font-headline-sm text-headline-sm text-on-surface mb-md"
+              >
+                Project Description
+              </h3>
+              <p
+                class="font-body-md text-body-md text-on-surface-variant leading-relaxed"
+              >
+                The Orion Product Launch marks a pivotal milestone for our
+                enterprise ecosystem. We are transitioning from legacy
+                infrastructure to a high-concurrency cloud-native platform
+                designed to serve over 10 million daily active users. This
+                project encompasses end-to-end rebranding, API stabilization,
+                and the rollout of our proprietary Orion-Core analytics engine.
+              </p>
+              <div class="mt-lg grid grid-cols-2 gap-md">
+                <div
+                  class="p-md rounded-lg bg-surface-container-high border border-border-dark"
+                >
+                  <p
+                    class="text-label-sm text-on-surface-variant uppercase mb-1"
+                  >
+                    Target Deadline
+                  </p>
+                  <p class="text-headline-sm font-bold text-on-surface">
+                    Dec 15, 2024
+                  </p>
+                </div>
+                <div
+                  class="p-md rounded-lg bg-surface-container-high border border-border-dark"
+                >
+                  <p
+                    class="text-label-sm text-on-surface-variant uppercase mb-1"
+                  >
+                    Lead Architect
+                  </p>
+                  <p class="text-headline-sm font-bold text-on-surface">
+                    Daniel Chen
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div
+              class="bg-surface-container rounded-xl p-lg border border-border-dark shadow-sm"
+            >
+              <h3
+                class="font-headline-sm text-headline-sm text-on-surface mb-md"
+              >
+                Strategic Goals
+              </h3>
+              <div class="space-y-md">
+                <div class="flex items-start gap-md">
+                  <div class="p-2 rounded bg-primary/10 text-primary">
+                    <span class="material-symbols-outlined">rocket_launch</span>
+                  </div>
+                  <div>
+                    <h4
+                      class="font-body-md text-body-md font-semibold text-on-surface"
+                    >
+                      Market Disruption
+                    </h4>
+                    <p class="text-body-sm text-on-surface-variant">
+                      Achieve 25% increase in market share through Orion's
+                      unique predictive logic.
+                    </p>
+                  </div>
+                </div>
+                <div class="flex items-start gap-md">
+                  <div class="p-2 rounded bg-tertiary/10 text-tertiary">
+                    <span class="material-symbols-outlined">security</span>
+                  </div>
+                  <div>
+                    <h4
+                      class="font-body-md text-body-md font-semibold text-on-surface"
+                    >
+                      Zero-Trust Infrastructure
+                    </h4>
+                    <p class="text-body-sm text-on-surface-variant">
+                      Implement state-of-the-art security protocols for all
+                      enterprise clients.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Right Column: Milestones & Stats -->
+          <div class="space-y-lg">
+            <!-- Recent Milestones -->
+            <div
+              class="bg-surface-container rounded-xl p-lg border border-border-dark shadow-sm"
+            >
+              <div class="flex justify-between items-center mb-md">
+                <h3 class="font-headline-sm text-headline-sm text-on-surface">
+                  Recent Milestones
+                </h3>
+                <button
+                  class="text-primary font-label-md text-label-md hover:underline"
+                >
+                  View All
+                </button>
+              </div>
+              <div class="space-y-sm">
+                <label
+                  class="flex items-center gap-md p-md rounded-lg bg-surface-container-high cursor-pointer group hover:bg-surface-variant transition-colors border border-border-dark/50"
+                >
+                  <input
+                    checked=""
+                    class="w-4 h-4 rounded bg-surface-container border-border-dark text-primary focus:ring-primary focus:ring-offset-0"
+                    type="checkbox"
+                  />
+                  <div class="flex-1">
+                    <p
+                      class="font-body-md text-body-md text-on-surface line-through opacity-60"
+                    >
+                      Beta API Documentation
+                    </p>
+                    <p class="text-label-sm text-on-surface-variant">
+                      Completed Oct 12
+                    </p>
+                  </div>
+                  <span
+                    class="material-symbols-outlined text-success"
+                    data-weight="fill"
+                    style="font-variation-settings: &quot;FILL&quot; 1"
+                    >check_circle</span
+                  >
+                </label>
+                <label
+                  class="flex items-center gap-md p-md rounded-lg bg-surface-container-high cursor-pointer group hover:bg-surface-variant transition-colors border border-border-dark/50"
+                >
+                  <input
+                    checked=""
+                    class="w-4 h-4 rounded bg-surface-container border-border-dark text-primary focus:ring-primary focus:ring-offset-0"
+                    type="checkbox"
+                  />
+                  <div class="flex-1">
+                    <p
+                      class="font-body-md text-body-md text-on-surface line-through opacity-60"
+                    >
+                      UI Brand System v2
+                    </p>
+                    <p class="text-label-sm text-on-surface-variant">
+                      Completed Nov 02
+                    </p>
+                  </div>
+                  <span
+                    class="material-symbols-outlined text-success"
+                    data-weight="fill"
+                    style="font-variation-settings: &quot;FILL&quot; 1"
+                    >check_circle</span
+                  >
+                </label>
+                <label
+                  class="flex items-center gap-md p-md rounded-lg border border-primary/30 bg-primary/5 cursor-pointer group hover:bg-primary/10 transition-colors"
+                >
+                  <input
+                    class="w-4 h-4 rounded bg-surface-container border-primary/50 text-primary focus:ring-primary focus:ring-offset-0"
+                    type="checkbox"
+                  />
+                  <div class="flex-1">
+                    <p class="font-body-md text-body-md text-on-surface">
+                      Alpha User Testing
+                    </p>
+                    <p class="text-label-sm text-primary">In Progress - 80%</p>
+                  </div>
+                  <span
+                    class="material-symbols-outlined text-on-surface-variant"
+                    >sync</span
+                  >
+                </label>
+                <label
+                  class="flex items-center gap-md p-md rounded-lg bg-surface-container-high cursor-pointer group hover:bg-surface-variant transition-colors border border-border-dark/50"
+                >
+                  <input
+                    class="w-4 h-4 rounded bg-surface-container border-border-dark text-primary focus:ring-primary focus:ring-offset-0"
+                    type="checkbox"
+                  />
+                  <div class="flex-1">
+                    <p class="font-body-md text-body-md text-on-surface">
+                      Cloud Provider Migration
+                    </p>
+                    <p class="text-label-sm text-on-surface-variant">
+                      Target Nov 28
+                    </p>
+                  </div>
+                  <span
+                    class="material-symbols-outlined text-on-surface-variant"
+                    >schedule</span
+                  >
+                </label>
+              </div>
+            </div>
+            <!-- Task Distribution -->
+            <div
+              class="bg-surface-container rounded-xl p-lg border border-border-dark shadow-sm"
+            >
+              <h3
+                class="font-headline-sm text-headline-sm text-on-surface mb-md"
+              >
+                Task Metrics
+              </h3>
+              <div class="space-y-lg">
+                <div>
+                  <div class="flex justify-between text-label-md mb-xs">
+                    <span class="text-on-surface-variant">To Do</span>
+                    <span class="text-on-surface">12</span>
+                  </div>
+                  <div
+                    class="w-full h-1.5 bg-surface-container-highest rounded-full overflow-hidden"
+                  >
+                    <div class="bg-outline w-[30%] h-full"></div>
+                  </div>
+                </div>
+                <div>
+                  <div class="flex justify-between text-label-md mb-xs">
+                    <span class="text-on-surface-variant">Doing</span>
+                    <span class="text-on-surface">45</span>
+                  </div>
+                  <div
+                    class="w-full h-1.5 bg-surface-container-highest rounded-full overflow-hidden"
+                  >
+                    <div class="bg-primary w-[75%] h-full"></div>
+                  </div>
+                </div>
+                <div>
+                  <div class="flex justify-between text-label-md mb-xs">
+                    <span class="text-on-surface-variant">Done</span>
+                    <span class="text-on-surface">88</span>
+                  </div>
+                  <div
+                    class="w-full h-1.5 bg-surface-container-highest rounded-full overflow-hidden"
+                  >
+                    <div class="bg-success w-[100%] h-full"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <!-- FAB (Contextual for Dashboard/Home, but often suppressed on Details - however, since user asked for owner actions, we'll include a helper FAB for adding new tasks) -->
+    <button
+      class="fixed bottom-lg right-lg w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg hover:shadow-primary/20 flex items-center justify-center transition-all hover:scale-105 active:scale-95 z-50"
+    >
+      <span class="material-symbols-outlined text-[32px]">add_task</span>
+    </button>
+    <script>
+      // Micro-interactions
+      document
+        .querySelectorAll(".material-symbols-outlined")
+        .forEach((icon) => {
+          icon.addEventListener("mouseenter", () => {
+            icon.classList.add(
+              "transition-transform",
+              "duration-300",
+              "scale-110",
+            );
+          });
+          icon.addEventListener("mouseleave", () => {
+            icon.classList.remove("scale-110");
+          });
+        });
+
+      // Tab switching logic (Visual only)
+      const tabs = document.querySelectorAll(".pb-md");
+      tabs.forEach((tab) => {
+        tab.addEventListener("click", () => {
+          tabs.forEach((t) => {
+            t.classList.remove("text-primary", "border-primary");
+            t.classList.add("text-on-surface-variant");
+          });
+          tab.classList.add("text-primary", "border-primary");
+          tab.classList.remove("text-on-surface-variant");
+        });
+      });
+    </script>
+  </body>
+</html>

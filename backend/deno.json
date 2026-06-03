@@ -1,0 +1,48 @@
+{
+  "nodeModulesDir": "auto",
+  "lock": false,
+  "tasks": {
+    "dev": "deno run -A --watch src/server.ts",
+    "start": "deno run -A src/server.ts",
+    "prisma:generate": "deno run -A npm:prisma@5.22.0 generate",
+    "prisma:push": "deno run -A npm:prisma@5.22.0 db push",
+    "prisma:studio": "deno run -A npm:prisma@5.22.0 studio",
+    "seed": "deno run -A prisma/seed.ts",
+    "typecheck": "deno check src/**/*.ts prisma/seed.ts"
+  },
+  "imports": {
+    "@prisma/client": "npm:@prisma/client@5.22.0",
+    "hono": "npm:hono@4.6.10",
+    "hono/": "npm:hono@4.6.10/",
+    "zod": "npm:zod@3.23.8",
+    "bcryptjs": "npm:bcryptjs@2.4.3",
+    "jsonwebtoken": "npm:jsonwebtoken@9.0.2",
+    "@hono/swagger-ui": "npm:@hono/swagger-ui@0.5.0",
+    "@hono/zod-openapi": "npm:@hono/zod-openapi@0.19.2"
+  },
+  "compilerOptions": {
+    "lib": ["deno.window", "dom", "deno.ns"],
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true
+  },
+  "fmt": {
+    "lineWidth": 100,
+    "indentWidth": 2,
+    "useTabs": false,
+    "semiColons": true,
+    "singleQuote": false
+  },
+  "lint": {
+    "rules": {
+      "tags": ["recommended"]
+    }
+  },
+  "exclude": ["node_modules", "src/generated", ".deno"],
+  "allowScripts": [
+    "npm:@prisma/client@5.22.0",
+    "npm:@prisma/engines@5.22.0",
+    "npm:mongodb-memory-server@10.1.4",
+    "npm:prisma@5.22.0"
+  ]
+}

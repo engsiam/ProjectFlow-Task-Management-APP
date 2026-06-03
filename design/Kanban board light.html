@@ -1,0 +1,767 @@
+<!doctype html>
+<html class="light" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Hanken+Grotesk:wght@600;700;800&amp;family=JetBrains+Mono:wght@500&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f8fafc;
+      }
+      .material-symbols-outlined {
+        font-variation-settings:
+          "FILL" 0,
+          "wght" 400,
+          "GRAD" 0,
+          "opsz" 24;
+        vertical-align: middle;
+      }
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #e2e8f0;
+        border-radius: 10px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #cbd5e1;
+      }
+    </style>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-container-highest": "#E2E8F0",
+              "inverse-primary": "#2a5dac",
+              danger: "#EF4444",
+              secondary: "#2497e3",
+              "on-tertiary-fixed-variant": "#004b6f",
+              "tertiary-fixed": "#c9e6ff",
+              "surface-tint": "#2c5ead",
+              "text-dark": "#0F172A",
+              "on-secondary-fixed": "#001d32",
+              "surface-container": "#F1F5F9",
+              "inverse-surface": "#031427",
+              "on-surface": "#0F172A",
+              "primary-fixed-dim": "#acc7ff",
+              "on-error": "#FFFFFF",
+              "surface-dim": "#F8FAFC",
+              "bg-light": "#F8FAFC",
+              "on-tertiary-fixed": "#001e2f",
+              "surface-container-lowest": "#FFFFFF",
+              "secondary-container": "#d7e2ff",
+              "on-secondary": "#FFFFFF",
+              "on-primary-fixed-variant": "#004492",
+              "surface-variant": "#f1f5f9",
+              "on-primary-container": "#FFFFFF",
+              tertiary: "#006694",
+              "surface-light": "#FFFFFF",
+              "surface-dark": "#111827",
+              "surface-container-high": "#e2e8f0",
+              "on-secondary-container": "#002c48",
+              "surface-bright": "#FFFFFF",
+              "on-primary-fixed": "#001a40",
+              "secondary-fixed-dim": "#95ccff",
+              surface: "#FFFFFF",
+              "error-container": "#fee2e2",
+              outline: "#94a3b8",
+              "border-light": "#E2E8F0",
+              "on-background": "#0F172A",
+              "secondary-fixed": "#cde5ff",
+              "primary-fixed": "#d7e2ff",
+              "text-light": "#0F172A",
+              "tertiary-fixed-dim": "#8aceff",
+              error: "#ef4444",
+              "on-error-container": "#7f1d1d",
+              primary: "#2c5ead",
+              "tertiary-container": "#b9dfff",
+              "on-surface-variant": "#64748b",
+              "outline-variant": "#cbd5e1",
+              success: "#22C55E",
+              "on-tertiary": "#FFFFFF",
+              "border-dark": "#263247",
+              "on-tertiary-container": "#001e2f",
+              "bg-dark": "#0B1220",
+              "inverse-on-surface": "#F8FAFC",
+              "on-secondary-fixed-variant": "#004a75",
+              background: "#F8FAFC",
+              "card-dark": "#FFFFFF",
+              "surface-container-low": "#F8FAFC",
+              "on-primary": "#FFFFFF",
+              "primary-container": "#2c5ead",
+              warning: "#F59E0B",
+            },
+            borderRadius: {
+              DEFAULT: "0.25rem",
+              lg: "0.5rem",
+              xl: "0.75rem",
+              full: "9999px",
+            },
+            spacing: {
+              xs: "4px",
+              "max-width-dashboard": "1440px",
+              lg: "24px",
+              md: "16px",
+              sm: "8px",
+              unit: "4px",
+              gutter: "20px",
+              "sidebar-width": "260px",
+              xl: "32px",
+            },
+            fontFamily: {
+              "body-sm": ["Inter"],
+              "label-sm": ["JetBrains Mono"],
+              "body-lg": ["Inter"],
+              "display-lg": ["Hanken Grotesk"],
+              "body-md": ["Inter"],
+              "headline-md": ["Hanken Grotesk"],
+              "headline-sm": ["Hanken Grotesk"],
+              "label-md": ["JetBrains Mono"],
+            },
+            fontSize: {
+              "body-sm": ["13px", { lineHeight: "18px", fontWeight: "400" }],
+              "label-sm": ["10px", { lineHeight: "14px", fontWeight: "500" }],
+              "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+              "display-lg": [
+                "36px",
+                {
+                  lineHeight: "44px",
+                  letterSpacing: "-0.02em",
+                  fontWeight: "700",
+                },
+              ],
+              "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+              "headline-md": [
+                "24px",
+                {
+                  lineHeight: "32px",
+                  letterSpacing: "-0.01em",
+                  fontWeight: "600",
+                },
+              ],
+              "headline-sm": [
+                "18px",
+                { lineHeight: "24px", fontWeight: "600" },
+              ],
+              "label-md": [
+                "12px",
+                {
+                  lineHeight: "16px",
+                  letterSpacing: "0.02em",
+                  fontWeight: "500",
+                },
+              ],
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body class="bg-background text-on-background">
+    <div class="flex min-h-screen">
+      <!-- SideNavBar -->
+      <aside
+        class="w-[260px] h-screen sticky top-0 left-0 bg-surface-container border-r border-border-light flex flex-col py-lg px-md h-full z-50"
+      >
+        <div class="flex items-center gap-sm mb-xl">
+          <div
+            class="w-8 h-8 bg-primary rounded flex items-center justify-center text-on-primary"
+          >
+            <span
+              class="material-symbols-outlined text-[20px]"
+              data-weight="fill"
+              style="font-variation-settings: &quot;FILL&quot; 1"
+              >folder_open</span
+            >
+          </div>
+          <div>
+            <h1
+              class="font-headline-md text-headline-md font-bold text-primary"
+            >
+              ProjectFlow
+            </h1>
+            <p class="font-label-sm text-label-sm text-on-surface-variant">
+              Enterprise Tier
+            </p>
+          </div>
+        </div>
+        <button
+          class="w-full bg-primary text-on-primary py-sm px-md rounded-lg font-body-md text-body-md font-semibold flex items-center justify-center gap-xs mb-lg hover:bg-opacity-90 transition-all"
+        >
+          <span class="material-symbols-outlined text-[18px]">add</span>
+          New Project
+        </button>
+        <nav class="flex-1 space-y-xs">
+          <a
+            class="flex items-center gap-md px-md py-sm rounded-lg font-body-md text-body-md transition-colors hover:bg-surface-variant text-on-surface-variant"
+            href="#"
+          >
+            <span class="material-symbols-outlined" data-icon="folder_open"
+              >folder_open</span
+            >
+            Projects
+          </a>
+          <a
+            class="flex items-center gap-md px-md py-sm rounded-lg font-body-md text-body-md transition-colors text-primary font-semibold border-r-2 border-primary bg-surface-variant"
+            href="#"
+          >
+            <span class="material-symbols-outlined" data-icon="assignment"
+              >assignment</span
+            >
+            Tasks
+          </a>
+          <a
+            class="flex items-center gap-md px-md py-sm rounded-lg font-body-md text-body-md transition-colors hover:bg-surface-variant text-on-surface-variant"
+            href="#"
+          >
+            <span class="material-symbols-outlined" data-icon="group"
+              >group</span
+            >
+            Members
+          </a>
+          <a
+            class="flex items-center gap-md px-md py-sm rounded-lg font-body-md text-body-md transition-colors hover:bg-surface-variant text-on-surface-variant"
+            href="#"
+          >
+            <span class="material-symbols-outlined" data-icon="bar_chart"
+              >bar_chart</span
+            >
+            Analytics
+          </a>
+          <a
+            class="flex items-center gap-md px-md py-sm rounded-lg font-body-md text-body-md transition-colors hover:bg-surface-variant text-on-surface-variant"
+            href="#"
+          >
+            <span class="material-symbols-outlined" data-icon="notifications"
+              >notifications</span
+            >
+            Notifications
+          </a>
+        </nav>
+        <div class="pt-lg border-t border-border-light space-y-xs">
+          <a
+            class="flex items-center gap-md px-md py-sm rounded-lg font-body-md text-body-md transition-colors hover:bg-surface-variant text-on-surface-variant"
+            href="#"
+          >
+            <span
+              class="material-symbols-outlined"
+              data-icon="signal_cellular_alt"
+              >signal_cellular_alt</span
+            >
+            System Status
+          </a>
+          <a
+            class="flex items-center gap-md px-md py-sm rounded-lg font-body-md text-body-md transition-colors hover:bg-surface-variant text-on-surface-variant"
+            href="#"
+          >
+            <span class="material-symbols-outlined" data-icon="settings"
+              >settings</span
+            >
+            Settings
+          </a>
+          <div class="flex items-center gap-md px-md py-md mt-sm">
+            <img
+              alt="User Profile"
+              class="w-8 h-8 rounded-full border border-border-light"
+              data-alt="A professional headshot of a creative director in a bright, modern studio. The lighting is soft and natural, emphasizing a clean and professional corporate aesthetic. The background is a soft-focus office interior with minimalist decor in shades of light blue and slate gray."
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwsaHKc5Tb4Zi7JHMSwelaX_XVKOob4IjivVvGZvPMf80bbeSuxOVHzqaQM1leO5hlqJ_Q1_oHLQ7S7P_DJ6t6rANOnIdIuswb4XQCOrRv_py9UbEG9yMfTnN__XygqV6krCqCg7DrNzQyGf6mwix4ujMIk5Dljfwy3UrNdFfAln8wUGJ3eQh1AzXSE9GCjRC78NKEXNDCq11pwYQqQk87kE5IiuAArHN-XQihHqMlaTIRsCjuMW63UPkaTUSTUwLG52HglGAuqKKu"
+            />
+            <div class="overflow-hidden">
+              <p class="font-body-sm text-body-sm font-semibold truncate">
+                Alex Rivera
+              </p>
+              <p
+                class="font-label-sm text-label-sm text-on-surface-variant truncate"
+              >
+                Lead Architect
+              </p>
+            </div>
+          </div>
+        </div>
+      </aside>
+      <main class="flex-1 flex flex-col h-screen overflow-hidden">
+        <!-- TopAppBar -->
+        <header
+          class="h-16 w-full sticky top-0 z-40 bg-surface border-b border-border-light flex justify-between items-center px-lg shrink-0"
+        >
+          <div class="flex items-center gap-lg flex-1">
+            <h2
+              class="font-headline-sm text-headline-sm font-bold text-primary"
+            >
+              Dashboard
+            </h2>
+            <div class="relative w-full max-w-md">
+              <span
+                class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]"
+                >search</span
+              >
+              <input
+                class="w-full bg-surface-container border-none rounded-lg pl-10 py-1.5 font-body-md text-body-md focus:ring-1 focus:ring-primary"
+                placeholder="Search tasks, docs, or members..."
+                type="text"
+              />
+            </div>
+          </div>
+          <div class="flex items-center gap-md">
+            <div class="flex items-center -space-x-2 mr-md">
+              <img
+                class="w-7 h-7 rounded-full border-2 border-surface"
+                data-alt="Portrait of a female developer with a bright and friendly expression. The scene is a well-lit collaborative workspace with soft blue and white accents. High-key lighting creates a clean, corporate modern feel that aligns with high-performance SaaS environments."
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjZ4cKstkiBjwh9KBLxCr4nwdCrxELg8jYoz5v3rIy8gjJJLyJhAelrHeyYIsuwquK9AkeK768yG5GeqUXEjz3Ai-gubsQIC8D8Nyy989AgeUv7FaInYKEAWEjekfF0Jvrfjccr6Qsn45y39yWBRPHPKwSvUMOD7SyeCkslTW3hHMpJ0Qm1ZeYHTA8E93j2KHhXHaYZaVyLj7XI3IhEcf7I4lBVLrNtUJ9tN4GnGNd1CV1obfMBSNdQm3t7NFqkJKHKp_XZp2Wk-p6"
+              />
+              <img
+                class="w-7 h-7 rounded-full border-2 border-surface"
+                data-alt="A confident male product manager in a crisp white shirt, sitting in a sunlit modern boardroom. The image captures a precise and professional mood with sharp focus and a sophisticated blue-tinted color palette. The background features minimalist glass architecture."
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCJ2ZulG6yGpOev5HMZDD90lsWQ-yyd5NdMbfygnTo3czEGDhwQlXSz5uXgELRr6_6n10AXyv8zC-cx0c4duQbXic3kKyzqy6qiia02fZVmIMa3PePp7sV7of0yxMSZO8MAlR6mj16eXPeQ2LYzleDt1K52FCse5a0x-uPk6uEtc8ZS8_yujnCGuIfypn7ONQEdBUh6DpTkNoZzujVLmVy0wPuO9cKAbgnpPVzSFx3RUXh4TUAWxPuJKuVo0u6fZQ3qtA0-ntfjPYQY"
+              />
+              <div
+                class="w-7 h-7 rounded-full bg-surface-container-highest flex items-center justify-center border-2 border-surface text-label-sm font-bold text-primary"
+              >
+                +4
+              </div>
+            </div>
+            <button
+              class="p-2 rounded-full hover:bg-surface-variant text-on-surface-variant transition-colors"
+            >
+              <span class="material-symbols-outlined">notifications</span>
+            </button>
+            <button
+              class="p-2 rounded-full hover:bg-surface-variant text-on-surface-variant transition-colors"
+              onclick="document.documentElement.classList.toggle('dark')"
+            >
+              <span class="material-symbols-outlined">contrast</span>
+            </button>
+            <div class="h-6 w-[1px] bg-border-light mx-xs"></div>
+            <button
+              class="flex items-center gap-xs font-body-md text-body-md font-semibold text-primary px-3 py-1.5 rounded-lg border border-primary/20 hover:bg-primary/5"
+            >
+              Share
+            </button>
+          </div>
+        </header>
+        <!-- Kanban Content -->
+        <div
+          class="flex-1 overflow-x-auto overflow-y-hidden p-lg custom-scrollbar"
+        >
+          <div class="flex h-full gap-lg min-w-max">
+            <!-- Column: Backlog -->
+            <div
+              class="flex flex-col w-[320px] bg-surface-container rounded-xl"
+            >
+              <div
+                class="p-md flex items-center justify-between sticky top-0 bg-surface-container rounded-t-xl z-10"
+              >
+                <div class="flex items-center gap-sm">
+                  <span class="font-headline-sm text-headline-sm font-bold"
+                    >Backlog</span
+                  >
+                  <span
+                    class="px-2 py-0.5 bg-surface-container-highest rounded text-label-sm text-on-surface-variant font-bold"
+                    >8</span
+                  >
+                </div>
+                <button class="text-on-surface-variant hover:text-primary">
+                  <span class="material-symbols-outlined">more_horiz</span>
+                </button>
+              </div>
+              <div
+                class="flex-1 overflow-y-auto p-sm space-y-sm custom-scrollbar"
+              >
+                <!-- Task Card -->
+                <div
+                  class="bg-surface rounded-lg p-md shadow-[0_2px_8px_rgba(44,94,173,0.05)] border border-border-light relative overflow-hidden group hover:border-secondary transition-colors cursor-grab active:cursor-grabbing"
+                >
+                  <div
+                    class="absolute left-0 top-0 bottom-0 w-1 bg-warning"
+                  ></div>
+                  <div class="flex justify-between items-start mb-xs">
+                    <span
+                      class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider"
+                      >PF-104</span
+                    >
+                    <span
+                      class="material-symbols-outlined text-on-surface-variant text-[18px] opacity-0 group-hover:opacity-100 transition-opacity"
+                      >edit</span
+                    >
+                  </div>
+                  <h3
+                    class="font-body-md text-body-md font-semibold mb-sm line-clamp-2"
+                  >
+                    Research: Competitor API Rate Limits &amp; Webhook
+                    Structures
+                  </h3>
+                  <div class="flex flex-wrap gap-xs mb-md">
+                    <span
+                      class="px-2 py-0.5 rounded-full bg-secondary/10 text-secondary text-label-sm font-bold border border-secondary/20"
+                      >Research</span
+                    >
+                    <span
+                      class="px-2 py-0.5 rounded-full bg-warning/10 text-warning text-label-sm font-bold border border-warning/20"
+                      >Medium</span
+                    >
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <div class="flex -space-x-2">
+                      <img
+                        class="w-6 h-6 rounded-full border-2 border-surface"
+                        data-alt="A portrait of a male data analyst in a minimalist, tech-focused office environment. The image uses a cool, sophisticated palette of blues and whites, reflecting a professional and calm brand identity. High-key studio lighting ensures a crisp, clean aesthetic."
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuBPgVZLSOgGagKXCluSUUOjF1rX9Dsn4ZTr4wcDEftUn2meloyXhzmoszELY9G8kKQLc_-eFHKVd1I6aCs4fWRRrnvRroUmEFjJ6XT7b24zfgws6XRUe7GZhH0HiNgXqjFxBre1RIIZg9ttK0f-0LX0ruXvql4II6Q6wLedS-AHGdnHci6YbZLf5h_Vwy2_6vDycxSW9LHmZUViP61zYEFpAU-GrHrprLW2eZotgef5I4IFDNEd0V4d7wfzQi5vMMWKYvE0vGQ_ieaG"
+                      />
+                    </div>
+                    <div
+                      class="flex items-center gap-xs text-on-surface-variant"
+                    >
+                      <span class="material-symbols-outlined text-[14px]"
+                        >calendar_today</span
+                      >
+                      <span class="font-label-sm text-label-sm">Sep 12</span>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  class="bg-surface rounded-lg p-md shadow-[0_2px_8px_rgba(44,94,173,0.05)] border border-border-light relative overflow-hidden group hover:border-secondary transition-colors cursor-grab active:cursor-grabbing"
+                >
+                  <div
+                    class="absolute left-0 top-0 bottom-0 w-1 bg-border-light"
+                  ></div>
+                  <div class="flex justify-between items-start mb-xs">
+                    <span
+                      class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider"
+                      >PF-109</span
+                    >
+                  </div>
+                  <h3
+                    class="font-body-md text-body-md font-semibold mb-sm line-clamp-2"
+                  >
+                    Update documentation for v2.4 Auth Endpoints
+                  </h3>
+                  <div class="flex flex-wrap gap-xs mb-md">
+                    <span
+                      class="px-2 py-0.5 rounded-full bg-tertiary-container text-on-tertiary-container text-label-sm font-bold border border-tertiary/20"
+                      >Docs</span
+                    >
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <div class="flex -space-x-2">
+                      <img
+                        class="w-6 h-6 rounded-full border-2 border-surface"
+                        data-alt="A professional woman working in a high-tech corporate office. The background features sleek glass walls and a professional color scheme of navy blue and soft sky blue. The lighting is precise and modern, emphasizing the functional density of a high-performance workplace."
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuARkbZ_aU8zMZS3lElo_sa5t_xGg1Qfm3IpzcpIWpWh5BrGtG-QcrvL00utTxQqUUAvcBjeLWjP_04_ZK28dWDoz3PbB8rOCYoiShpf7NoHw6xXYQwEKRLD9FPh3i-oE6Qn21T3PLIJUP0cKXTr1k--WzO0EFjQwFEED5x6gW02xNvO37M8oDEkLgCdymtsixU6g1dZklwHAFrvOao1jVKGz-8umgfFr_EtwTRgZ-26b37EWC_qhFrWY-CupIiXzdf9kthfcOkN2-qd"
+                      />
+                    </div>
+                    <div
+                      class="flex items-center gap-xs text-on-surface-variant"
+                    >
+                      <span class="material-symbols-outlined text-[14px]"
+                        >attach_file</span
+                      >
+                      <span class="font-label-sm text-label-sm">3</span>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  class="w-full py-3 border-2 border-dashed border-border-light rounded-lg font-body-sm text-on-surface-variant hover:border-primary hover:text-primary transition-all flex items-center justify-center gap-xs"
+                >
+                  <span class="material-symbols-outlined">add</span> Add Task
+                </button>
+              </div>
+            </div>
+            <!-- Column: In Progress -->
+            <div
+              class="flex flex-col w-[320px] bg-surface-container rounded-xl"
+            >
+              <div
+                class="p-md flex items-center justify-between sticky top-0 bg-surface-container rounded-t-xl z-10"
+              >
+                <div class="flex items-center gap-sm">
+                  <span class="font-headline-sm text-headline-sm font-bold"
+                    >In Progress</span
+                  >
+                  <span
+                    class="px-2 py-0.5 bg-primary/10 text-primary rounded text-label-sm font-bold"
+                    >4</span
+                  >
+                </div>
+                <button class="text-on-surface-variant hover:text-primary">
+                  <span class="material-symbols-outlined">more_horiz</span>
+                </button>
+              </div>
+              <div
+                class="flex-1 overflow-y-auto p-sm space-y-sm custom-scrollbar"
+              >
+                <div
+                  class="bg-surface rounded-lg p-md shadow-[0_2px_8px_rgba(44,94,173,0.05)] border border-border-light relative overflow-hidden group hover:border-secondary transition-colors cursor-grab active:cursor-grabbing"
+                >
+                  <div
+                    class="absolute left-0 top-0 bottom-0 w-1 bg-danger"
+                  ></div>
+                  <div class="flex justify-between items-start mb-xs">
+                    <span
+                      class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider"
+                      >PF-98</span
+                    >
+                    <span
+                      class="flex items-center gap-xs px-2 py-0.5 bg-danger/10 text-danger rounded-full text-[10px] font-bold"
+                      >Urgently Required</span
+                    >
+                  </div>
+                  <h3
+                    class="font-body-md text-body-md font-semibold mb-sm line-clamp-2"
+                  >
+                    Fix: Race condition in multi-tenant session validation
+                  </h3>
+                  <div
+                    class="w-full bg-surface-container-highest h-[6px] rounded-full mb-md overflow-hidden"
+                  >
+                    <div
+                      class="bg-gradient-to-r from-primary to-secondary h-full w-[65%]"
+                    ></div>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <div class="flex -space-x-2">
+                      <img
+                        class="w-6 h-6 rounded-full border-2 border-surface"
+                        data-alt="A technical lead looking intently at a high-resolution monitor in a darkened but vibrant office space. The scene is illuminated by the soft glow of screens and subtle blue accent lights, creating a mood of deep focus and mechanical elegance."
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCOdPuQ1NcG7froo8iXEqnCRTwNvfoYMwaKhysYH3cjAvR7cTB3uUt-jKe6xz4gOujp1tpb1zeJkMp6Mq0SK3kCl7DPO4f8kUSbqoYZuHfyrzfRqs0KAnoYfebMgqYc14Tc3bJnRwI-6LJOd3dnvjexacYwL5kfwCBda118IhOh672szlpUwmVqIPfqOwPfRm_bLHl6-krdQu9X2e9MS-ax-Z0N1CFn3l9jbzYCxjw8F1LSJHzch5LFp2nNDPea3Rrvm7EqWsBdPoa4"
+                      />
+                      <img
+                        class="w-6 h-6 rounded-full border-2 border-surface"
+                        data-alt="A portrait of a male data analyst in a minimalist, tech-focused office environment. The image uses a cool, sophisticated palette of blues and whites, reflecting a professional and calm brand identity. High-key studio lighting ensures a crisp, clean aesthetic."
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDm-YH3kpfcwc3IMEqh6aLP6Eq9sYg0Ix40ILZT32kfGqPNs28lfhrL0LnOONo0qUB23O6kJ6DvClyGo8gtBbWVh3HBd0gVXoAY7mG1o_AHyhe3JYXOzOw3t2g8cFSyL71M2TZIDKpfatDZBcMYFJKb_MvHnaRp1QXbWXGX_c24OZFLhbKlfooxhUjG8hHXIp_2LYpCBKLB4wiLX94qv2At2-tpbEXhYLkzqFNYCVqVpxGXjKWofXtGp-VK60Q-xmc2bRj4RBKd2qgF"
+                      />
+                    </div>
+                    <div class="flex items-center gap-md">
+                      <div
+                        class="flex items-center gap-xs text-on-surface-variant"
+                      >
+                        <span class="material-symbols-outlined text-[14px]"
+                          >chat_bubble_outline</span
+                        >
+                        <span class="font-label-sm text-label-sm">12</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  class="bg-surface rounded-lg p-md shadow-[0_2px_8px_rgba(44,94,173,0.05)] border border-border-light relative overflow-hidden group hover:border-secondary transition-colors cursor-grab active:cursor-grabbing"
+                >
+                  <div
+                    class="absolute left-0 top-0 bottom-0 w-1 bg-primary"
+                  ></div>
+                  <div class="flex justify-between items-start mb-xs">
+                    <span
+                      class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider"
+                      >PF-101</span
+                    >
+                  </div>
+                  <h3
+                    class="font-body-md text-body-md font-semibold mb-sm line-clamp-2"
+                  >
+                    Implement fluid-fixed hybrid grid for Dashboard layout
+                  </h3>
+                  <div class="flex flex-wrap gap-xs mb-md">
+                    <span
+                      class="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-label-sm font-bold border border-primary/20"
+                      >Frontend</span
+                    >
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <div class="flex -space-x-2">
+                      <img
+                        class="w-6 h-6 rounded-full border-2 border-surface"
+                        data-alt="A front-end developer working in a minimalist studio. The lighting is soft and daylight-balanced, highlighting a desk with high-end tech tools. The aesthetic is clean, modern, and professional, using a corporate blue and white color scheme."
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2twav0k8yMLSBfOOj6EFu5bisgQK4xHvuYw5LFIUKudDWhlnljvqdm5gyyhtmTRcf7S1r5JRsXgMaG3XJP8v5koz3C9BG8f7SxjqdriZB4RFW-kHurWBauwQd0KuaWdujxp74f3ZSXI_C70xiO1J08K3It8_u-Qt7PuBDYRtJTWbZp-c6F-Gga0_4chLgoCA6Qh-WhYUJzTWWszi9XGYreJdK0mpV-DMbTxOoiz1D0WcY-CYaXor3CpkUVEtcicfeaNv0PnWGOKPY"
+                      />
+                    </div>
+                    <div
+                      class="flex items-center gap-xs text-on-surface-variant"
+                    >
+                      <span class="material-symbols-outlined text-[14px]"
+                        >hourglass_empty</span
+                      >
+                      <span class="font-label-sm text-label-sm">2d left</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Column: Code Review -->
+            <div
+              class="flex flex-col w-[320px] bg-surface-container rounded-xl"
+            >
+              <div
+                class="p-md flex items-center justify-between sticky top-0 bg-surface-container rounded-t-xl z-10"
+              >
+                <div class="flex items-center gap-sm">
+                  <span class="font-headline-sm text-headline-sm font-bold"
+                    >Review</span
+                  >
+                  <span
+                    class="px-2 py-0.5 bg-surface-container-highest rounded text-label-sm text-on-surface-variant font-bold"
+                    >2</span
+                  >
+                </div>
+                <button class="text-on-surface-variant hover:text-primary">
+                  <span class="material-symbols-outlined">more_horiz</span>
+                </button>
+              </div>
+              <div
+                class="flex-1 overflow-y-auto p-sm space-y-sm custom-scrollbar"
+              >
+                <div
+                  class="bg-surface rounded-lg p-md shadow-[0_2px_8px_rgba(44,94,173,0.05)] border border-border-light relative overflow-hidden group hover:border-secondary transition-colors cursor-grab active:cursor-grabbing"
+                >
+                  <div
+                    class="absolute left-0 top-0 bottom-0 w-1 bg-warning"
+                  ></div>
+                  <div class="flex justify-between items-start mb-xs">
+                    <span
+                      class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider"
+                      >PF-112</span
+                    >
+                  </div>
+                  <h3
+                    class="font-body-md text-body-md font-semibold mb-sm line-clamp-2"
+                  >
+                    Refactor state management using atomic stores
+                  </h3>
+                  <div class="flex items-center justify-between mt-md">
+                    <div class="flex items-center gap-sm">
+                      <img
+                        class="w-6 h-6 rounded-full border-2 border-surface"
+                        data-alt="A professional headshot of a creative director in a bright, modern studio. The lighting is soft and natural, emphasizing a clean and professional corporate aesthetic. The background is a soft-focus office interior with minimalist decor in shades of light blue and slate gray."
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSBWQV5kX4_Zp-v8ko0DM6x86spaXFUNZZbb14F6kL5rCtYBQjxY6o0s7aZ2LKgpu1Lm3Dd3fQb1X11QL9TNsjJgyb1GS6rEohwy7jKPEqe05Xw_SyR3Ni1H-bzoXRdwhkXJsi2gGvwcXKH4OE2sxoUtq5N_dMoki9VKCjnnA4JVmWDJjYqo08DqleECoQQv5ExuVpTQPbcSVSrkaU2PQaCPq1H3SpO6wdYtIjUW3EI5ToWGo5pU4gA66T7DVYCSCj99X9NTwME6k0"
+                      />
+                      <span
+                        class="font-body-sm text-body-sm text-on-surface-variant italic"
+                        >Waiting for feedback...</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Column: Done -->
+            <div
+              class="flex flex-col w-[320px] bg-surface-container rounded-xl"
+            >
+              <div
+                class="p-md flex items-center justify-between sticky top-0 bg-surface-container rounded-t-xl z-10"
+              >
+                <div class="flex items-center gap-sm">
+                  <span class="font-headline-sm text-headline-sm font-bold"
+                    >Done</span
+                  >
+                  <span
+                    class="px-2 py-0.5 bg-success/10 text-success rounded text-label-sm font-bold"
+                    >12</span
+                  >
+                </div>
+                <button class="text-on-surface-variant hover:text-primary">
+                  <span class="material-symbols-outlined">check_circle</span>
+                </button>
+              </div>
+              <div
+                class="flex-1 overflow-y-auto p-sm space-y-sm custom-scrollbar"
+              >
+                <div
+                  class="bg-surface/60 rounded-lg p-md shadow-none border border-border-light opacity-80 group cursor-default"
+                >
+                  <div class="flex justify-between items-start mb-xs">
+                    <span
+                      class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider line-through"
+                      >PF-85</span
+                    >
+                    <span
+                      class="material-symbols-outlined text-success text-[18px]"
+                      >check_circle</span
+                    >
+                  </div>
+                  <h3
+                    class="font-body-md text-body-md font-semibold mb-sm line-clamp-2 text-on-surface-variant"
+                  >
+                    Email template system migration to MJML
+                  </h3>
+                  <div class="flex items-center justify-between">
+                    <div class="flex -space-x-2">
+                      <div
+                        class="w-6 h-6 rounded-full bg-surface-container-highest border-2 border-surface flex items-center justify-center text-[10px] font-bold"
+                      >
+                        MK
+                      </div>
+                    </div>
+                    <span
+                      class="px-2 py-0.5 rounded bg-success/10 text-success text-[10px] font-bold"
+                      >COMPLETED</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Add Column Button -->
+            <div class="w-[320px] h-full flex items-start">
+              <button
+                class="w-full flex items-center justify-center gap-sm py-4 border-2 border-dashed border-border-light rounded-xl font-body-md text-on-surface-variant hover:bg-surface-container hover:border-primary/50 hover:text-primary transition-all"
+              >
+                <span class="material-symbols-outlined">add</span>
+                Add Status Column
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+    <!-- Floating Action Button (Supressed on Details/Settings as per Mandate, but kept on Dashboard) -->
+    <button
+      class="fixed bottom-8 right-8 w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform active:scale-95 group z-50"
+    >
+      <span
+        class="material-symbols-outlined text-[28px] transition-transform group-hover:rotate-90"
+        >add</span
+      >
+    </button>
+    <script>
+      // Micro-interaction for column hover effects
+      const columns = document.querySelectorAll(".bg-surface-container");
+      columns.forEach((col) => {
+        col.addEventListener("mouseenter", () => {
+          col.classList.add("shadow-sm");
+        });
+        col.addEventListener("mouseleave", () => {
+          col.classList.remove("shadow-sm");
+        });
+      });
+
+      // Simple task card interaction demo
+      const taskCards = document.querySelectorAll(".bg-surface.rounded-lg");
+      taskCards.forEach((card) => {
+        card.addEventListener("mousedown", () => {
+          card.classList.add("scale-[0.98]", "shadow-none");
+        });
+        card.addEventListener("mouseup", () => {
+          card.classList.remove("scale-[0.98]");
+          card.classList.add("shadow-[0_2px_8px_rgba(44,94,173,0.05)]");
+        });
+      });
+    </script>
+  </body>
+</html>

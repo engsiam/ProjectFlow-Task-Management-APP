@@ -1,0 +1,1080 @@
+<!doctype html>
+<html class="dark" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Developer Handoff: Azure Stratum UI</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Hanken+Grotesk:wght@600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings:
+          "FILL" 0,
+          "wght" 400,
+          "GRAD" 0,
+          "opsz" 24;
+      }
+      .token-card {
+        transition:
+          transform 0.2s ease,
+          box-shadow 0.2s ease;
+      }
+      .token-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(44, 94, 173, 0.15);
+      }
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #031427;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #26364a;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #2c5ead;
+      }
+    </style>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "text-dark": "#F8FAFC",
+              outline: "#8d909d",
+              "on-tertiary-fixed-variant": "#004b6f",
+              "surface-container-low": "#0b1c30",
+              "error-container": "#93000a",
+              "on-secondary-fixed": "#001d32",
+              "on-background": "#d3e4fe",
+              "surface-container-highest": "#26364a",
+              "on-secondary-fixed-variant": "#004a75",
+              "border-dark": "#263247",
+              "primary-fixed": "#d7e2ff",
+              "surface-container": "#102034",
+              secondary: "#95ccff",
+              "surface-bright": "#2a3a4f",
+              surface: "#031427",
+              "on-tertiary": "#00344e",
+              success: "#22C55E",
+              "tertiary-fixed-dim": "#8aceff",
+              background: "#031427",
+              "tertiary-fixed": "#c9e6ff",
+              "surface-container-high": "#1b2b3f",
+              "on-surface": "#d3e4fe",
+              "on-primary-fixed-variant": "#004492",
+              "surface-dim": "#031427",
+              "on-secondary-container": "#002c48",
+              "surface-variant": "#26364a",
+              "surface-light": "#FFFFFF",
+              tertiary: "#8aceff",
+              "primary-container": "#2c5ead",
+              "inverse-surface": "#d3e4fe",
+              "text-light": "#0F172A",
+              warning: "#F59E0B",
+              "card-dark": "#172033",
+              "on-secondary": "#003352",
+              "border-light": "#E2E8F0",
+              "on-error": "#690005",
+              "on-surface-variant": "#c3c6d3",
+              error: "#ffb4ab",
+              primary: "#acc7ff",
+              "tertiary-container": "#006694",
+              "inverse-primary": "#2a5dac",
+              "on-tertiary-fixed": "#001e2f",
+              "on-primary-fixed": "#001a40",
+              "bg-light": "#F8FAFC",
+              "surface-dark": "#111827",
+              "secondary-fixed": "#cde5ff",
+              "on-primary-container": "#cbdaff",
+              "inverse-on-surface": "#213145",
+              "secondary-container": "#2497e3",
+              "on-error-container": "#ffdad6",
+              "surface-tint": "#acc7ff",
+              "on-primary": "#002f68",
+              "secondary-fixed-dim": "#95ccff",
+              danger: "#EF4444",
+              "bg-dark": "#0B1220",
+              "outline-variant": "#434751",
+              "surface-container-lowest": "#000f21",
+              "primary-fixed-dim": "#acc7ff",
+              "on-tertiary-container": "#b9dfff",
+            },
+            borderRadius: {
+              DEFAULT: "0.25rem",
+              lg: "0.5rem",
+              xl: "0.75rem",
+              full: "9999px",
+            },
+            spacing: {
+              gutter: "20px",
+              unit: "4px",
+              xs: "4px",
+              "sidebar-width": "260px",
+              "max-width-dashboard": "1440px",
+              md: "16px",
+              xl: "32px",
+              sm: "8px",
+              lg: "24px",
+            },
+            fontFamily: {
+              "headline-sm": ["Hanken Grotesk"],
+              "body-md": ["Inter"],
+              "body-lg": ["Inter"],
+              "display-lg": ["Hanken Grotesk"],
+              "label-sm": ["JetBrains Mono"],
+              "label-md": ["JetBrains Mono"],
+              "headline-md": ["Hanken Grotesk"],
+              "body-sm": ["Inter"],
+            },
+            fontSize: {
+              "headline-sm": [
+                "18px",
+                { lineHeight: "24px", fontWeight: "600" },
+              ],
+              "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+              "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+              "display-lg": [
+                "36px",
+                {
+                  lineHeight: "44px",
+                  letterSpacing: "-0.02em",
+                  fontWeight: "700",
+                },
+              ],
+              "label-sm": ["10px", { lineHeight: "14px", fontWeight: "500" }],
+              "label-md": [
+                "12px",
+                {
+                  lineHeight: "16px",
+                  letterSpacing: "0.02em",
+                  fontWeight: "500",
+                },
+              ],
+              "headline-md": [
+                "24px",
+                {
+                  lineHeight: "32px",
+                  letterSpacing: "-0.01em",
+                  fontWeight: "600",
+                },
+              ],
+              "body-sm": ["13px", { lineHeight: "18px", fontWeight: "400" }],
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body class="bg-surface text-on-surface font-body-md overflow-x-hidden">
+    <!-- Top Navigation Anchor -->
+    <header
+      class="h-16 w-full sticky top-0 z-40 bg-surface border-b border-border-dark flex justify-between items-center px-lg w-full max-w-max-width-dashboard mx-auto"
+    >
+      <div class="flex items-center gap-md">
+        <span
+          class="material-symbols-outlined text-primary"
+          style="font-variation-settings: &quot;FILL&quot; 1"
+          >architecture</span
+        >
+        <div>
+          <h1 class="font-headline-sm text-headline-sm font-bold text-primary">
+            Developer Handoff
+          </h1>
+          <p class="text-[10px] uppercase tracking-widest text-outline">
+            Azure Stratum UI v2.4.0 • Updated Feb 2024
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center gap-sm">
+        <button
+          class="px-md py-xs rounded bg-primary-container text-on-primary-container font-semibold flex items-center gap-xs hover:opacity-90 transition-opacity"
+        >
+          <span class="material-symbols-outlined text-[18px]">download</span>
+          Export Assets
+        </button>
+        <button
+          class="p-xs rounded hover:bg-surface-variant transition-colors"
+          onclick="document.documentElement.classList.toggle('dark')"
+        >
+          <span class="material-symbols-outlined">contrast</span>
+        </button>
+      </div>
+    </header>
+    <div class="flex max-w-max-width-dashboard mx-auto min-h-screen relative">
+      <!-- Documentation Sidebar -->
+      <aside
+        class="w-[260px] h-[calc(100vh-64px)] sticky top-16 left-0 border-r border-border-dark bg-surface-container py-lg px-md hidden md:flex flex-col gap-sm overflow-y-auto"
+      >
+        <nav class="flex flex-col gap-xs">
+          <a
+            class="px-md py-sm rounded text-primary font-semibold border-r-2 border-primary bg-surface-variant flex items-center gap-md"
+            href="#colors"
+          >
+            <span class="material-symbols-outlined text-[20px]">palette</span>
+            Colors
+          </a>
+          <a
+            class="px-md py-sm rounded text-on-surface-variant hover:bg-surface-variant transition-colors flex items-center gap-md"
+            href="#typography"
+          >
+            <span class="material-symbols-outlined text-[20px]"
+              >text_format</span
+            >
+            Typography
+          </a>
+          <a
+            class="px-md py-sm rounded text-on-surface-variant hover:bg-surface-variant transition-colors flex items-center gap-md"
+            href="#spacing"
+          >
+            <span class="material-symbols-outlined text-[20px]">grid_4x4</span>
+            Spacing &amp; Grid
+          </a>
+          <a
+            class="px-md py-sm rounded text-on-surface-variant hover:bg-surface-variant transition-colors flex items-center gap-md"
+            href="#components"
+          >
+            <span class="material-symbols-outlined text-[20px]">widgets</span>
+            Components
+          </a>
+          <a
+            class="px-md py-sm rounded text-on-surface-variant hover:bg-surface-variant transition-colors flex items-center gap-md"
+            href="#layout"
+          >
+            <span class="material-symbols-outlined text-[20px]"
+              >view_quilt</span
+            >
+            Layout Specs
+          </a>
+          <a
+            class="px-md py-sm rounded text-on-surface-variant hover:bg-surface-variant transition-colors flex items-center gap-md"
+            href="#tech"
+          >
+            <span class="material-symbols-outlined text-[20px]">code</span>
+            Technical Notes
+          </a>
+        </nav>
+        <div class="mt-auto pt-lg border-t border-border-dark">
+          <div
+            class="flex items-center gap-sm px-md py-sm rounded bg-surface-container-high border border-border-dark"
+          >
+            <div
+              class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold"
+            >
+              JD
+            </div>
+            <div class="overflow-hidden">
+              <p class="font-bold text-on-surface truncate">Lead Designer</p>
+              <p class="text-[10px] text-outline">Verified Spec</p>
+            </div>
+          </div>
+        </div>
+      </aside>
+      <!-- Main Content Area -->
+      <main class="flex-1 p-lg md:p-xl flex flex-col gap-xl">
+        <!-- Section: Color Tokens -->
+        <section class="scroll-mt-24" id="colors">
+          <div class="mb-lg flex justify-between items-end">
+            <div>
+              <h2 class="font-headline-md text-headline-md text-on-surface">
+                Color Tokens
+              </h2>
+              <p class="text-on-surface-variant">
+                Strategic palette mapping for Azure Stratum system.
+              </p>
+            </div>
+            <span
+              class="px-sm py-1 bg-surface-container-high border border-border-dark rounded font-label-sm text-label-sm text-outline"
+              >Palette: DOCUMENT_10</span
+            >
+          </div>
+          <div class="grid grid-cols-1 xl:grid-cols-2 gap-lg">
+            <!-- Brand & Primary -->
+            <div
+              class="bg-surface-container-low p-lg rounded-xl border border-border-dark flex flex-col gap-md"
+            >
+              <h3
+                class="font-label-md text-label-md text-primary uppercase tracking-widest"
+              >
+                Brand Identity
+              </h3>
+              <div class="grid grid-cols-2 gap-sm">
+                <div
+                  class="token-card bg-[#2C5EAD] p-md rounded-lg h-32 flex flex-col justify-end text-white border border-white/10"
+                >
+                  <span class="font-label-sm text-label-sm opacity-80"
+                    >Primary Blue</span
+                  >
+                  <span class="font-bold font-label-md text-label-md"
+                    >#2C5EAD</span
+                  >
+                </div>
+                <div
+                  class="token-card bg-[#1591DC] p-md rounded-lg h-32 flex flex-col justify-end text-white border border-white/10"
+                >
+                  <span class="font-label-sm text-label-sm opacity-80"
+                    >Accent Sky</span
+                  >
+                  <span class="font-bold font-label-md text-label-md"
+                    >#1591DC</span
+                  >
+                </div>
+              </div>
+            </div>
+            <!-- Semantic Colors -->
+            <div
+              class="bg-surface-container-low p-lg rounded-xl border border-border-dark flex flex-col gap-md"
+            >
+              <h3
+                class="font-label-md text-label-md text-primary uppercase tracking-widest"
+              >
+                Semantic &amp; Feedback
+              </h3>
+              <div class="grid grid-cols-3 gap-sm">
+                <div
+                  class="token-card bg-success p-md rounded-lg h-32 flex flex-col justify-end text-black border border-black/10"
+                >
+                  <span class="font-label-sm text-label-sm opacity-80"
+                    >Success</span
+                  >
+                  <span class="font-bold font-label-md text-label-md"
+                    >#22C55E</span
+                  >
+                </div>
+                <div
+                  class="token-card bg-warning p-md rounded-lg h-32 flex flex-col justify-end text-black border border-black/10"
+                >
+                  <span class="font-label-sm text-label-sm opacity-80"
+                    >Warning</span
+                  >
+                  <span class="font-bold font-label-md text-label-md"
+                    >#F59E0B</span
+                  >
+                </div>
+                <div
+                  class="token-card bg-danger p-md rounded-lg h-32 flex flex-col justify-end text-white border border-white/10"
+                >
+                  <span class="font-label-sm text-label-sm opacity-80"
+                    >Danger</span
+                  >
+                  <span class="font-bold font-label-md text-label-md"
+                    >#EF4444</span
+                  >
+                </div>
+              </div>
+            </div>
+            <!-- Neutral Scale (Dark Mode Shown) -->
+            <div
+              class="bg-surface-container-low p-lg rounded-xl border border-border-dark flex flex-col gap-md xl:col-span-2"
+            >
+              <h3
+                class="font-label-md text-label-md text-primary uppercase tracking-widest"
+              >
+                Surfaces &amp; Borders (Dark Mode Core)
+              </h3>
+              <div
+                class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-sm"
+              >
+                <div
+                  class="token-card bg-[#031427] border border-border-dark p-sm rounded flex flex-col text-on-surface"
+                >
+                  <div
+                    class="w-full aspect-square bg-[#031427] rounded mb-sm"
+                  ></div>
+                  <span class="text-[10px] opacity-60">Background</span>
+                  <span class="font-label-sm text-label-sm">#031427</span>
+                </div>
+                <div
+                  class="token-card bg-[#102034] border border-border-dark p-sm rounded flex flex-col text-on-surface"
+                >
+                  <div
+                    class="w-full aspect-square bg-[#102034] rounded mb-sm"
+                  ></div>
+                  <span class="text-[10px] opacity-60">Surface</span>
+                  <span class="font-label-sm text-label-sm">#102034</span>
+                </div>
+                <div
+                  class="token-card bg-[#172033] border border-border-dark p-sm rounded flex flex-col text-on-surface"
+                >
+                  <div
+                    class="w-full aspect-square bg-[#172033] rounded mb-sm"
+                  ></div>
+                  <span class="text-[10px] opacity-60">Card Base</span>
+                  <span class="font-label-sm text-label-sm">#172033</span>
+                </div>
+                <div
+                  class="token-card bg-[#263247] border border-border-dark p-sm rounded flex flex-col text-on-surface"
+                >
+                  <div
+                    class="w-full aspect-square bg-[#263247] rounded mb-sm"
+                  ></div>
+                  <span class="text-[10px] opacity-60">Border Dark</span>
+                  <span class="font-label-sm text-label-sm">#263247</span>
+                </div>
+                <div
+                  class="token-card bg-[#26364a] border border-border-dark p-sm rounded flex flex-col text-on-surface"
+                >
+                  <div
+                    class="w-full aspect-square bg-[#26364a] rounded mb-sm"
+                  ></div>
+                  <span class="text-[10px] opacity-60">Variant</span>
+                  <span class="font-label-sm text-label-sm">#26364a</span>
+                </div>
+                <div
+                  class="token-card bg-[#acc7ff] border border-border-dark p-sm rounded flex flex-col text-[#002f68]"
+                >
+                  <div
+                    class="w-full aspect-square bg-[#acc7ff] rounded mb-sm"
+                  ></div>
+                  <span class="text-[10px] opacity-60">On-Surface</span>
+                  <span class="font-label-sm text-label-sm">#ACC7FF</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <!-- Section: Typography Scale -->
+        <section class="scroll-mt-24" id="typography">
+          <div class="mb-lg">
+            <h2 class="font-headline-md text-headline-md text-on-surface">
+              Typography Scale
+            </h2>
+            <p class="text-on-surface-variant">
+              The technical hierarchy for Hanken Grotesk and Inter pairings.
+            </p>
+          </div>
+          <div
+            class="bg-surface-container-low rounded-xl border border-border-dark overflow-hidden"
+          >
+            <table class="w-full border-collapse">
+              <thead>
+                <tr
+                  class="bg-surface-container-high text-left border-b border-border-dark"
+                >
+                  <th
+                    class="p-md font-label-md text-label-md text-outline uppercase tracking-widest"
+                  >
+                    Level
+                  </th>
+                  <th
+                    class="p-md font-label-md text-label-md text-outline uppercase tracking-widest"
+                  >
+                    Preview
+                  </th>
+                  <th
+                    class="p-md font-label-md text-label-md text-outline uppercase tracking-widest"
+                  >
+                    Size/Line-Height
+                  </th>
+                  <th
+                    class="p-md font-label-md text-label-md text-outline uppercase tracking-widest"
+                  >
+                    Weight
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-border-dark">
+                <tr>
+                  <td class="p-md font-label-sm text-label-sm text-primary">
+                    Display Large
+                  </td>
+                  <td
+                    class="p-md font-display-lg text-display-lg text-on-surface"
+                  >
+                    Digital Stratum
+                  </td>
+                  <td
+                    class="p-md font-label-sm text-label-sm text-on-surface-variant"
+                  >
+                    36px / 44px
+                  </td>
+                  <td
+                    class="p-md font-label-sm text-label-sm text-on-surface-variant"
+                  >
+                    Bold (700)
+                  </td>
+                </tr>
+                <tr>
+                  <td class="p-md font-label-sm text-label-sm text-primary">
+                    Headline Medium
+                  </td>
+                  <td
+                    class="p-md font-headline-md text-headline-md text-on-surface"
+                  >
+                    Task Analytics
+                  </td>
+                  <td
+                    class="p-md font-label-sm text-label-sm text-on-surface-variant"
+                  >
+                    24px / 32px
+                  </td>
+                  <td
+                    class="p-md font-label-sm text-label-sm text-on-surface-variant"
+                  >
+                    Semi-Bold (600)
+                  </td>
+                </tr>
+                <tr>
+                  <td class="p-md font-label-sm text-label-sm text-primary">
+                    Body Large
+                  </td>
+                  <td class="p-md font-body-lg text-body-lg text-on-surface">
+                    Professional interface density.
+                  </td>
+                  <td
+                    class="p-md font-label-sm text-label-sm text-on-surface-variant"
+                  >
+                    16px / 24px
+                  </td>
+                  <td
+                    class="p-md font-label-sm text-label-sm text-on-surface-variant"
+                  >
+                    Regular (400)
+                  </td>
+                </tr>
+                <tr>
+                  <td class="p-md font-label-sm text-label-sm text-primary">
+                    Body Medium
+                  </td>
+                  <td class="p-md font-body-md text-body-md text-on-surface">
+                    Standard system content text.
+                  </td>
+                  <td
+                    class="p-md font-label-sm text-label-sm text-on-surface-variant"
+                  >
+                    14px / 20px
+                  </td>
+                  <td
+                    class="p-md font-label-sm text-label-sm text-on-surface-variant"
+                  >
+                    Regular (400)
+                  </td>
+                </tr>
+                <tr>
+                  <td class="p-md font-label-sm text-label-sm text-primary">
+                    Label Medium
+                  </td>
+                  <td class="p-md font-label-md text-label-md text-on-surface">
+                    METADATA_VALUE
+                  </td>
+                  <td
+                    class="p-md font-label-sm text-label-sm text-on-surface-variant"
+                  >
+                    12px / 16px
+                  </td>
+                  <td
+                    class="p-md font-label-sm text-label-sm text-on-surface-variant"
+                  >
+                    Mono (500)
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+        <!-- Section: Spacing & Grid -->
+        <section class="scroll-mt-24" id="spacing">
+          <div class="mb-lg">
+            <h2 class="font-headline-md text-headline-md text-on-surface">
+              Spacing &amp; Grid
+            </h2>
+            <p class="text-on-surface-variant">
+              The 8px atomic unit system and responsive layouts.
+            </p>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
+            <!-- Atomic Spacing -->
+            <div
+              class="bg-surface-container-low p-lg rounded-xl border border-border-dark"
+            >
+              <h3
+                class="font-label-md text-label-md text-primary uppercase tracking-widest mb-md"
+              >
+                Spacing Rhythm
+              </h3>
+              <div class="flex flex-col gap-sm">
+                <div class="flex items-center gap-md">
+                  <div class="w-1 h-1 bg-primary"></div>
+                  <span class="font-label-sm text-label-sm text-outline w-12"
+                    >4px</span
+                  >
+                  <span class="text-on-surface">xs / Atomic unit</span>
+                </div>
+                <div class="flex items-center gap-md">
+                  <div class="w-2 h-2 bg-primary"></div>
+                  <span class="font-label-sm text-label-sm text-outline w-12"
+                    >8px</span
+                  >
+                  <span class="text-on-surface">sm / Inner grouping</span>
+                </div>
+                <div class="flex items-center gap-md">
+                  <div class="w-4 h-4 bg-primary"></div>
+                  <span class="font-label-sm text-label-sm text-outline w-12"
+                    >16px</span
+                  >
+                  <span class="text-on-surface">md / Standard padding</span>
+                </div>
+                <div class="flex items-center gap-md">
+                  <div class="w-6 h-6 bg-primary"></div>
+                  <span class="font-label-sm text-label-sm text-outline w-12"
+                    >24px</span
+                  >
+                  <span class="text-on-surface">lg / Layout spacing</span>
+                </div>
+                <div class="flex items-center gap-md">
+                  <div class="w-8 h-8 bg-primary"></div>
+                  <span class="font-label-sm text-label-sm text-outline w-12"
+                    >32px</span
+                  >
+                  <span class="text-on-surface">xl / Large breaks</span>
+                </div>
+              </div>
+            </div>
+            <!-- Grid Specs -->
+            <div
+              class="bg-surface-container-low p-lg rounded-xl border border-border-dark flex flex-col gap-md"
+            >
+              <h3
+                class="font-label-md text-label-md text-primary uppercase tracking-widest"
+              >
+                Layout Containers
+              </h3>
+              <div class="space-y-sm">
+                <div
+                  class="p-sm bg-surface-container-high rounded border border-border-dark flex justify-between"
+                >
+                  <span class="text-on-surface">Desktop Max-Width</span>
+                  <span class="font-label-md text-label-md text-primary"
+                    >1440px</span
+                  >
+                </div>
+                <div
+                  class="p-sm bg-surface-container-high rounded border border-border-dark flex justify-between"
+                >
+                  <span class="text-on-surface">Sidebar Width</span>
+                  <span class="font-label-md text-label-md text-primary"
+                    >260px</span
+                  >
+                </div>
+                <div
+                  class="p-sm bg-surface-container-high rounded border border-border-dark flex justify-between"
+                >
+                  <span class="text-on-surface">Grid Columns</span>
+                  <span class="font-label-md text-label-md text-primary"
+                    >12-Col</span
+                  >
+                </div>
+                <div
+                  class="p-sm bg-surface-container-high rounded border border-border-dark flex justify-between"
+                >
+                  <span class="text-on-surface">Corner Radius</span>
+                  <span class="font-label-md text-label-md text-primary"
+                    >8px (lg)</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <!-- Section: UI Components -->
+        <section class="scroll-mt-24" id="components">
+          <div class="mb-lg">
+            <h2 class="font-headline-md text-headline-md text-on-surface">
+              Core UI Components
+            </h2>
+            <p class="text-on-surface-variant">
+              Interactive primitives for consistent implementation.
+            </p>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-lg">
+            <!-- Buttons -->
+            <div
+              class="bg-surface-container-low p-lg rounded-xl border border-border-dark"
+            >
+              <h3
+                class="font-label-md text-label-md text-primary uppercase tracking-widest mb-lg"
+              >
+                Button States
+              </h3>
+              <div class="grid grid-cols-2 gap-lg">
+                <div class="space-y-sm">
+                  <p class="text-[10px] text-outline uppercase font-bold">
+                    Primary
+                  </p>
+                  <button
+                    class="w-full h-10 rounded-lg bg-[#2C5EAD] text-white font-bold hover:translate-y-[-1px] transition-transform"
+                  >
+                    Default
+                  </button>
+                  <button
+                    class="w-full h-10 rounded-lg bg-[#2C5EAD] text-white font-bold opacity-80 ring-2 ring-[#acc7ff]/30 ring-offset-2 ring-offset-[#031427]"
+                  >
+                    Hover
+                  </button>
+                  <button
+                    class="w-full h-10 rounded-lg bg-[#2C5EAD]/50 text-white/50 cursor-not-allowed"
+                  >
+                    Disabled
+                  </button>
+                </div>
+                <div class="space-y-sm">
+                  <p class="text-[10px] text-outline uppercase font-bold">
+                    Secondary
+                  </p>
+                  <button
+                    class="w-full h-10 rounded-lg border border-border-dark text-on-surface hover:bg-surface-variant"
+                  >
+                    Default
+                  </button>
+                  <button
+                    class="w-full h-10 rounded-lg border border-primary text-primary bg-primary/5"
+                  >
+                    Active
+                  </button>
+                  <button
+                    class="w-full h-10 rounded-lg border border-border-dark/30 text-outline cursor-not-allowed"
+                  >
+                    Disabled
+                  </button>
+                </div>
+              </div>
+            </div>
+            <!-- Inputs -->
+            <div
+              class="bg-surface-container-low p-lg rounded-xl border border-border-dark"
+            >
+              <h3
+                class="font-label-md text-label-md text-primary uppercase tracking-widest mb-lg"
+              >
+                Input Fields
+              </h3>
+              <div class="space-y-md">
+                <div>
+                  <label
+                    class="text-[11px] font-bold text-outline uppercase mb-1 block"
+                    >Default State</label
+                  >
+                  <input
+                    class="w-full bg-surface-container-highest border border-border-dark rounded-lg px-md py-sm text-on-surface focus:outline-none placeholder:text-outline"
+                    placeholder="Enter text..."
+                    type="text"
+                  />
+                </div>
+                <div>
+                  <label
+                    class="text-[11px] font-bold text-primary uppercase mb-1 block"
+                    >Focused State</label
+                  >
+                  <div class="relative">
+                    <input
+                      class="w-full bg-surface-container-highest border border-primary rounded-lg px-md py-sm text-on-surface focus:outline-none"
+                      type="text"
+                      value="System focused"
+                    />
+                    <div
+                      class="absolute inset-0 ring-1 ring-primary/40 rounded-lg pointer-events-none"
+                    ></div>
+                  </div>
+                </div>
+                <div>
+                  <label
+                    class="text-[11px] font-bold text-danger uppercase mb-1 block"
+                    >Error State</label
+                  >
+                  <input
+                    class="w-full bg-surface-container-highest border border-danger rounded-lg px-md py-sm text-danger focus:outline-none"
+                    type="text"
+                    value="Invalid input"
+                  />
+                  <p class="text-[10px] text-danger mt-1">
+                    This field is required.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <!-- Badges & Status -->
+            <div
+              class="bg-surface-container-low p-lg rounded-xl border border-border-dark lg:col-span-2"
+            >
+              <h3
+                class="font-label-md text-label-md text-primary uppercase tracking-widest mb-lg"
+              >
+                Status &amp; Priority Badges
+              </h3>
+              <div class="flex flex-wrap gap-xl">
+                <div class="space-y-sm">
+                  <p class="text-[10px] text-outline uppercase font-bold">
+                    Roles
+                  </p>
+                  <div class="flex gap-sm">
+                    <span
+                      class="px-md py-1 rounded-full bg-primary/10 text-primary font-label-sm text-label-sm border border-primary/20"
+                      >Admin</span
+                    >
+                    <span
+                      class="px-md py-1 rounded-full bg-on-tertiary-fixed-variant/20 text-tertiary font-label-sm text-label-sm border border-tertiary/20"
+                      >Lead</span
+                    >
+                  </div>
+                </div>
+                <div class="space-y-sm">
+                  <p class="text-[10px] text-outline uppercase font-bold">
+                    Priority
+                  </p>
+                  <div class="flex gap-sm">
+                    <span
+                      class="px-md py-1 rounded-full bg-danger/10 text-danger font-label-sm text-label-sm border border-danger/20 flex items-center gap-1"
+                    >
+                      <div class="w-1.5 h-1.5 rounded-full bg-danger"></div>
+                      High
+                    </span>
+                    <span
+                      class="px-md py-1 rounded-full bg-warning/10 text-warning font-label-sm text-label-sm border border-warning/20 flex items-center gap-1"
+                    >
+                      <div class="w-1.5 h-1.5 rounded-full bg-warning"></div>
+                      Med
+                    </span>
+                  </div>
+                </div>
+                <div class="space-y-sm">
+                  <p class="text-[10px] text-outline uppercase font-bold">
+                    Status
+                  </p>
+                  <div class="flex gap-sm">
+                    <span
+                      class="px-md py-1 rounded-lg bg-surface-container-highest border border-border-dark text-on-surface-variant font-label-sm text-label-sm"
+                      >Backlog</span
+                    >
+                    <span
+                      class="px-md py-1 rounded-lg bg-primary text-on-primary font-bold font-label-sm text-label-sm"
+                      >In Progress</span
+                    >
+                    <span
+                      class="px-md py-1 rounded-lg bg-success/10 text-success border border-success/20 font-label-sm text-label-sm"
+                      >Completed</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <!-- Section: Layout Specs -->
+        <section class="scroll-mt-24" id="layout">
+          <div class="mb-lg">
+            <h2 class="font-headline-md text-headline-md text-on-surface">
+              Layout Specifications
+            </h2>
+            <p class="text-on-surface-variant">
+              Anatomy of the primary structural shells.
+            </p>
+          </div>
+          <div class="grid grid-cols-1 xl:grid-cols-2 gap-lg">
+            <!-- Task Card Anatomy -->
+            <div
+              class="bg-surface-container-low rounded-xl border border-border-dark overflow-hidden"
+            >
+              <div
+                class="p-md bg-surface-container-high border-b border-border-dark flex justify-between items-center"
+              >
+                <span class="font-label-md text-label-md text-on-surface"
+                  >KanbanCard.tsx</span
+                >
+                <span class="text-[10px] text-outline">Fixed: 320px Width</span>
+              </div>
+              <div
+                class="p-xl flex justify-center items-center bg-[#000f21] relative overflow-hidden"
+              >
+                <!-- SVG Annotation Overlay -->
+                <div class="absolute inset-0 pointer-events-none opacity-40">
+                  <div
+                    class="absolute top-xl left-[20%] right-[20%] border-t border-dashed border-primary"
+                  ></div>
+                  <div
+                    class="absolute top-[30%] bottom-[30%] left-xl border-l border-dashed border-primary"
+                  ></div>
+                </div>
+                <div
+                  class="w-[280px] bg-card-dark rounded-lg border border-border-dark p-md shadow-lg relative z-10"
+                >
+                  <div
+                    class="absolute left-0 top-md bottom-md w-[2px] bg-danger rounded-r"
+                  ></div>
+                  <div class="flex justify-between items-start mb-sm pl-xs">
+                    <span class="text-label-md font-label-md text-outline"
+                      >PRJ-442</span
+                    >
+                    <div
+                      class="w-6 h-6 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center"
+                    >
+                      <span
+                        class="material-symbols-outlined text-[14px] text-primary"
+                        >person</span
+                      >
+                    </div>
+                  </div>
+                  <h4 class="font-bold text-on-surface mb-md pl-xs">
+                    Integrate Azure Key Vault for secrets management
+                  </h4>
+                  <div class="flex items-center gap-sm pl-xs">
+                    <span
+                      class="px-sm py-0.5 rounded bg-surface-container-highest border border-border-dark text-[10px] text-outline font-bold"
+                      >API</span
+                    >
+                    <span
+                      class="text-[10px] text-outline ml-auto flex items-center gap-1"
+                    >
+                      <span class="material-symbols-outlined text-[12px]"
+                        >schedule</span
+                      >
+                      2d
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="p-md bg-surface-container">
+                <ul class="text-[11px] space-y-1 text-on-surface-variant">
+                  <li>• Radius: 8px (rounded-lg)</li>
+                  <li>• Border: 1px solid #263247</li>
+                  <li>• Shadow: 0 4px 12px rgba(0, 0, 0, 0.15)</li>
+                  <li>• Left Indicator: 2px solid Semantic Color</li>
+                </ul>
+              </div>
+            </div>
+            <!-- Layout Dimensions -->
+            <div
+              class="bg-surface-container-low rounded-xl border border-border-dark overflow-hidden flex flex-col"
+            >
+              <div
+                class="p-md bg-surface-container-high border-b border-border-dark"
+              >
+                <span class="font-label-md text-label-md text-on-surface"
+                  >Global Shell Mapping</span
+                >
+              </div>
+              <div class="flex-1 p-lg flex flex-col gap-md">
+                <div class="flex flex-col gap-sm">
+                  <div
+                    class="h-8 bg-surface-variant border border-border-dark rounded flex items-center px-md text-[10px] text-outline justify-between"
+                  >
+                    <span>TopAppBar</span>
+                    <span class="font-label-sm text-primary">Height: 64px</span>
+                  </div>
+                  <div class="flex gap-sm h-32">
+                    <div
+                      class="w-12 bg-surface-variant border border-border-dark rounded flex items-center justify-center"
+                    >
+                      <span
+                        class="[writing-mode:vertical-lr] rotate-180 text-[10px] text-outline font-label-sm"
+                        >SIDEBAR: 260px</span
+                      >
+                    </div>
+                    <div
+                      class="flex-1 bg-surface-container-highest border border-border-dark border-dashed rounded flex items-center justify-center text-[10px] text-outline font-label-sm"
+                    >
+                      MAIN CANVAS: FLUID (MAX-1440)
+                    </div>
+                  </div>
+                </div>
+                <div class="mt-auto space-y-sm">
+                  <p class="text-[11px] font-bold text-primary uppercase">
+                    Responsive Breakpoints
+                  </p>
+                  <div class="grid grid-cols-2 gap-sm">
+                    <div
+                      class="p-sm bg-surface-container rounded border border-border-dark"
+                    >
+                      <p class="text-[10px] text-outline uppercase">Mobile</p>
+                      <p class="text-on-surface font-bold">&lt; 768px</p>
+                      <p class="text-[9px] text-on-surface-variant">
+                        Single Col / Bottom Nav
+                      </p>
+                    </div>
+                    <div
+                      class="p-sm bg-surface-container rounded border border-border-dark"
+                    >
+                      <p class="text-[10px] text-outline uppercase">Desktop</p>
+                      <p class="text-on-surface font-bold">1280px +</p>
+                      <p class="text-[9px] text-on-surface-variant">
+                        Full 12-Col Grid
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <!-- Section: Technical Notes -->
+        <section class="scroll-mt-24 mb-xl" id="tech">
+          <div class="mb-lg">
+            <h2 class="font-headline-md text-headline-md text-on-surface">
+              Technical Implementation Notes
+            </h2>
+          </div>
+          <div
+            class="bg-primary/5 border border-primary/20 rounded-xl p-lg grid grid-cols-1 md:grid-cols-3 gap-lg"
+          >
+            <div>
+              <h4 class="font-bold text-primary mb-sm">
+                Tailwind Utility First
+              </h4>
+              <p class="text-sm text-on-surface-variant leading-relaxed">
+                Always use semantic tokens (e.g.,
+                <code class="text-secondary font-label-sm"
+                  >bg-surface-container</code
+                >) instead of arbitrary hex codes to ensure Dark/Light mode
+                theme switching works automatically via the
+                <code class="text-secondary font-label-sm">.dark</code> class on
+                the html tag.
+              </p>
+            </div>
+            <div>
+              <h4 class="font-bold text-primary mb-sm">Iconography</h4>
+              <p class="text-sm text-on-surface-variant leading-relaxed">
+                System uses <strong>Material Symbols Outlined</strong>. Use the
+                standard transcription rules for
+                <code class="text-secondary font-label-sm">data-icon</code>
+                strings. Standard weight is 400. For active states, use
+                <code class="text-secondary font-label-sm">'FILL' 1</code>
+                variation settings.
+              </p>
+            </div>
+            <div>
+              <h4 class="font-bold text-primary mb-sm">Component Naming</h4>
+              <p class="text-sm text-on-surface-variant leading-relaxed">
+                Standard PascalCase for components. Shared components
+                (SideNavBar, TopAppBar) are defined in the global JSON and
+                should be treated as immutable structural anchors for all
+                dashboard sub-views.
+              </p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+    <!-- Floating Action for Mobile Navigation (Documentation Only) -->
+    <div class="md:hidden fixed bottom-lg right-lg z-50">
+      <button
+        class="w-14 h-14 rounded-full bg-primary text-on-primary shadow-xl flex items-center justify-center"
+      >
+        <span class="material-symbols-outlined">menu</span>
+      </button>
+    </div>
+  </body>
+</html>

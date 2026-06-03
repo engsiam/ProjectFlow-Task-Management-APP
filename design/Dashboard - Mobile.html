@@ -1,0 +1,552 @@
+<!doctype html>
+<html class="dark" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>ProjectFlow Mobile Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Hanken+Grotesk:wght@600;700;800&amp;family=JetBrains+Mono:wght@500&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@100..900&amp;family=Inter:wght@100..900&amp;family=JetBrains+Mono:wght@100..900&amp;display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings:
+          "FILL" 0,
+          "wght" 400,
+          "GRAD" 0,
+          "opsz" 24;
+        display: inline-block;
+        line-height: 1;
+        text-transform: none;
+        letter-spacing: normal;
+        word-wrap: normal;
+        white-space: nowrap;
+        direction: ltr;
+      }
+      .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .hide-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+
+      /* Custom Azure Stratum Glass Effect */
+      .azure-glass {
+        background: rgba(16, 32, 52, 0.8);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(172, 199, 255, 0.1);
+      }
+    </style>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-light": "#FFFFFF",
+              success: "#22C55E",
+              danger: "#EF4444",
+              "primary-fixed-dim": "#acc7ff",
+              "bg-light": "#F8FAFC",
+              "on-tertiary-fixed": "#001e2f",
+              "on-surface-variant": "#c3c6d3",
+              primary: "#acc7ff",
+              "surface-bright": "#2a3a4f",
+              warning: "#F59E0B",
+              "tertiary-fixed-dim": "#8aceff",
+              "secondary-fixed": "#cde5ff",
+              "on-error": "#690005",
+              "surface-container-highest": "#26364a",
+              "text-light": "#0F172A",
+              "on-surface": "#d3e4fe",
+              "on-error-container": "#ffdad6",
+              "on-secondary-fixed": "#001d32",
+              "surface-container-high": "#1b2b3f",
+              "on-secondary": "#003352",
+              surface: "#031427",
+              "tertiary-fixed": "#c9e6ff",
+              outline: "#8d909d",
+              "on-tertiary-container": "#b9dfff",
+              "card-dark": "#172033",
+              "text-dark": "#F8FAFC",
+              "border-light": "#E2E8F0",
+              "on-secondary-fixed-variant": "#004a75",
+              "on-primary-fixed-variant": "#004492",
+              background: "#031427",
+              "bg-dark": "#0B1220",
+              "on-primary-container": "#cbdaff",
+              "surface-container-low": "#0b1c30",
+              "primary-container": "#2c5ead",
+              "outline-variant": "#434751",
+              "on-tertiary": "#00344e",
+              "on-secondary-container": "#002c48",
+              "primary-fixed": "#d7e2ff",
+              "secondary-container": "#2497e3",
+              "surface-container-lowest": "#000f21",
+              "surface-variant": "#26364a",
+              "on-background": "#d3e4fe",
+              "surface-dark": "#111827",
+              "secondary-fixed-dim": "#95ccff",
+              "on-primary-fixed": "#001a40",
+              secondary: "#95ccff",
+              "error-container": "#93000a",
+              "border-dark": "#263247",
+              "inverse-surface": "#d3e4fe",
+              error: "#ffb4ab",
+              "inverse-on-surface": "#213145",
+              "surface-container": "#102034",
+              "surface-dim": "#031427",
+              "on-primary": "#002f68",
+              "on-tertiary-fixed-variant": "#004b6f",
+              tertiary: "#8aceff",
+              "surface-tint": "#acc7ff",
+              "inverse-primary": "#2a5dac",
+              "tertiary-container": "#006694",
+            },
+            borderRadius: {
+              DEFAULT: "0.25rem",
+              lg: "0.5rem",
+              xl: "0.75rem",
+              full: "9999px",
+            },
+            spacing: {
+              gutter: "20px",
+              xl: "32px",
+              lg: "24px",
+              xs: "4px",
+              unit: "4px",
+              "max-width-dashboard": "1440px",
+              md: "16px",
+              sm: "8px",
+              "sidebar-width": "260px",
+            },
+            fontFamily: {
+              "body-lg": ["Inter"],
+              "display-lg": ["Hanken Grotesk"],
+              "body-sm": ["Inter"],
+              "headline-sm": ["Hanken Grotesk"],
+              "label-sm": ["JetBrains Mono"],
+              "label-md": ["JetBrains Mono"],
+              "body-md": ["Inter"],
+              "headline-md": ["Hanken Grotesk"],
+            },
+            fontSize: {
+              "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+              "display-lg": [
+                "36px",
+                {
+                  lineHeight: "44px",
+                  letterSpacing: "-0.02em",
+                  fontWeight: "700",
+                },
+              ],
+              "body-sm": ["13px", { lineHeight: "18px", fontWeight: "400" }],
+              "headline-sm": [
+                "18px",
+                { lineHeight: "24px", fontWeight: "600" },
+              ],
+              "label-sm": ["10px", { lineHeight: "14px", fontWeight: "500" }],
+              "label-md": [
+                "12px",
+                {
+                  lineHeight: "16px",
+                  letterSpacing: "0.02em",
+                  fontWeight: "500",
+                },
+              ],
+              "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+              "headline-md": [
+                "24px",
+                {
+                  lineHeight: "32px",
+                  letterSpacing: "-0.01em",
+                  fontWeight: "600",
+                },
+              ],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        min-height: max(884px, 100dvh);
+      }
+    </style>
+  </head>
+  <body
+    class="bg-background text-on-background font-body-md selection:bg-primary/30 min-h-screen flex flex-col"
+  >
+    <!-- Top Navigation Bar (Hybrid Header) -->
+    <header
+      class="h-16 w-full sticky top-0 z-40 bg-surface dark:bg-surface border-b border-border-dark flex justify-between items-center px-md"
+    >
+      <div class="flex items-center gap-sm">
+        <div
+          class="w-8 h-8 rounded bg-primary-container flex items-center justify-center"
+        >
+          <span
+            class="material-symbols-outlined text-on-primary-container text-[20px]"
+            >folder_open</span
+          >
+        </div>
+        <h1
+          class="font-headline-sm text-headline-sm font-bold text-primary dark:text-primary"
+        >
+          Dashboard
+        </h1>
+      </div>
+      <div class="flex items-center gap-md">
+        <button
+          class="text-on-surface-variant hover:text-primary transition-opacity duration-200"
+        >
+          <span class="material-symbols-outlined">contrast</span>
+        </button>
+        <div class="relative">
+          <span class="material-symbols-outlined text-on-surface-variant"
+            >notifications</span
+          >
+          <span
+            class="absolute top-0 right-0 w-2 h-2 bg-danger rounded-full border-2 border-surface"
+          ></span>
+        </div>
+        <img
+          alt="User profile"
+          class="w-8 h-8 rounded-full border border-outline-variant"
+          data-alt="A high-quality 3D rendered avatar of a young professional male with short dark hair and a crisp navy blue suit. The lighting is bright and directional, casting soft shadows against a clean, corporate sky blue background. The aesthetic is modern, professional, and consistent with a high-end enterprise software interface."
+          src="https://lh3.googleusercontent.com/aida-public/AB6AXuDwugTs6pTcuAZJf6HA0UXGPHAIOptNjFAwdtXdrdf88pZypuS4snY_wXZzL2zF6xwDndRxIdHkP_bV6TmbsE0rc8Pdm3mR_BRC583EAGmJEI1LGKs6ENIOXIcrTzo-IejntbhiMjuZD5DkzRN7bVGOSodX7Cx20mR0QQiYBgXzN-Bnl18NLhBzT2A4opY52k5NziYyV8UeMbMV-VneWrLR8afnSgpudpNEy0NuY721YSfrSNrMli-6x37y2gquJGxS85fvQ1ZzfhHO"
+        />
+      </div>
+    </header>
+    <!-- Main Content Canvas -->
+    <main class="flex-1 overflow-y-auto px-md py-lg space-y-lg pb-24">
+      <!-- Welcome Segment -->
+      <section class="space-y-xs">
+        <p
+          class="font-label-md text-label-md text-secondary tracking-wider uppercase"
+        >
+          System Operational
+        </p>
+        <h2 class="font-headline-md text-headline-md font-bold text-on-surface">
+          Good Morning, Alexander
+        </h2>
+        <p class="font-body-md text-body-md text-on-surface-variant">
+          Here is your fleet's status for Feb 24.
+        </p>
+      </section>
+      <!-- KPI Grid (Stacked for Mobile) -->
+      <section class="grid grid-cols-1 gap-md">
+        <!-- Analytics Card 1 -->
+        <div
+          class="bg-surface-container rounded-xl p-md border border-border-dark relative overflow-hidden"
+        >
+          <div class="flex justify-between items-start mb-sm">
+            <span class="font-label-md text-label-md text-on-surface-variant"
+              >ACTIVE TASKS</span
+            >
+            <span class="text-success flex items-center text-xs font-semibold">
+              <span class="material-symbols-outlined text-[14px]"
+                >trending_up</span
+              >
+              12%
+            </span>
+          </div>
+          <div class="text-3xl font-bold text-primary">42</div>
+          <div
+            class="mt-xs h-1 w-full bg-surface-container-highest rounded-full overflow-hidden"
+          >
+            <div class="h-full bg-primary w-[75%]"></div>
+          </div>
+        </div>
+        <!-- Analytics Card 2 -->
+        <div
+          class="bg-surface-container rounded-xl p-md border border-border-dark"
+        >
+          <div class="flex justify-between items-start mb-sm">
+            <span class="font-label-md text-label-md text-on-surface-variant"
+              >UTILIZATION</span
+            >
+            <span class="text-tertiary flex items-center text-xs font-semibold">
+              <span class="material-symbols-outlined text-[14px]"
+                >horizontal_rule</span
+              >
+              0%
+            </span>
+          </div>
+          <div class="text-3xl font-bold text-tertiary">89%</div>
+          <div class="mt-xs flex gap-1">
+            <div class="h-1 flex-1 bg-tertiary rounded-full"></div>
+            <div class="h-1 flex-1 bg-tertiary rounded-full"></div>
+            <div class="h-1 flex-1 bg-tertiary rounded-full"></div>
+            <div
+              class="h-1 flex-1 bg-surface-container-highest rounded-full"
+            ></div>
+          </div>
+        </div>
+      </section>
+      <!-- Project Condense List -->
+      <section class="space-y-md">
+        <div class="flex justify-between items-end">
+          <h3
+            class="font-headline-sm text-headline-sm font-bold text-on-surface"
+          >
+            Recent Projects
+          </h3>
+          <button class="text-primary font-label-md text-label-md">
+            View All
+          </button>
+        </div>
+        <div class="space-y-sm">
+          <!-- Project Item 1 -->
+          <div
+            class="flex items-center gap-md p-sm bg-surface-container-low rounded-lg border border-transparent hover:border-primary/30 transition-all"
+          >
+            <div
+              class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary"
+            >
+              <span class="material-symbols-outlined">data_object</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h4 class="font-body-md font-semibold text-on-surface truncate">
+                Azure Stratum UI
+              </h4>
+              <p class="text-xs text-on-surface-variant">
+                8 members • Due in 2d
+              </p>
+            </div>
+            <div class="flex -space-x-2">
+              <img
+                class="w-6 h-6 rounded-full border border-surface"
+                data-alt="Avatar 1"
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBDR5O3nt_K-S81F7QWZDT63U5Uzn9TcjtAmlYC_bEaMNouWcOHOZ_qWta5TikmJFnxQJTH8woDO-Ot5x2IHkNcRBI4zY0outz-730oYTHYMOro76kHOta-jCPGMAA2HZf4Z5QnVzmJHecjqLn-i60c9c-rmTdM79cA6fxvNIePuMJRg7tfU3tma_2Feh70zkVy45ulxN9fK-kZXwM7rjCrXpb6Wmp3KtlCziv01QTakWCsHMBZfxkKSYpy8iMwaGdUUOGS8TPVw0lY"
+              />
+              <img
+                class="w-6 h-6 rounded-full border border-surface"
+                data-alt="Avatar 2"
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCa6fAh5UTaQqADiocuoq6MwvMURg2O4I_mCs51BKK1MCR1cjRAxjo9EsB9rlqYd6_KtgCmFzTkErb5DRe-n4wpfssIMyEcdzAhJ82grTlNRYp0E3LX5TS5Dm_IcuC9_h0wnFsQA-DIfYCvEKTePdo2_L9YiU7qO-ieKRRclWUwE8XdFaA10xDIcqR_I6_bYf9S7TQxb7uQxA1TQNDTDnKHIXuOpDDpLk3qFcK4Be-L3IQME7uSEq1_pmQkIvNj4DBIze5CcGvo5jVI"
+              />
+              <div
+                class="w-6 h-6 rounded-full bg-surface-variant flex items-center justify-center text-[8px] font-bold border border-surface"
+              >
+                +3
+              </div>
+            </div>
+          </div>
+          <!-- Project Item 2 -->
+          <div
+            class="flex items-center gap-md p-sm bg-surface-container-low rounded-lg border border-transparent"
+          >
+            <div
+              class="w-10 h-10 rounded-lg bg-tertiary/10 flex items-center justify-center text-tertiary"
+            >
+              <span class="material-symbols-outlined">cloud_sync</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h4 class="font-body-md font-semibold text-on-surface truncate">
+                API Refactoring
+              </h4>
+              <p class="text-xs text-on-surface-variant">
+                12 members • Due in 5d
+              </p>
+            </div>
+            <div class="flex -space-x-2">
+              <img
+                class="w-6 h-6 rounded-full border border-surface"
+                data-alt="Avatar 3"
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAl53L1kSVOutFkwkqQZnUfah5drEmYXuEAVdbNdEwS7IaeSrep-H3G3WU_fcxIOAG-u2lYOjkYYCMHcNsOsLgkd3crzVn3wvF0chkbT4B1SqGx53OmcVRUmyoe1XGEtylCJ1p52xOuOW92Tofo6XCjPsU-oINyhovtt8oEq3ukOKN73dr0l-paCbSaGB-hirfUjrO-rDLN9GFbrqA0DeNpQRIeGd66PnSnhzOBn8v74rOHn0Bp8d1zQy09kMuVinvn7_0137G-Z2Zp"
+              />
+              <div
+                class="w-6 h-6 rounded-full bg-surface-variant flex items-center justify-center text-[8px] font-bold border border-surface"
+              >
+                +9
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- Focused Task List -->
+      <section class="space-y-md">
+        <h3 class="font-headline-sm text-headline-sm font-bold text-on-surface">
+          Urgent Tasks
+        </h3>
+        <div class="space-y-sm">
+          <!-- Task Card High Priority -->
+          <div
+            class="bg-card-dark rounded-xl border border-border-dark overflow-hidden flex shadow-lg"
+          >
+            <div class="w-1 bg-danger h-stretch"></div>
+            <div class="p-md flex-1">
+              <div class="flex justify-between items-start mb-xs">
+                <span
+                  class="font-label-sm text-label-sm px-2 py-0.5 bg-danger/10 text-danger rounded-full"
+                  >HIGH PRIORITY</span
+                >
+                <span
+                  class="font-label-sm text-label-sm text-on-surface-variant"
+                  >#PF-241</span
+                >
+              </div>
+              <h4 class="font-body-lg font-semibold text-on-surface mb-sm">
+                Resolve Database Latency
+              </h4>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-xs text-on-surface-variant">
+                  <span class="material-symbols-outlined text-[16px]"
+                    >schedule</span
+                  >
+                  <span class="text-xs">Due Today, 5:00 PM</span>
+                </div>
+                <button
+                  class="w-8 h-8 rounded-full hover:bg-surface-variant flex items-center justify-center"
+                >
+                  <span class="material-symbols-outlined text-[18px]"
+                    >more_vert</span
+                  >
+                </button>
+              </div>
+            </div>
+          </div>
+          <!-- Task Card Medium Priority -->
+          <div
+            class="bg-card-dark rounded-xl border border-border-dark overflow-hidden flex shadow-lg"
+          >
+            <div class="w-1 bg-warning h-stretch"></div>
+            <div class="p-md flex-1">
+              <div class="flex justify-between items-start mb-xs">
+                <span
+                  class="font-label-sm text-label-sm px-2 py-0.5 bg-warning/10 text-warning rounded-full"
+                  >MEDIUM</span
+                >
+                <span
+                  class="font-label-sm text-label-sm text-on-surface-variant"
+                  >#PF-245</span
+                >
+              </div>
+              <h4 class="font-body-lg font-semibold text-on-surface mb-sm">
+                Design System Audit
+              </h4>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-xs text-on-surface-variant">
+                  <span class="material-symbols-outlined text-[16px]"
+                    >schedule</span
+                  >
+                  <span class="text-xs">Feb 26, 2024</span>
+                </div>
+                <button
+                  class="w-8 h-8 rounded-full hover:bg-surface-variant flex items-center justify-center"
+                >
+                  <span class="material-symbols-outlined text-[18px]"
+                    >more_vert</span
+                  >
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <!-- Floating Action Button -->
+    <button
+      class="fixed right-md bottom-24 w-14 h-14 bg-primary text-on-primary rounded-full shadow-[0_8px_24px_rgba(172,199,255,0.3)] flex items-center justify-center z-50 hover:scale-105 active:scale-95 transition-transform"
+    >
+      <span class="material-symbols-outlined text-[28px]">add</span>
+    </button>
+    <!-- Bottom Navigation Bar -->
+    <nav
+      class="fixed bottom-0 left-0 right-0 azure-glass border-t border-border-dark flex justify-around items-center h-20 px-md z-50"
+    >
+      <!-- Projects Tab -->
+      <a class="flex flex-col items-center gap-1 group" href="#">
+        <div
+          class="px-5 py-1 rounded-full bg-primary-container text-on-primary-container group-active:scale-90 transition-transform"
+        >
+          <span class="material-symbols-outlined">folder_open</span>
+        </div>
+        <span class="font-label-md text-label-md text-primary font-semibold"
+          >Projects</span
+        >
+      </a>
+      <!-- Tasks Tab -->
+      <a class="flex flex-col items-center gap-1 group" href="#">
+        <div
+          class="px-5 py-1 rounded-full text-on-surface-variant group-hover:bg-surface-variant transition-colors"
+        >
+          <span class="material-symbols-outlined">assignment</span>
+        </div>
+        <span class="font-label-md text-label-md text-on-surface-variant"
+          >Tasks</span
+        >
+      </a>
+      <!-- Members Tab -->
+      <a class="flex flex-col items-center gap-1 group" href="#">
+        <div
+          class="px-5 py-1 rounded-full text-on-surface-variant group-hover:bg-surface-variant transition-colors"
+        >
+          <span class="material-symbols-outlined">group</span>
+        </div>
+        <span class="font-label-md text-label-md text-on-surface-variant"
+          >Members</span
+        >
+      </a>
+      <!-- Analytics Tab -->
+      <a class="flex flex-col items-center gap-1 group" href="#">
+        <div
+          class="px-5 py-1 rounded-full text-on-surface-variant group-hover:bg-surface-variant transition-colors"
+        >
+          <span class="material-symbols-outlined">bar_chart</span>
+        </div>
+        <span class="font-label-md text-label-md text-on-surface-variant"
+          >Stats</span
+        >
+      </a>
+      <!-- Settings Tab -->
+      <a class="flex flex-col items-center gap-1 group" href="#">
+        <div
+          class="px-5 py-1 rounded-full text-on-surface-variant group-hover:bg-surface-variant transition-colors"
+        >
+          <span class="material-symbols-outlined">settings</span>
+        </div>
+        <span class="font-label-md text-label-md text-on-surface-variant"
+          >Settings</span
+        >
+      </a>
+    </nav>
+    <!-- Micro-interaction Script -->
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // Simple haptic-style feedback on clicks
+        const buttons = document.querySelectorAll("button, a");
+        buttons.forEach((btn) => {
+          btn.addEventListener("click", () => {
+            if (window.navigator.vibrate) {
+              window.navigator.vibrate(10);
+            }
+          });
+        });
+
+        // Random subtle shimmer for cards
+        const cards = document.querySelectorAll(".bg-card-dark");
+        cards.forEach((card) => {
+          card.addEventListener("touchstart", () => {
+            card.style.borderColor = "#acc7ff";
+          });
+          card.addEventListener("touchend", () => {
+            setTimeout(() => {
+              card.style.borderColor = "#263247";
+            }, 200);
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
