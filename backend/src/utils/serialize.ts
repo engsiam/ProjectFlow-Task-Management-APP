@@ -7,6 +7,7 @@ export const PUBLIC_USER_FIELDS = {
   name: true,
   avatar: true,
   bio: true,
+  role: true,
   status: true,
   createdAt: true,
   updatedAt: true,
@@ -19,6 +20,7 @@ export const PUBLIC_USER_SAFE = (u: {
   name: string;
   avatar: string | null;
   bio: string | null;
+  role: string;
   status: string;
   createdAt: Date;
   updatedAt: Date;
@@ -29,6 +31,7 @@ export const PUBLIC_USER_SAFE = (u: {
   name: u.name,
   avatar: u.avatar,
   bio: u.bio,
+  role: u.role,
   status: u.status,
   createdAt: u.createdAt,
   updatedAt: u.updatedAt,

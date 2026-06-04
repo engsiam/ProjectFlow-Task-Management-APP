@@ -14,6 +14,7 @@ import {
   statusTone,
 } from "../components/ui.tsx";
 import CommentBox from "./CommentBox.tsx";
+import ConfirmDialog from "./ConfirmDialog.tsx";
 
 const toIsoDate = (date: string) => date ? new Date(`${date}T12:00:00.000Z`).toISOString() : undefined;
 
@@ -40,11 +41,14 @@ export default function TaskDetailModal(
   }, [task.id]);
 
   const projectRole = useMemo(() => {
-    const projectContext = task.project ?? projects.find((p) => p.id === task.projectId) ?? null;
+    const fullProject = projects.find((p) => p.id === task.projectId);
+    const projectContext = fullProject ?? task.project ?? null;
     return getProjectRole(projectContext, currentUserId);
   }, [currentUserId, projects, task.project, task.projectId]);
   const mayEditTask = canEditTask(projectRole);
   const mayDeleteTask = canDeleteTask(projectRole, task, currentUserId);
+
+  const [confirmAction, setConfirmAction] = useState<"delete" | null>(null);
 
   async function save() {
     if (!mayEditTask) return;
@@ -66,13 +70,13 @@ export default function TaskDetailModal(
 
   async function remove() {
     if (!mayDeleteTask) return;
-    if (!confirm(`Delete ${task.title}?`)) return;
     try {
       await del(`/tasks/${task.id}`);
       toast(`"${task.title}" deleted.`, "warning");
       onSaved();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Unable to delete task.";
+      setError(msg);
       toast(msg, "danger");
     }
   }
@@ -331,7 +335,7 @@ export default function TaskDetailModal(
                   <Icon name="content_copy" size={18} /> Save
                 </button>
                 {mayDeleteTask && (
-                  <button type="button" class="btn btn-danger" onClick={remove} style={{ fontSize: "13px", minHeight: "36px" }}>
+                  <button type="button" class="btn btn-danger" onClick={() => setConfirmAction("delete")} style={{ fontSize: "13px", minHeight: "36px" }}>
                     <Icon name="delete" size={18} /> Delete
                   </button>
                 )}
@@ -341,6 +345,16 @@ export default function TaskDetailModal(
           </aside>
         </div>
       </div>
+      {confirmAction === "delete" && (
+        <ConfirmDialog
+          title="Delete task"
+          body={`Are you sure you want to delete "${task.title}"? This cannot be undone.`}
+          confirmLabel="Delete"
+          variant="danger"
+          onCancel={() => setConfirmAction(null)}
+          onConfirm={async () => { setConfirmAction(null); await remove(); }}
+        />
+      )}
     </div>
   );
 }

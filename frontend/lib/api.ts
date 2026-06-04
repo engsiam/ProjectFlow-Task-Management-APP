@@ -1,6 +1,7 @@
 import { API_BASE_URL } from "./constants.ts";
 import { clearSession, getAccessToken, getRefreshToken, saveSession } from "./auth.ts";
 import type { ApiResponse } from "./types.ts";
+import { recordApiCall } from "./api-metrics.ts";
 
 type Query = Record<string, string | number | boolean | undefined | null>;
 type Paginated<T> = {
@@ -37,28 +38,44 @@ let refreshPromise: Promise<boolean> | null = null;
 async function tryRefresh(): Promise<boolean> {
   const rt = getRefreshToken();
   if (!rt) return false;
-  try {
-    const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refreshToken: rt }),
-    });
-    if (!res.ok) return false;
-    const body = await res.json();
-    if (body?.success && body?.data) {
-      saveSession(body.data);
-      return true;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refreshToken: rt }),
+      });
+      if (!res.ok) {
+        if (attempt === 0) {
+          await new Promise((r) => setTimeout(r, 800));
+          continue;
+        }
+        return false;
+      }
+      const body = await res.json();
+      if (body?.success && body?.data) {
+        saveSession(body.data);
+        return true;
+      }
+      return false;
+    } catch {
+      if (attempt === 0) {
+        await new Promise((r) => setTimeout(r, 800));
+        continue;
+      }
+      return false;
     }
-    return false;
-  } catch {
-    return false;
   }
+  return false;
 }
 
 export async function api<T>(
   path: string,
   options: RequestInit & { query?: Query } = {},
 ): Promise<T> {
+  const method = (options.method ?? "GET").toUpperCase();
+  const start = performance.now();
+
   const makeRequest = (token: string | null) => {
     const headers = new Headers(options.headers);
     if (!headers.has("Content-Type") && options.body) {
@@ -72,6 +89,7 @@ export async function api<T>(
   };
 
   let response = await makeRequest(getAccessToken());
+  let status = response.status;
 
   // Transparent token refresh on 401
   if (response.status === 401) {
@@ -82,7 +100,10 @@ export async function api<T>(
     refreshPromise = null;
     if (refreshed) {
       response = await makeRequest(getAccessToken());
+      status = response.status;
     } else {
+      const elapsed = Math.round(performance.now() - start);
+      recordApiCall({ method, path, status: 401, duration: elapsed, timestamp: Date.now() });
       clearSession();
       if (
         typeof location !== "undefined" && !location.pathname.startsWith("/login")
@@ -98,6 +119,9 @@ export async function api<T>(
   if (contentType.includes("application/json")) {
     payload = await response.json();
   }
+
+  const elapsed = Math.round(performance.now() - start);
+  recordApiCall({ method, path, status, duration: elapsed, timestamp: Date.now() });
 
   if (!response.ok) {
     const message =

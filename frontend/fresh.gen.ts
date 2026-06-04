@@ -14,6 +14,7 @@ import * as $projects_index from "./routes/projects/index.tsx";
 import * as $settings from "./routes/settings.tsx";
 import * as $signup from "./routes/signup.tsx";
 import * as $tasks from "./routes/tasks.tsx";
+import * as $ApiMetricsTable from "./islands/ApiMetricsTable.tsx";
 import * as $CommentBox from "./islands/CommentBox.tsx";
 import * as $ConfirmDialog from "./islands/ConfirmDialog.tsx";
 import * as $DashboardClient from "./islands/DashboardClient.tsx";
@@ -57,6 +58,7 @@ const manifest = {
     "./routes/tasks.tsx": $tasks,
   },
   islands: {
+    "./islands/ApiMetricsTable.tsx": $ApiMetricsTable,
     "./islands/CommentBox.tsx": $CommentBox,
     "./islands/ConfirmDialog.tsx": $ConfirmDialog,
     "./islands/DashboardClient.tsx": $DashboardClient,

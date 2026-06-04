@@ -7,6 +7,7 @@ import {
 import type { Notification } from "../lib/types.ts";
 import { Icon } from "../components/ui.tsx";
 import { toast } from "../lib/toast.ts";
+import { notificationHref, notificationIcon } from "../lib/notification-nav.ts";
 
 export default function NotificationDropdown() {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -164,28 +165,52 @@ export default function NotificationDropdown() {
             {items.map((item) => (
               <a
                 key={item.id}
-                href="/notifications"
+                href={notificationHref(item)}
                 class="panel"
-                style={{ padding: "10px", display: "block" }}
+                style={{ padding: "10px", display: "block", textDecoration: "none" }}
                 onClick={() => setOpen(false)}
               >
-                <div style={{ display: "flex", gap: "8px" }}>
+                <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
                   <span
                     style={{
-                      width: "8px",
-                      height: "8px",
-                      borderRadius: "999px",
-                      marginTop: "6px",
-                      background: item.read ? "var(--border)" : "var(--accent)",
+                      width: "28px",
+                      height: "28px",
+                      borderRadius: "8px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                      background: item.read
+                        ? "var(--surface-2)"
+                        : "color-mix(in srgb, var(--primary), transparent 85%)",
+                      color: item.read ? "var(--muted)" : "var(--primary)",
                     }}
-                  />
-                  <div>
-                    <strong style={{ fontSize: "13px" }}>{item.title}</strong>
+                  >
+                    <Icon name={notificationIcon(item)} size={16} />
+                  </span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                      <strong style={{ fontSize: "13px" }}>{item.title}</strong>
+                      {!item.read && (
+                        <span
+                          style={{
+                            width: "6px",
+                            height: "6px",
+                            borderRadius: "999px",
+                            background: "var(--accent)",
+                            flexShrink: 0,
+                          }}
+                        />
+                      )}
+                    </div>
                     <p
                       style={{
                         margin: "2px 0 0",
                         color: "var(--muted)",
                         fontSize: "12px",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
                       }}
                     >
                       {item.message}

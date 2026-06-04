@@ -10,9 +10,10 @@ import {
 } from "../utils/token.ts";
 import { randomToken, sha256 } from "../utils/id.ts";
 import { BadRequestError, ConflictError, UnauthorizedError } from "../utils/errors.ts";
-import { PUBLIC_USER_SAFE } from "../utils/serialize.ts";
+import { PUBLIC_USER_FIELDS, PUBLIC_USER_SAFE } from "../utils/serialize.ts";
 import type { LoginInput, RefreshInput, SignupInput } from "../validators/auth.validator.ts";
 import { slugifyUsername } from "../utils/id.ts";
+import { cacheGet, cacheSet } from "../utils/cache.ts";
 
 const genUsername = async (name: string, email: string): Promise<string> => {
   const base = slugifyUsername(name) || slugifyUsername(email.split("@")[0]) || "user";
@@ -35,21 +36,20 @@ const issueTokens = async (user: {
   email: string;
   username: string;
   name: string;
+  role: string;
 }, meta?: { userAgent?: string; ipAddress?: string }) => {
-  // Parallelize CPU-bound JWT signing + sha256 + DB write
+  // JWT signing and SHA256 are synchronous CPU work; run them in sequence (microseconds)
+  // then do the DB write asynchronously.
   const jti = randomToken(16);
-  const [accessToken, refreshToken] = await Promise.all([
-    Promise.resolve(signAccessToken({
-      sub: user.id,
-      email: user.email,
-      username: user.username,
-      name: user.name,
-    })),
-    Promise.resolve(signRefreshToken({ sub: user.id, jti })),
-  ]);
-  const [tokenHash] = await Promise.all([
-    sha256(refreshToken),
-  ]);
+  const accessToken = signAccessToken({
+    sub: user.id,
+    email: user.email,
+    username: user.username,
+    name: user.name,
+    role: user.role,
+  });
+  const refreshToken = signRefreshToken({ sub: user.id, jti });
+  const tokenHash = await sha256(refreshToken);
   const expiresAt = new Date(Date.now() + refreshTokenExpiresInSeconds() * 1000);
   await prisma.refreshToken.create({
     data: {
@@ -91,10 +91,19 @@ export const login = async (
   meta?: { userAgent?: string; ipAddress?: string },
 ) => {
   const user = await prisma.user.findUnique({ where: { email: input.email } });
-  if (!user) throw new UnauthorizedError("Invalid email or password");
-  if (user.status === "DISABLED") throw new UnauthorizedError("Account is disabled");
+  if (!user) {
+    throw new UnauthorizedError("Invalid email or password");
+  }
+
+  if (user.status === "DISABLED") {
+    throw new UnauthorizedError("Account is disabled");
+  }
+
   const ok = await verifyPassword(input.password, user.password);
-  if (!ok) throw new UnauthorizedError("Invalid email or password");
+  if (!ok) {
+    throw new UnauthorizedError("Invalid email or password");
+  }
+
   const tokens = await issueTokens(user, meta);
   return { user: PUBLIC_USER_SAFE(user), ...tokens };
 };
@@ -111,19 +120,14 @@ export const refresh = async (input: RefreshInput) => {
   if (!stored || stored.revoked || stored.expiresAt < new Date()) {
     throw new UnauthorizedError("Refresh token not recognized");
   }
-  // Rotate: revoke old, issue new — parallel where possible
+  // Issue new tokens in parallel. Keep the old token valid so concurrent
+  // refreshes from multiple tabs don't race and invalidate each other.
   const jti = randomToken(16);
   const newRefreshToken = signRefreshToken({ sub: payload.sub, jti });
-  const [newHash] = await Promise.all([
-    sha256(newRefreshToken),
-    prisma.refreshToken.update({
-      where: { id: stored.id },
-      data: { revoked: true },
-    }),
-  ]);
+  const newHash = await sha256(newRefreshToken);
   const user = await prisma.user.findUnique({
     where: { id: payload.sub },
-    select: { id: true, email: true, username: true, name: true, status: true },
+    select: { id: true, email: true, username: true, name: true, role: true, status: true },
   });
   if (!user) throw new UnauthorizedError("User no longer exists");
   if (user.status === "DISABLED") throw new UnauthorizedError("Account is disabled");
@@ -132,6 +136,7 @@ export const refresh = async (input: RefreshInput) => {
     email: user.email,
     username: user.username,
     name: user.name,
+    role: user.role,
   });
   await prisma.refreshToken.create({
     data: {
@@ -164,7 +169,15 @@ export const logout = async (userId: string, refreshToken?: string) => {
 };
 
 export const me = async (userId: string) => {
-  const user = await prisma.user.findUnique({ where: { id: userId } });
+  const cacheKey = `user:${userId}`;
+  const cached = cacheGet<ReturnType<typeof PUBLIC_USER_SAFE>>(cacheKey);
+  if (cached) return cached;
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: PUBLIC_USER_FIELDS,
+  });
   if (!user) throw new BadRequestError("User not found");
-  return PUBLIC_USER_SAFE(user);
+  const result = PUBLIC_USER_SAFE(user as Parameters<typeof PUBLIC_USER_SAFE>[0]);
+  cacheSet(cacheKey, result, 10_000);
+  return result;
 };

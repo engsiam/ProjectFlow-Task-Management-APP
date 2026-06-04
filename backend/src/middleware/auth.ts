@@ -53,6 +53,7 @@ export const auth = (): MiddlewareHandler<{ Variables: AppVariables }> => {
       email: payload.email,
       username: payload.username,
       name: payload.name,
+      role: payload.role ?? "TEAM_MEMBER",
     });
     await next();
   };
@@ -73,6 +74,7 @@ export const optionalAuth = (): MiddlewareHandler<{ Variables: Partial<AppVariab
               email: payload.email,
               username: payload.username,
               name: payload.name,
+              role: payload.role ?? "TEAM_MEMBER",
             });
           }
         } catch {

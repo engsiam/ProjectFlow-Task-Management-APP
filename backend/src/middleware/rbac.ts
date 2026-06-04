@@ -13,6 +13,20 @@ import {
 } from "../utils/errors.ts";
 import { isRoleAtLeast, type RoleType } from "../types/domain.ts";
 
+/** Middleware that enforces a minimum global role on the authenticated user. */
+export const requireGlobalRole = (
+  minRole: RoleType,
+): MiddlewareHandler<{ Variables: AppVariables }> => {
+  return async (c: Context, next: Next) => {
+    const user = c.get("user");
+    if (!user) throw new UnauthorizedError();
+    if (!isRoleAtLeast(user.role as RoleType, minRole)) {
+      throw new ForbiddenError(`Requires global role ${minRole} or higher`);
+    }
+    await next();
+  };
+};
+
 export const requireProjectRole = (
   minRole: RoleType,
   paramName = "projectId",

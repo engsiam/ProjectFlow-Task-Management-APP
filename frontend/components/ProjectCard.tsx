@@ -4,6 +4,7 @@ import { getProjectRole } from "../lib/roles.ts";
 import { toast } from "../lib/toast.ts";
 import type { Project } from "../lib/types.ts";
 import { Avatar, Icon } from "./ui.tsx";
+import ConfirmDialog from "../islands/ConfirmDialog.tsx";
 
 function projectHealth(project: Project): { label: string; tone: "success" | "warning" | "danger" | "neutral" } {
   if (project.status === "COMPLETED") return { label: "Completed", tone: "success" };
@@ -98,8 +99,9 @@ export default function ProjectCard(
     : 0;
   const completedTasks = project.taskStats?.done ?? 0;
 
+  const [confirmAction, setConfirmAction] = useState<"archive" | "delete" | null>(null);
+
   async function archive() {
-    if (!confirm(`Archive ${project.name}?`)) return;
     try {
       await post(`/projects/${project.id}/archive`);
       toast(`"${project.name}" archived.`, "success");
@@ -110,7 +112,6 @@ export default function ProjectCard(
   }
 
   async function remove() {
-    if (!confirm(`Delete ${project.name}? This cannot be undone.`)) return;
     try {
       await del(`/projects/${project.id}`);
       toast(`"${project.name}" deleted.`, "warning");
@@ -125,8 +126,8 @@ export default function ProjectCard(
   ];
   if (projectRole === "ADMIN") {
     actions.push(
-      { label: "Archive", icon: "archive", onClick: archive },
-      { label: "Delete", icon: "delete", danger: true, onClick: remove },
+      { label: "Archive", icon: "archive", onClick: () => setConfirmAction("archive") },
+      { label: "Delete", icon: "delete", danger: true, onClick: () => setConfirmAction("delete") },
     );
   }
 
@@ -188,6 +189,26 @@ export default function ProjectCard(
           <span class="pc-task-count">{openTasks} open · {completedTasks} closed</span>
         </div>
       </div>
+      {confirmAction === "archive" && (
+        <ConfirmDialog
+          title="Archive project"
+          body={`Are you sure you want to archive "${project.name}"? Archived projects can be restored later.`}
+          confirmLabel="Archive"
+          variant="primary"
+          onCancel={() => setConfirmAction(null)}
+          onConfirm={async () => { setConfirmAction(null); await archive(); }}
+        />
+      )}
+      {confirmAction === "delete" && (
+        <ConfirmDialog
+          title="Delete project"
+          body={`Are you sure you want to delete "${project.name}"? All tasks, members, and data will be permanently removed.`}
+          confirmLabel="Delete"
+          variant="danger"
+          onCancel={() => setConfirmAction(null)}
+          onConfirm={async () => { setConfirmAction(null); await remove(); }}
+        />
+      )}
     </article>
   );
 }

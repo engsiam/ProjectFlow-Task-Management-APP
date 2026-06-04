@@ -14,6 +14,7 @@ import {
   Icon,
   Skeleton,
 } from "../components/ui.tsx";
+import { notificationHref, notificationIcon } from "../lib/notification-nav.ts";
 
 export default function NotificationsClient() {
   const [items, setItems] = useState<Notification[]>([]);
@@ -148,32 +149,47 @@ export default function NotificationsClient() {
             style={{ padding: "14px", display: "grid", gap: "10px" }}
           >
             {items.map((item) => (
-              <article
+              <div
                 key={item.id}
                 class="panel"
                 style={{
-                  padding: "14px",
+                  padding: "0",
                   display: "grid",
                   gridTemplateColumns: "1fr auto",
-                  gap: "12px",
-                  alignItems: "center",
+                  gap: "0",
+                  alignItems: "stretch",
+                  overflow: "hidden",
                 }}
               >
-                <div style={{ display: "flex", gap: "10px" }}>
+                <a
+                  href={notificationHref(item)}
+                  style={{
+                    display: "flex",
+                    gap: "12px",
+                    padding: "14px",
+                    textDecoration: "none",
+                    color: "inherit",
+                    cursor: "pointer",
+                  }}
+                >
                   <span
-                    class="brand-mark"
                     style={{
-                      width: "34px",
-                      height: "34px",
+                      width: "36px",
+                      height: "36px",
+                      borderRadius: "10px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
                       background: item.read
                         ? "var(--surface-2)"
-                        : "var(--primary)",
-                      color: item.read ? "var(--muted)" : "white",
+                        : "color-mix(in srgb, var(--primary), transparent 85%)",
+                      color: item.read ? "var(--muted)" : "var(--primary)",
                     }}
                   >
-                    <Icon name="notifications" size={18} />
+                    <Icon name={notificationIcon(item)} size={18} />
                   </span>
-                  <div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <div
                       style={{
                         display: "flex",
@@ -185,24 +201,27 @@ export default function NotificationsClient() {
                       <strong>{item.title}</strong>
                       {!item.read && <Badge tone="warning">Unread</Badge>}
                     </div>
-                    <p style={{ margin: "4px 0 0", color: "var(--muted)" }}>
+                    <p style={{ margin: "4px 0 0", color: "var(--muted)", fontSize: "13px" }}>
                       {item.message}
                     </p>
                   </div>
+                </a>
+                <div style={{ display: "flex", alignItems: "center", padding: "0 14px 0 0" }}>
+                  <button
+                    type="button"
+                    class="btn btn-secondary"
+                    style={{ whiteSpace: "nowrap", fontSize: "12px", minHeight: "30px" }}
+                    disabled={item.read || busyId === item.id || markingAll}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); markRead(item.id); }}
+                  >
+                    {item.read
+                      ? "Read"
+                      : busyId === item.id
+                      ? "Saving..."
+                      : "Mark read"}
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  class="btn btn-secondary"
-                  disabled={item.read || busyId === item.id || markingAll}
-                  onClick={() => markRead(item.id)}
-                >
-                  {item.read
-                    ? "Read"
-                    : busyId === item.id
-                    ? "Saving..."
-                    : "Mark read"}
-                </button>
-              </article>
+              </div>
             ))}
           </div>
         )}

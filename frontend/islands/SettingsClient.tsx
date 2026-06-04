@@ -6,6 +6,7 @@ import { toast } from "../lib/toast.ts";
 import type { User } from "../lib/types.ts";
 import { Avatar, Button, Icon, Skeleton } from "../components/ui.tsx";
 import ThemeToggle from "./ThemeToggle.tsx";
+import ApiMetricsTable from "./ApiMetricsTable.tsx";
 
 const AVATAR_UPLOAD_URL = `${API_BASE_URL}/upload/avatar`;
 const MAX_AVATAR_SIZE = 2 * 1024 * 1024; // 2 MB
@@ -215,6 +216,20 @@ export default function SettingsClient() {
           <Button variant="danger" onClick={logout}>
             <Icon name="logout" size={18} /> Logout
           </Button>
+        </div>
+      </section>
+
+      <hr style={{ border: "none", borderTop: "1px solid var(--border)", margin: "12px 0" }} />
+
+      <section>
+        <p class="mono" style={{ margin: 0, color: "var(--muted)", fontSize: "11px" }}>
+          DEBUG
+        </p>
+        <h2 class="headline" style={{ margin: "4px 0 16px", fontSize: "24px" }}>
+          API Response Times
+        </h2>
+        <div class="card" style={{ padding: "20px" }}>
+          <ApiMetricsTable />
         </div>
       </section>
     </div>

@@ -33,6 +33,9 @@ export const getProjectRole = (
     null;
 };
 
+export const canCreateProject = (role?: Role | null) =>
+  isRoleAtLeast(role, "PROJECT_MANAGER");
+
 export const canInviteMembers = (role?: Role | null) =>
   isRoleAtLeast(role, "PROJECT_MANAGER");
 

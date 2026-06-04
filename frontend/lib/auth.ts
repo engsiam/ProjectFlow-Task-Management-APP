@@ -1,4 +1,4 @@
-import type { User } from "./types.ts";
+import type { Role, User } from "./types.ts";
 
 const ACCESS_TOKEN_KEY = "projectflow.accessToken";
 const REFRESH_TOKEN_KEY = "projectflow.refreshToken";
@@ -28,12 +28,31 @@ export function saveSession(data: {
   if (data.user) localStorage.setItem(USER_KEY, JSON.stringify(data.user));
 }
 
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const decoded = atob(parts[1].replace(/-/g, "+").replace(/_/g, "/"));
+    return JSON.parse(decoded);
+  } catch {
+    return null;
+  }
+}
+
 export function getCurrentUser(): User | null {
   if (typeof localStorage === "undefined") return null;
   const raw = localStorage.getItem(USER_KEY);
   if (!raw) return null;
   try {
-    return JSON.parse(raw) as User;
+    const user = JSON.parse(raw) as User;
+    if (!user.role) {
+      const token = getAccessToken();
+      if (token) {
+        const payload = decodeJwtPayload(token);
+        if (payload?.role) user.role = payload.role as Role;
+      }
+    }
+    return user;
   } catch {
     return null;
   }

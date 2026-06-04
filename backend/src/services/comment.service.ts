@@ -1,6 +1,7 @@
 // Comment service.
 
 import { prisma } from "../prisma/client.ts";
+import { isRoleAtLeast, type RoleType } from "../types/domain.ts";
 import { ForbiddenError, NotFoundError } from "../utils/errors.ts";
 import { extractMentions } from "../utils/id.ts";
 import { logActivity } from "./activity.service.ts";
@@ -26,9 +27,9 @@ const ensureProjectAccess = async (
     where: { projectId_userId: { projectId, userId } },
   });
   if (!member) throw new ForbiddenError("You are not a member of this project");
-  const rank = { VIEWER: 1, TEAM_MEMBER: 2, PROJECT_MANAGER: 3, ADMIN: 4 }[member.role as "VIEWER"];
-  const min = { VIEWER: 1, TEAM_MEMBER: 2, PROJECT_MANAGER: 3, ADMIN: 4 }[minRole];
-  if (rank < min) throw new ForbiddenError(`Requires role ${minRole} or higher`);
+  if (!isRoleAtLeast(member.role as RoleType, minRole as RoleType)) {
+    throw new ForbiddenError(`Requires role ${minRole} or higher`);
+  }
   return { project };
 };
 
@@ -244,7 +245,7 @@ export const remove = async (userId: string, commentId: string) => {
   if (!project) throw new NotFoundError("Project not found");
   const member = project.members[0];
   const isOwner = project.ownerId === userId;
-  const isManager = isOwner || (member && (member.role === "PROJECT_MANAGER" || member.role === "ADMIN"));
+  const isManager = isOwner || (member && isRoleAtLeast(member.role as RoleType, "PROJECT_MANAGER"));
   if (comment.authorId !== userId && !isManager) {
     throw new ForbiddenError("You can only delete your own comments");
   }

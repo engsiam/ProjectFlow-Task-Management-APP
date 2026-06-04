@@ -1,10 +1,11 @@
 import { useEffect, useState } from "preact/hooks";
-import { getList } from "../lib/api.ts";
-import { getCurrentUser, requireClientAuth } from "../lib/auth.ts";
-import type { Project } from "../lib/types.ts";
+import { get, getList } from "../lib/api.ts";
+import { getCurrentUser, requireClientAuth, saveSession } from "../lib/auth.ts";
+import type { Project, Role, User } from "../lib/types.ts";
 import { Button, EmptyState, Icon, Skeleton } from "../components/ui.tsx";
 import ProjectCard from "../components/ProjectCard.tsx";
 import ProjectCreateModal from "./ProjectCreateModal.tsx";
+import { canCreateProject } from "../lib/roles.ts";
 
 export default function ProjectsClient() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -12,6 +13,9 @@ export default function ProjectsClient() {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState("");
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserRole, setCurrentUserRole] = useState<Role | undefined>(
+    getCurrentUser()?.role,
+  );
 
   async function load() {
     requireClientAuth();
@@ -27,7 +31,17 @@ export default function ProjectsClient() {
   }
 
   useEffect(() => { load(); }, []);
-  useEffect(() => { setCurrentUserId(getCurrentUser()?.id ?? null); }, []);
+
+  useEffect(() => {
+    const cached = getCurrentUser();
+    setCurrentUserId(cached?.id ?? null);
+    if (!cached?.role) {
+      get<User>("/auth/me").then((data) => {
+        saveSession({ user: data });
+        setCurrentUserRole(data.role as Role);
+      }).catch(() => null);
+    }
+  }, []);
 
   if (loading) {
     return (
@@ -36,6 +50,8 @@ export default function ProjectsClient() {
       </div>
     );
   }
+
+  const mayCreate = canCreateProject(currentUserRole);
 
   const activeCount = projects.filter((p) => p.status === "ACTIVE").length;
   const completedCount = projects.filter((p) => p.status === "COMPLETED").length;
@@ -59,9 +75,11 @@ export default function ProjectsClient() {
               {completedCount > 0 && <span class="pc-count-badge pc-count-badge--done">{completedCount} Completed</span>}
             </div>
           )}
-          <Button variant="primary" onClick={() => setOpen(true)}>
-            <Icon name="add" size={18} /> New Project
-          </Button>
+          {mayCreate && (
+            <Button variant="primary" onClick={() => setOpen(true)}>
+              <Icon name="add" size={18} /> New Project
+            </Button>
+          )}
         </div>
       </header>
 
@@ -73,11 +91,13 @@ export default function ProjectsClient() {
             <EmptyState
               icon="folder_open"
               title="No projects yet"
-              body="Create your first project to organize tasks, invite members, and track progress."
+              body={mayCreate ? "Create your first project to organize tasks, invite members, and track progress." : "You don't have permission to create projects."}
             />
-            <Button variant="primary" onClick={() => setOpen(true)}>
-              <Icon name="add" size={18} /> Create Project
-            </Button>
+            {mayCreate && (
+              <Button variant="primary" onClick={() => setOpen(true)}>
+                <Icon name="add" size={18} /> Create Project
+              </Button>
+            )}
           </div>
         )
         : (

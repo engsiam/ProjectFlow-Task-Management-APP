@@ -92,6 +92,7 @@ export type Notification = {
   message: string;
   read: boolean;
   type?: string;
+  data?: Record<string, unknown>;
   createdAt: string;
 };
 

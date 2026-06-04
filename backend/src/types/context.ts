@@ -6,6 +6,7 @@ export type AuthUser = {
   email: string;
   username: string;
   name: string;
+  role: string;
 };
 
 export type AppVariables = {

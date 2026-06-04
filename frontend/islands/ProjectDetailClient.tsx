@@ -10,6 +10,7 @@ import {
   getProjectRole,
 } from "../lib/roles.ts";
 import type { Activity, Project, ProjectMember, Role, Task } from "../lib/types.ts";
+import ConfirmDialog from "./ConfirmDialog.tsx";
 import {
   Avatar,
   Badge,
@@ -431,7 +432,6 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
         <TaskCreateModal
           projects={[project]}
           projectId={project.id}
-          members={members}
           onClose={() => setTaskOpen(false)}
           onCreated={() => { load(); }}
         />
@@ -495,6 +495,8 @@ function MemberList({
   projectId: string;
   onChanged: () => void;
 }) {
+  const [removingMember, setRemovingMember] = useState<ProjectMember | null>(null);
+
   async function changeRole(member: ProjectMember, role: Role) {
     try {
       await patch(`/projects/${projectId}/members/${member.user.id}/role`, { role });
@@ -506,7 +508,6 @@ function MemberList({
     }
   }
   async function removeMember(member: ProjectMember) {
-    if (!confirm(`Remove ${member.user.name} from this project?`)) return;
     try {
       await del(`/projects/${projectId}/members/${member.user.id}`);
       toast(`${member.user.name} removed from project.`, "warning");
@@ -520,46 +521,58 @@ function MemberList({
     return <EmptyState icon="group" title="No members" body="Invite teammates to collaborate." />;
   }
   return (
-    <div class="card" style="padding:14px;display:grid;gap:4px">
-      {members.map((member) => {
-        const editableRoles = getAssignableRoles(actorRole, member.role);
-        const removable = canRemoveMember(actorRole, member.role, currentUserId, member.user.id);
-        return (
-          <div key={member.id} class="pd-member-row">
-            <div class="pd-member-info">
-              <Avatar user={member.user} size={32} />
-              <div>
-                <div style="font-size:13px;font-weight:500">{member.user.name}</div>
-                <div style="font-size:11px;color:var(--muted)">{member.user.email}</div>
+    <>
+      <div class="card" style="padding:14px;display:grid;gap:4px">
+        {members.map((member) => {
+          const editableRoles = getAssignableRoles(actorRole, member.role);
+          const removable = canRemoveMember(actorRole, member.role, currentUserId, member.user.id);
+          return (
+            <div key={member.id} class="pd-member-row">
+              <div class="pd-member-info">
+                <Avatar user={member.user} size={32} />
+                <div>
+                  <div style="font-size:13px;font-weight:500">{member.user.name}</div>
+                  <div style="font-size:11px;color:var(--muted)">{member.user.email}</div>
+                </div>
+              </div>
+              <div class="pd-member-actions">
+                {editableRoles.length === 0
+                  ? <Badge>{member.role}</Badge>
+                  : (
+                    <select
+                      class="select"
+                      value={member.role}
+                      style="width:120px"
+                      onChange={(e) => changeRole(member, e.currentTarget.value as Role)}
+                    >
+                      {editableRoles.map((role) => (
+                        <option key={role} value={role}>
+                          {role.charAt(0) + role.slice(1).toLowerCase()}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                {removable && (
+                  <button type="button" class="btn btn-danger" style="padding:4px 8px;font-size:12px" onClick={() => setRemovingMember(member)}>
+                    <Icon name="person_remove" size={14} /> Remove
+                  </button>
+                )}
               </div>
             </div>
-            <div class="pd-member-actions">
-              {editableRoles.length === 0
-                ? <Badge>{member.role}</Badge>
-                : (
-                  <select
-                    class="select"
-                    value={member.role}
-                    style="width:120px"
-                    onChange={(e) => changeRole(member, e.currentTarget.value as Role)}
-                  >
-                    {editableRoles.map((role) => (
-                      <option key={role} value={role}>
-                        {role.charAt(0) + role.slice(1).toLowerCase()}
-                      </option>
-                    ))}
-                  </select>
-                )}
-              {removable && (
-                <button type="button" class="btn btn-danger" style="padding:4px 8px;font-size:12px" onClick={() => removeMember(member)}>
-                  <Icon name="person_remove" size={14} /> Remove
-                </button>
-              )}
-            </div>
-          </div>
-        );
-      })}
-    </div>
+          );
+        })}
+      </div>
+      {removingMember && (
+        <ConfirmDialog
+          title="Remove member"
+          body={`Are you sure you want to remove ${removingMember.user.name} from the project? Tasks assigned to them will remain.`}
+          confirmLabel="Remove"
+          variant="danger"
+          onCancel={() => setRemovingMember(null)}
+          onConfirm={async () => { const m = removingMember; setRemovingMember(null); await removeMember(m); }}
+        />
+      )}
+    </>
   );
 }
 

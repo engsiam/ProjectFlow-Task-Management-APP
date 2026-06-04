@@ -5,20 +5,26 @@ import { toast } from "../lib/toast.ts";
 import type {
   Priority,
   Project,
-  ProjectMember,
   Task,
   TaskStatus,
 } from "../lib/types.ts";
 import { Button, Icon } from "../components/ui.tsx";
 
+interface PublicUser {
+  id: string;
+  name: string;
+  username?: string;
+  email: string;
+  avatar?: string | null;
+}
+
 const toIsoDate = (date: string) =>
   date ? new Date(`${date}T12:00:00.000Z`).toISOString() : undefined;
 
 export default function TaskCreateModal(
-  { projects, projectId, members = [], initialStatus, onClose, onCreated }: {
+  { projects, projectId, initialStatus, onClose, onCreated }: {
     projects: Project[];
     projectId?: string;
-    members?: ProjectMember[];
     initialStatus?: TaskStatus;
     onClose: () => void;
     onCreated: (task?: Task) => void | Promise<void>;
@@ -35,53 +41,46 @@ export default function TaskCreateModal(
   const [dueDate, setDueDate] = useState("");
   const [labels, setLabels] = useState("");
   const [loading, setLoading] = useState(false);
-  const [memberLoading, setMemberLoading] = useState(false);
-  const [loadedMembers, setLoadedMembers] = useState<ProjectMember[]>([]);
+  const [userLoading, setUserLoading] = useState(false);
+  const [allUsers, setAllUsers] = useState<PublicUser[]>([]);
   const [error, setError] = useState("");
-  const memberOptions = members.length > 0 ? members : loadedMembers;
 
   useEffect(() => {
     setAssigneeId("");
   }, [selectedProject]);
 
   useEffect(() => {
-    if (!selectedProject || members.length > 0) {
-      setLoadedMembers([]);
-      setMemberLoading(false);
+    if (!selectedProject) {
+      setAllUsers([]);
+      setUserLoading(false);
       return;
     }
 
     let active = true;
-    setLoadedMembers([]);
-    setMemberLoading(true);
-    getList<ProjectMember>(`/projects/${selectedProject}/members`, {
-      limit: 100,
-    })
+    setAllUsers([]);
+    setUserLoading(true);
+    getList<PublicUser>("/users/search", { limit: 50 })
       .then((items) => {
-        if (active) setLoadedMembers(items);
+        if (active) setAllUsers(items);
       })
       .catch(() => {
-        if (active) setLoadedMembers([]);
+        if (active) setAllUsers([]);
       })
       .finally(() => {
-        if (active) setMemberLoading(false);
+        if (active) setUserLoading(false);
       });
 
     return () => {
       active = false;
     };
-  }, [selectedProject, members.length]);
+  }, [selectedProject]);
 
   useEffect(() => {
     const currentUserId = getCurrentUser()?.id;
-    if (
-      !currentUserId ||
-      !memberOptions.some((member) => member.user.id === currentUserId)
-    ) {
-      return;
-    }
+    if (!currentUserId) return;
+    if (!allUsers.some((user) => user.id === currentUserId)) return;
     setAssigneeId((value) => value || currentUserId);
-  }, [memberOptions, selectedProject]);
+  }, [allUsers, selectedProject]);
 
   async function submit(e: Event) {
     e.preventDefault();
@@ -188,26 +187,24 @@ export default function TaskCreateModal(
               <option value="URGENT">Urgent</option>
             </select>
           </div>
-          {(memberOptions.length > 0 || memberLoading) && (
-            <div>
-              <label class="label">Assignee</label>
-              <select
-                class="select"
-                value={assigneeId}
-                onChange={(e) => setAssigneeId(e.currentTarget.value)}
-                disabled={memberLoading}
-              >
-                <option value="">
-                  {memberLoading ? "Loading members..." : "Unassigned"}
+          <div>
+            <label class="label">Assignee</label>
+            <select
+              class="select"
+              value={assigneeId}
+              onChange={(e) => setAssigneeId(e.currentTarget.value)}
+              disabled={userLoading}
+            >
+              <option value="">
+                {userLoading ? "Loading users..." : "Unassigned"}
+              </option>
+              {allUsers.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.name}
                 </option>
-                {memberOptions.map((member) => (
-                  <option key={member.user.id} value={member.user.id}>
-                    {member.user.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
+              ))}
+            </select>
+          </div>
           <div>
             <label class="label">Due date</label>
             <input

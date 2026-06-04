@@ -211,9 +211,6 @@ export const update = async (
 export const archive = async (userId: string, projectId: string) => {
   const project = await prisma.project.findUnique({ where: { id: projectId } });
   if (!project) throw new NotFoundError("Project not found");
-  if (project.ownerId !== userId) {
-    throw new ForbiddenError("Only OWNER can archive a project");
-  }
   const updated = await prisma.project.update({
     where: { id: projectId },
     data: { status: "ARCHIVED", archivedAt: new Date() },
@@ -231,9 +228,6 @@ export const archive = async (userId: string, projectId: string) => {
 export const remove = async (userId: string, projectId: string) => {
   const project = await prisma.project.findUnique({ where: { id: projectId } });
   if (!project) throw new NotFoundError("Project not found");
-  if (project.ownerId !== userId) {
-    throw new ForbiddenError("Only OWNER can delete a project");
-  }
   await prisma.activityLog.deleteMany({ where: { projectId } });
   await prisma.project.delete({ where: { id: projectId } });
 };

@@ -1,26 +1,32 @@
-// Simple in-memory cache with TTL.
-// Use for expensive queries like dashboard analytics.
-// In production, replace with Deno KV or Redis.
+// Simple in-memory TTL cache. NOT shared across workers — single-process only.
 
-interface CacheEntry<T> {
-  value: T;
-  expiry: number;
+const store = new Map<string, { value: unknown; expiry: number }>();
+
+let cleanupTimer: ReturnType<typeof setInterval> | null = null;
+
+function startCleanup() {
+  if (cleanupTimer) return;
+  cleanupTimer = setInterval(() => {
+    const now = Date.now();
+    for (const [key, entry] of store) {
+      if (entry.expiry <= now) store.delete(key);
+    }
+  }, 30_000).unref?.();
 }
 
-const store = new Map<string, CacheEntry<unknown>>();
-
-export function cacheGet<T>(key: string): T | null {
+export function cacheGet<T>(key: string): T | undefined {
   const entry = store.get(key);
-  if (!entry) return null;
-  if (entry.expiry < Date.now()) {
+  if (!entry) return undefined;
+  if (entry.expiry <= Date.now()) {
     store.delete(key);
-    return null;
+    return undefined;
   }
   return entry.value as T;
 }
 
-export function cacheSet<T>(key: string, value: T, ttlMs = 15_000): void {
+export function cacheSet<T>(key: string, value: T, ttlMs: number): void {
   store.set(key, { value, expiry: Date.now() + ttlMs });
+  startCleanup();
 }
 
 export function cacheDelete(key: string): void {
@@ -31,7 +37,6 @@ export function cacheClear(): void {
   store.clear();
 }
 
-// Build a cache key from userId and optional suffix
-export function cacheKey(userId: string, suffix = ""): string {
-  return `pf:${userId}:${suffix}`;
+export function cacheKey(...parts: string[]): string {
+  return parts.join(":");
 }

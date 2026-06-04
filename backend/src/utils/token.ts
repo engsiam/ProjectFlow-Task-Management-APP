@@ -8,6 +8,7 @@ export type AccessTokenPayload = {
   email: string;
   username: string;
   name: string;
+  role: string;
   type: "access";
 };
 

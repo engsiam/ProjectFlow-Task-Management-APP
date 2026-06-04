@@ -51,8 +51,8 @@ export const signupBodySchema = z.object({
 });
 
 export const loginBodySchema = z.object({
-  email: z.string().email().openapi({ example: "owner@example.com" }),
-  password: z.string().openapi({ example: "Password123!" }),
+  email: z.string().email().toLowerCase().trim().openapi({ example: "owner@example.com" }),
+  password: z.string().min(1).openapi({ example: "Password123!" }),
 });
 
 export const refreshBodySchema = z.object({

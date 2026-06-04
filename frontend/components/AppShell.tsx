@@ -8,6 +8,8 @@ import SearchCommand from "../islands/SearchCommand.tsx";
 import ToastProvider from "../islands/ToastProvider.tsx";
 import ShellUser from "../islands/ShellUser.tsx";
 import GlobalErrorHandler from "../islands/GlobalErrorHandler.tsx";
+import { getCurrentUser } from "../lib/auth.ts";
+import { canCreateProject } from "../lib/roles.ts";
 import { prefetchOnHover } from "../lib/prefetch.ts";
 import ErrorBoundary from "./ErrorBoundary.tsx";
 
@@ -57,6 +59,8 @@ export function AppShell(
   { active, title, children }: { active: string; title: string; children: ComponentChildren },
 ) {
   const collapsed = sidebarCollapsed.value;
+  const user = typeof localStorage !== "undefined" ? getCurrentUser() : null;
+  const canCreate = canCreateProject(user?.role);
 
   return (
     <div class={`app-shell${collapsed ? " sidebar-collapsed" : ""}`}>
@@ -92,6 +96,7 @@ export function AppShell(
                     key={item.label}
                     class={`sb-link ${active === item.label ? "active" : ""}`}
                     href={item.href}
+                    data-label={item.label}
                     ref={(el) => el && prefetchOnHover(el, item.href)}
                   >
                     <span class="sb-link-icon">
@@ -105,19 +110,32 @@ export function AppShell(
           </nav>
 
           <div class="sb-footer">
-            {!collapsed && (
-              <div class="sb-status-badge">
-                <SystemStatus />
-              </div>
-            )}
-            {collapsed && (
-              <div class="sb-status-dot">
-                <SystemStatus compact />
-              </div>
-            )}
-            <button class="sb-fab" onClick={() => location.href = "/projects"}>
-              <Icon name="add" size={20} />
-            </button>
+            {!collapsed
+              ? (
+                <>
+                  <div class="sb-api-row">
+                    <SystemStatus />
+                  </div>
+                  {canCreate && (
+                    <button class="sb-cta" onClick={() => location.href = "/projects"}>
+                      <Icon name="add" size={16} />
+                      <span>New Project</span>
+                    </button>
+                  )}
+                </>
+              )
+              : (
+                <>
+                  <div class="sb-api-dot-collapsed">
+                    <SystemStatus compact />
+                  </div>
+                  {canCreate && (
+                    <button class="sb-fab" onClick={() => location.href = "/projects"}>
+                      <Icon name="add" size={20} />
+                    </button>
+                  )}
+                </>
+              )}
           </div>
         </div>
       </aside>

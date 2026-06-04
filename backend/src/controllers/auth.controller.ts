@@ -17,7 +17,11 @@ export const signup = async (c: Context) => {
 export const login = async (c: Context) => {
   // deno-lint-ignore no-explicit-any
   const body = (c.req as any).valid("json") as LoginInput;
-  const result = await authService.login(body, getClientMeta(c));
+  console.log("[login] Request body:", JSON.stringify(body, null, 2));
+  console.log("[login] Email length:", body?.email?.length, "| Password length:", body?.password?.length);
+  const meta = getClientMeta(c);
+  console.log("[login] Client meta:", JSON.stringify(meta, null, 2));
+  const result = await authService.login(body, meta);
   return respondOk(c, result, "Login successful");
 };
 

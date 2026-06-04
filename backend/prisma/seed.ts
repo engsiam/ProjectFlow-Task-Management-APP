@@ -20,6 +20,7 @@ const usersSeed = [
     email: "admin@example.com",
     username: "olivia",
     name: "Olivia Admin",
+    role: "ADMIN",
     bio: "Founder. Owns the platform roadmap.",
     avatar: "https://i.pravatar.cc/150?img=47",
   },
@@ -27,6 +28,7 @@ const usersSeed = [
     email: "pm@example.com",
     username: "maya",
     name: "Maya PM",
+    role: "PROJECT_MANAGER",
     bio: "Engineering manager. Loves Kanban.",
     avatar: "https://i.pravatar.cc/150?img=32",
   },
@@ -34,6 +36,7 @@ const usersSeed = [
     email: "member@example.com",
     username: "milo",
     name: "Milo Member",
+    role: "TEAM_MEMBER",
     bio: "Frontend engineer. React + Deno fan.",
     avatar: "https://i.pravatar.cc/150?img=12",
   },
@@ -41,6 +44,7 @@ const usersSeed = [
     email: "viewer@example.com",
     username: "vera",
     name: "Vera Viewer",
+    role: "VIEWER",
     bio: "PMO. Read-only observer.",
     avatar: "https://i.pravatar.cc/150?img=49",
   },
@@ -48,6 +52,7 @@ const usersSeed = [
     email: "alex@example.com",
     username: "alex",
     name: "Alex Engineer",
+    role: "TEAM_MEMBER",
     bio: "Backend engineer, MongoDB & Prisma.",
     avatar: "https://i.pravatar.cc/150?img=15",
   },
@@ -94,24 +99,31 @@ const projectsSeed = [
 async function main() {
   console.log("Seeding database...");
 
+  // Clear existing data (order matters for FK constraints)
+  console.log("  Clearing existing data...");
+  await prisma.activityLog.deleteMany({});
+  await prisma.mention.deleteMany({});
+  await prisma.comment.deleteMany({});
+  await prisma.notification.deleteMany({});
+  await prisma.refreshToken.deleteMany({});
+  await prisma.task.deleteMany({});
+  await prisma.invitation.deleteMany({});
+  await prisma.projectMember.deleteMany({});
+  await prisma.project.deleteMany({});
+  await prisma.user.deleteMany({});
+  console.log("  Done clearing.");
+
   // ---- Users
   const passwordHash = await bcrypt.hash(PASSWORD, 10);
   const userByUsername = new Map<string, string>();
   for (const u of usersSeed) {
-    const user = await prisma.user.upsert({
-      where: { email: u.email },
-      update: {
-        name: u.name,
-        username: u.username,
-        avatar: u.avatar,
-        bio: u.bio,
-        status: "ACTIVE",
-      },
-      create: {
+    const user = await prisma.user.create({
+      data: {
         email: u.email,
         password: passwordHash,
         name: u.name,
         username: u.username,
+        role: u.role,
         avatar: u.avatar,
         bio: u.bio,
         status: "ACTIVE",

@@ -169,8 +169,12 @@ export const getById = async (userId: string, taskId: string) => {
   if (task.project.ownerId !== userId) {
     const member = await prisma.projectMember.findUnique({
       where: { projectId_userId: { projectId: task.projectId, userId } },
+      select: { role: true },
     });
     if (!member) throw new ForbiddenError("You are not a member of this project");
+    (task.project as Record<string, unknown>).currentRole = member.role;
+  } else {
+    (task.project as Record<string, unknown>).currentRole = "ADMIN";
   }
   return task;
 };
@@ -191,14 +195,15 @@ export const create = async (userId: string, projectId: string, input: CreateTas
       select: { id: true, role: true },
     });
     if (!member) throw new ForbiddenError("You are not a member of this project");
-    if (member.role === "VIEWER") throw new ForbiddenError("Requires role Team Member or higher");
+    if (!isRoleAtLeast(member.role as RoleType, "TEAM_MEMBER")) throw new ForbiddenError("Requires role Team Member or higher");
   }
   if (input.assigneeId) {
-    const member = await prisma.projectMember.findUnique({
-      where: { projectId_userId: { projectId, userId: input.assigneeId } },
+    const assigneeUser = await prisma.user.findUnique({
+      where: { id: input.assigneeId },
+      select: { id: true, status: true },
     });
-    if (!member) {
-      throw new BadRequestError("Assignee must be a member of the project");
+    if (!assigneeUser || assigneeUser.status !== "ACTIVE") {
+      throw new BadRequestError("Assignee not found");
     }
   }
   // Compute next order in the column
@@ -262,16 +267,25 @@ export const update = async (userId: string, taskId: string, input: UpdateTaskIn
       select: { id: true, role: true },
     });
     if (!member) throw new ForbiddenError("You are not a member of this project");
-    if (member.role === "VIEWER") throw new ForbiddenError("Requires role Team Member or higher");
+    if (!isRoleAtLeast(member.role as RoleType, "TEAM_MEMBER")) throw new ForbiddenError("Requires role Team Member or higher");
+    // Members below PROJECT_MANAGER can only update tasks they own or are assigned to
+    if (
+      !isRoleAtLeast(member.role as RoleType, "PROJECT_MANAGER") &&
+      existing.assigneeId !== userId &&
+      existing.creatorId !== userId
+    ) {
+      throw new ForbiddenError("You can only update tasks assigned to you");
+    }
   }
 
-  // Validate assignee is member
+  // Validate assignee exists and is active
   if (input.assigneeId) {
-    const member = await prisma.projectMember.findUnique({
-      where: { projectId_userId: { projectId: existing.projectId, userId: input.assigneeId } },
+    const assigneeUser = await prisma.user.findUnique({
+      where: { id: input.assigneeId },
+      select: { id: true, status: true },
     });
-    if (!member) {
-      throw new BadRequestError("Assignee must be a member of the project");
+    if (!assigneeUser || assigneeUser.status !== "ACTIVE") {
+      throw new BadRequestError("Assignee not found");
     }
   }
 
@@ -327,7 +341,44 @@ export const update = async (userId: string, taskId: string, input: UpdateTaskIn
     });
   }
 
-  // Notify on completion
+  // Notify on unassignment
+  if (
+    input.assigneeId !== undefined && input.assigneeId !== existing.assigneeId &&
+    existing.assigneeId && existing.assigneeId !== userId
+  ) {
+    await notifyUser({
+      userId: existing.assigneeId,
+      type: "TASK_ASSIGNED",
+      title: "Unassigned from task",
+      message: `You have been unassigned from "${task.title}"`,
+      data: { taskId, projectId: existing.projectId },
+    });
+  }
+
+  // Notify assignee on any field change (title, description, priority, dueDate, status)
+  const hasContentChange =
+    input.title !== undefined || input.description !== undefined ||
+    input.priority !== undefined || input.dueDate !== undefined ||
+    input.labels !== undefined;
+  if (hasContentChange && existing.assigneeId && existing.assigneeId !== userId) {
+    const changedFields: string[] = [];
+    if (input.title !== undefined && input.title !== existing.title) changedFields.push("title");
+    if (input.description !== undefined) changedFields.push("description");
+    if (input.priority !== undefined && input.priority !== existing.priority) changedFields.push("priority");
+    if (input.dueDate !== undefined) changedFields.push("due date");
+    if (input.labels !== undefined) changedFields.push("labels");
+    if (changedFields.length > 0) {
+      await notifyUser({
+        userId: existing.assigneeId,
+        type: "TASK_STATUS",
+        title: "Task updated",
+        message: `"${task.title}" was updated (${changedFields.join(", ")})`,
+        data: { taskId, projectId: existing.projectId },
+      });
+    }
+  }
+
+  // Notify creator on completion
   if (isDoneNow && !wasDoneBefore) {
     await logActivity({
       actorId: userId,
@@ -363,7 +414,14 @@ export const move = async (userId: string, taskId: string, input: MoveTaskInput)
       select: { id: true, role: true },
     });
     if (!member) throw new ForbiddenError("You are not a member of this project");
-    if (member.role === "VIEWER") throw new ForbiddenError("Requires role Team Member or higher");
+    if (!isRoleAtLeast(member.role as RoleType, "TEAM_MEMBER")) throw new ForbiddenError("Requires role Team Member or higher");
+    if (
+      !isRoleAtLeast(member.role as RoleType, "PROJECT_MANAGER") &&
+      existing.assigneeId !== userId &&
+      existing.creatorId !== userId
+    ) {
+      throw new ForbiddenError("You can only move tasks assigned to you");
+    }
   }
 
   let newOrder = input.order;
@@ -410,7 +468,14 @@ export const reorder = async (userId: string, taskId: string, input: ReorderTask
       select: { id: true, role: true },
     });
     if (!member) throw new ForbiddenError("You are not a member of this project");
-    if (member.role === "VIEWER") throw new ForbiddenError("Requires role Team Member or higher");
+    if (!isRoleAtLeast(member.role as RoleType, "TEAM_MEMBER")) throw new ForbiddenError("Requires role Team Member or higher");
+    if (
+      !isRoleAtLeast(member.role as RoleType, "PROJECT_MANAGER") &&
+      existing.assigneeId !== userId &&
+      existing.creatorId !== userId
+    ) {
+      throw new ForbiddenError("You can only reorder tasks assigned to you");
+    }
   }
   return await prisma.task.update({
     where: { id: taskId },
@@ -432,7 +497,7 @@ export const remove = async (userId: string, taskId: string) => {
       select: { id: true, role: true },
     });
     if (!member) throw new ForbiddenError("You are not a member of this project");
-    if (member.role === "VIEWER") throw new ForbiddenError("Requires role Team Member or higher");
+    if (!isRoleAtLeast(member.role as RoleType, "TEAM_MEMBER")) throw new ForbiddenError("Requires role Team Member or higher");
     userRole = member.role as string;
   }
   // Only ADMIN/Project Manager or the creator can delete

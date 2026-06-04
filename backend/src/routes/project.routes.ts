@@ -5,6 +5,7 @@ import type { Handler, MiddlewareHandler } from "hono";
 import * as projectCtrl from "../controllers/project.controller.ts";
 import { auth } from "../middleware/auth.ts";
 import {
+  requireGlobalRole,
   requireProjectManager,
   requireProjectMember,
   requireProjectOwner,
@@ -315,7 +316,7 @@ export const projectRouteEntries: RouteEntry[] = [
   {
     route: createProjectRoute,
     handler: projectCtrl.createProject as Handler,
-    middleware: m([auth()]),
+    middleware: m([auth(), requireGlobalRole("PROJECT_MANAGER")]),
   },
   {
     route: getProjectRoute,

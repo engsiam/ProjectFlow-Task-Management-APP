@@ -24,6 +24,7 @@ model User {
   username  String   @unique
   avatar    String?
   bio       String?
+  role      String   @default("TEAM_MEMBER") // ADMIN, PROJECT_MANAGER, TEAM_MEMBER, VIEWER
   status    String   @default("ACTIVE") // ACTIVE, DISABLED
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -53,6 +54,7 @@ model RefreshToken {
   ipAddress String?
 
   @@index([expiresAt])
+  @@index([userId, revoked])
 }
 
 // ============================================================
@@ -87,7 +89,7 @@ model ProjectMember {
   project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   userId    String   @db.ObjectId
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role      String   @default("MEMBER") // OWNER, MANAGER, MEMBER, VIEWER
+  role      String   @default("TEAM_MEMBER") // ADMIN, PROJECT_MANAGER, TEAM_MEMBER, VIEWER
   joinedAt  DateTime @default(now())
 
   @@unique([projectId, userId])
@@ -98,7 +100,7 @@ model Invitation {
   projectId    String   @db.ObjectId
   project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   email        String
-  role         String   @default("MEMBER") // OWNER, MANAGER, MEMBER, VIEWER
+  role         String   @default("TEAM_MEMBER") // ADMIN, PROJECT_MANAGER, TEAM_MEMBER, VIEWER
   token        String   @unique
   status       String   @default("PENDING") // PENDING, ACCEPTED, REJECTED, EXPIRED, CANCELLED
   invitedById  String   @db.ObjectId
