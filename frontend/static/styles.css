@@ -4565,3 +4565,663 @@ a {
 .btn-group .btn:last-child {
   border-radius: 0 6px 6px 0;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Analytics Module - Charts, KPIs, and Recharts Tooltips
+   ═══════════════════════════════════════════════════════════ */
+
+.analytics-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 4px 0 40px;
+}
+
+.analytics-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.analytics-head-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.analytics-title {
+  font-family: "Hanken Grotesk", Inter, sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.analytics-subtitle {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 0;
+}
+
+.analytics-head-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.analytics-select-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px 4px 4px 12px;
+}
+
+.analytics-select-label {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.analytics-select {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  min-width: 140px;
+}
+
+.analytics-select:hover { background: var(--surface-2); }
+
+.analytics-range {
+  display: inline-flex;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.analytics-range-btn {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+
+.analytics-range-btn:hover { color: var(--text); }
+
+.analytics-range-btn.is-active {
+  background: var(--primary);
+  color: #fff;
+}
+
+.analytics-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: color-mix(in srgb, var(--danger), transparent 88%);
+  color: var(--danger);
+  border: 1px solid color-mix(in srgb, var(--danger), transparent 75%);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* ── KPI Grid ── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.kpi-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  min-height: 116px;
+}
+
+.kpi-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--primary), transparent 94%), transparent 60%);
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--primary), transparent 90%);
+  border-color: color-mix(in srgb, var(--primary), transparent 70%);
+}
+
+.kpi-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.kpi-card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.kpi-card-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 7px;
+  border-radius: 999px;
+}
+
+.kpi-card-label {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  position: relative;
+  z-index: 1;
+}
+
+.kpi-card-value {
+  font-family: "Hanken Grotesk", Inter, sans-serif;
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  position: relative;
+  z-index: 1;
+}
+
+.kpi-card-hint {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.kpi-card-trend-label {
+  font-size: 11px;
+  color: var(--muted);
+  margin: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.kpi-card-skel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.kpi-skel-line {
+  display: block;
+  height: 12px;
+  width: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--surface-2), color-mix(in srgb, var(--surface-2), transparent 50%), var(--surface-2));
+  background-size: 220% 100%;
+  animation: kpi-skel-pulse 1.4s ease-in-out infinite;
+}
+
+.kpi-skel-line.short { width: 50%; }
+
+@keyframes kpi-skel-pulse {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+/* ── Chart Card ── */
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.chart-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 18px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 100%;
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--text), transparent 96%);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.chart-card:hover {
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--text), transparent 94%);
+  border-color: color-mix(in srgb, var(--primary), transparent 80%);
+}
+
+.chart-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.chart-card-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.chart-card-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.chart-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+  font-family: "Hanken Grotesk", Inter, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+.chart-card-subtitle {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 2px 0 0;
+}
+
+.chart-card-actions { display: flex; align-items: center; gap: 6px; }
+
+.chart-card-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 100%;
+}
+
+.chart-card-loading,
+.chart-card-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.chart-card-empty-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--muted), transparent 90%);
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.chart-card-empty-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+
+.chart-card-empty-body {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0;
+  max-width: 220px;
+}
+
+.chart-card-footer {
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  margin-top: 6px;
+}
+
+.chart-card-foot-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.chart-foot-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.chart-foot-label {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 500;
+}
+
+.chart-foot-value {
+  font-family: "Hanken Grotesk", Inter, sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* ── Donut Chart ── */
+.donut-chart-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.donut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.donut-center-value {
+  font-family: "Hanken Grotesk", Inter, sans-serif;
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+}
+
+.donut-center-label {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+/* ── Recharts Tooltip ── */
+.chart-tooltip {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--text), transparent 88%);
+  font-size: 12px;
+  min-width: 160px;
+  backdrop-filter: blur(8px);
+}
+
+.chart-tooltip-title {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  margin: 0 0 6px;
+}
+
+.chart-tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+.chart-tooltip-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 6px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.chart-tooltip-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.chart-tooltip-label {
+  font-size: 12px;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.chart-tooltip-value {
+  font-size: 12px;
+  color: var(--text);
+  font-weight: 700;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.chart-tooltip-muted {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.chart-tooltip-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 6px 0 4px;
+}
+
+.chart-tooltip-total { font-weight: 700; }
+
+/* ── Dashboard Analytics Snapshot ── */
+.dash-analytics-snapshot {
+  background: linear-gradient(135deg, var(--card) 0%, color-mix(in srgb, var(--primary), transparent 96%) 100%);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 22px;
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.dash-analytics-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.dash-analytics-title {
+  font-family: "Hanken Grotesk", Inter, sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dash-analytics-sub {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 4px 0 0;
+}
+
+.dash-analytics-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--primary), transparent 80%);
+  transition: background 0.15s ease;
+}
+
+.dash-analytics-link:hover {
+  background: color-mix(in srgb, var(--primary), transparent 92%);
+}
+
+.dash-analytics-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.dash-analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.dash-analytics-grid > .chart-card { min-height: 280px; }
+
+/* ── Project Analytics Tab ── */
+.pd-analytics {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pd-analytics-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pd-analytics-title {
+  font-family: "Hanken Grotesk", Inter, sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pd-analytics-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: none;
+  padding: 5px 9px;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--primary), transparent 80%);
+  transition: background 0.15s ease;
+}
+
+.pd-analytics-link:hover {
+  background: color-mix(in srgb, var(--primary), transparent 92%);
+}
+
+.pd-analytics-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.pd-analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.pd-analytics-grid > .chart-card { min-height: 280px; }
+
+/* ── Responsive ── */
+@media (max-width: 1200px) {
+  .kpi-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .analytics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 900px) {
+  .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .analytics-grid { grid-template-columns: 1fr; }
+  .dash-analytics-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dash-analytics-grid { grid-template-columns: 1fr; }
+  .pd-analytics-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pd-analytics-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+  .dash-analytics-kpis { grid-template-columns: 1fr; }
+  .pd-analytics-kpis { grid-template-columns: 1fr; }
+  .analytics-head { flex-direction: column; align-items: stretch; }
+  .analytics-head-right { width: 100%; }
+  .analytics-title { font-size: 22px; }
+  .kpi-card-value { font-size: 26px; }
+}
+
+/* ── Dark mode refinements for analytics ── */
+.dark .chart-card { background: var(--card); }
+.dark .chart-tooltip { background: var(--surface); }
+.dark .kpi-card { background: var(--card); }
+.dark .dash-analytics-snapshot { background: linear-gradient(135deg, var(--card) 0%, color-mix(in srgb, var(--primary), transparent 96%) 100%); }
+.dark .chart-card:hover { box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4); }
+.dark .recharts-cartesian-axis-tick-value { fill: var(--muted); }
+.dark .recharts-legend-item-text { color: var(--muted) !important; }

@@ -30,6 +30,12 @@ const sections: NavSection[] = [
     ],
   },
   {
+    label: "Insights",
+    items: [
+      { href: "/analytics", label: "Analytics", icon: "monitoring" },
+    ],
+  },
+  {
     label: "Collaboration",
     items: [
       { href: "/members", label: "Members", icon: "group" },
@@ -50,6 +56,7 @@ const mobileNavIcons: Record<string, string> = {
   Dashboard: "dashboard",
   Projects: "folder_open",
   Tasks: "assignment",
+  Analytics: "monitoring",
   Members: "group",
   Notifications: "notifications",
   Settings: "settings",

@@ -145,3 +145,60 @@ export type DashboardData = {
   recentActivity?: Activity[];
   projectProgress?: { project: Project; progress: number }[];
 };
+
+// ---------- Analytics Charts ----------
+export type AnalyticsKPI = {
+  totalProjects: number;
+  totalTasks: number;
+  completedTasks: number;
+  pendingTasks: number;
+  overdueTasks: number;
+  completionRate: number;
+};
+
+export type PriorityDatum = {
+  name: Priority;
+  label: string;
+  value: number;
+  color: string;
+};
+
+export type StatusDatum = {
+  name: TaskStatus;
+  label: string;
+  value: number;
+  color: string;
+};
+
+export type TrendDatum = {
+  date: string;
+  label: string;
+  created: number;
+  completed: number;
+};
+
+export type ProductivityDatum = {
+  userId: string;
+  name: string;
+  avatar?: string | null;
+  completed: number;
+  inProgress: number;
+  total: number;
+};
+
+export type ComparisonDatum = {
+  label: string;
+  completed: number;
+  overdue: number;
+  pending: number;
+};
+
+export type AnalyticsCharts = {
+  kpi: AnalyticsKPI;
+  byPriority: PriorityDatum[];
+  byStatus: StatusDatum[];
+  trend: TrendDatum[];
+  productivity: ProductivityDatum[];
+  comparison: ComparisonDatum[];
+  generatedAt: string;
+};

@@ -2,6 +2,7 @@
 
 import type { Context } from "hono";
 import * as analyticsService from "../services/analytics.service.ts";
+import * as chartsService from "../services/analytics-charts.service.ts";
 import * as exportService from "../services/export.service.ts";
 import * as healthService from "../services/health.service.ts";
 import { respondOk } from "../utils/response.ts";
@@ -18,6 +19,31 @@ export const dashboard = async (c: Context) => {
   const result = await analyticsService.getDashboard(user.id, user.role as never);
   cacheSet(key, result, DASHBOARD_CACHE_TTL);
   return respondOk(c, result, "Dashboard");
+};
+
+export const analyticsCharts = async (c: Context) => {
+  const user = getUser(c);
+  const result = await chartsService.getDashboardCharts(user.id, user.role as never);
+  return respondOk(c, result, "Dashboard analytics charts");
+};
+
+export const projectAnalyticsCharts = async (c: Context) => {
+  const user = getUser(c);
+  const projectId = c.req.param("projectId");
+  try {
+    const result = await chartsService.getProjectCharts(user.id, user.role as never, projectId);
+    return respondOk(c, result, "Project analytics charts");
+  } catch (err) {
+    if (err instanceof Error) {
+      if (err.message === "Project not found") {
+        return c.json({ success: false, message: err.message, error: { code: "NOT_FOUND" } }, 404);
+      }
+      if (err.message === "Forbidden") {
+        return c.json({ success: false, message: err.message, error: { code: "FORBIDDEN" } }, 403);
+      }
+    }
+    throw err;
+  }
 };
 
 export const projectAnalytics = async (c: Context) => {

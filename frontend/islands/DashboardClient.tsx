@@ -12,6 +12,7 @@ import {
 } from "../components/ui.tsx";
 import ProjectCreateModal from "./ProjectCreateModal.tsx";
 import TaskCreateModal from "./TaskCreateModal.tsx";
+import DashboardAnalyticsSnapshot from "./DashboardAnalyticsSnapshot.tsx";
 
 // ── Cache ──
 const cache = { data: null as DashboardData | null, projects: null as Project[] | null, ts: 0 };
@@ -504,6 +505,13 @@ export default function DashboardClient() {
           </div>
         </div>
 
+      </div>
+
+      {/* ═══ ANALYTICS SNAPSHOT ═══ */}
+      <div class="dash-grid">
+        <div class="dash-col-12">
+          <DashboardAnalyticsSnapshot />
+        </div>
       </div>
 
       {/* ── Modals ── */}

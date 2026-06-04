@@ -24,6 +24,7 @@ import {
 import KanbanBoard from "./KanbanBoard.tsx";
 import TaskCreateModal from "./TaskCreateModal.tsx";
 import InviteMemberModal from "./InviteMemberModal.tsx";
+import ProjectAnalyticsTab from "./ProjectAnalyticsTab.tsx";
 
 type Tab = "Overview" | "Board" | "Tasks" | "Members" | "Activity" | "Analytics";
 const tabs: Tab[] = ["Overview", "Board", "Tasks", "Members", "Activity", "Analytics"];
@@ -403,30 +404,7 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
         />
       )}
       {tab === "Activity" && <ActivityPanel activity={activity} />}
-      {tab === "Analytics" && (
-        <div class="pd-card">
-          <div class="pd-card-title"><Icon name="analytics" size={16} /> Task Distribution</div>
-          <div style="display:grid;gap:10px">
-            {Object.entries(counts).map(([status, count]) => (
-              <div key={status}>
-                <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:13px">
-                  <span style="color:var(--muted)">{status.replace("_", " ")}</span>
-                  <strong>{count}</strong>
-                </div>
-                <div class="pd-progress-bar" style="height:6px">
-                  <div
-                    class="pd-progress-fill"
-                    style={{
-                      width: tasks.length ? `${(count / tasks.length) * 100}%` : "0%",
-                      background: STATUS_DOT[status],
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {tab === "Analytics" && <ProjectAnalyticsTab projectId={project.id} />}
 
       {taskOpen && (
         <TaskCreateModal

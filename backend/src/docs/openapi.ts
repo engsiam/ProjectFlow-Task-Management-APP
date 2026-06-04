@@ -486,6 +486,63 @@ export const projectAnalyticsData = z.object({
   }),
 });
 
+// ---------- Chart-ready Analytics ----------
+export const analyticsKpiSchema = z.object({
+  totalProjects: z.number().int(),
+  totalTasks: z.number().int(),
+  completedTasks: z.number().int(),
+  pendingTasks: z.number().int(),
+  overdueTasks: z.number().int(),
+  completionRate: z.number().int(),
+});
+
+export const priorityDatumSchema = z.object({
+  name: z.enum(["URGENT", "HIGH", "MEDIUM", "LOW"]),
+  label: z.string(),
+  value: z.number().int(),
+  color: z.string(),
+});
+
+export const statusDatumSchema = z.object({
+  name: z.enum(["TODO", "IN_PROGRESS", "REVIEW", "DONE"]),
+  label: z.string(),
+  value: z.number().int(),
+  color: z.string(),
+});
+
+export const trendDatumSchema = z.object({
+  date: z.string(),
+  label: z.string(),
+  created: z.number().int(),
+  completed: z.number().int(),
+});
+
+export const productivityDatumSchema = z.object({
+  userId: z.string(),
+  name: z.string(),
+  avatar: z.string().nullable().optional(),
+  completed: z.number().int(),
+  inProgress: z.number().int(),
+  total: z.number().int(),
+});
+
+export const comparisonDatumSchema = z.object({
+  label: z.string(),
+  completed: z.number().int(),
+  overdue: z.number().int(),
+  pending: z.number().int(),
+});
+
+export const analyticsChartsData = z.object({
+  kpi: analyticsKpiSchema,
+  byPriority: z.array(priorityDatumSchema),
+  byStatus: z.array(statusDatumSchema),
+  trend: z.array(trendDatumSchema),
+  productivity: z.array(productivityDatumSchema),
+  comparison: z.array(comparisonDatumSchema),
+  generatedAt: z.string(),
+});
+
 // ---------- Helpers ----------
 export const jsonOkResponse = <T extends z.ZodTypeAny>(description: string, data: T) => ({
   description,

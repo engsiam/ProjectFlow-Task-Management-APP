@@ -4,6 +4,7 @@
 
 import * as $_404 from "./routes/_404.tsx";
 import * as $_app from "./routes/_app.tsx";
+import * as $analytics from "./routes/analytics.tsx";
 import * as $auth_callback from "./routes/auth/callback.tsx";
 import * as $dashboard from "./routes/dashboard.tsx";
 import * as $index from "./routes/index.tsx";
@@ -15,9 +16,11 @@ import * as $projects_index from "./routes/projects/index.tsx";
 import * as $settings from "./routes/settings.tsx";
 import * as $signup from "./routes/signup.tsx";
 import * as $tasks from "./routes/tasks.tsx";
+import * as $AnalyticsClient from "./islands/AnalyticsClient.tsx";
 import * as $ApiMetricsTable from "./islands/ApiMetricsTable.tsx";
 import * as $CommentBox from "./islands/CommentBox.tsx";
 import * as $ConfirmDialog from "./islands/ConfirmDialog.tsx";
+import * as $DashboardAnalyticsSnapshot from "./islands/DashboardAnalyticsSnapshot.tsx";
 import * as $DashboardClient from "./islands/DashboardClient.tsx";
 import * as $GlobalErrorHandler from "./islands/GlobalErrorHandler.tsx";
 import * as $InviteMemberModal from "./islands/InviteMemberModal.tsx";
@@ -27,6 +30,7 @@ import * as $MembersClient from "./islands/MembersClient.tsx";
 import * as $NotificationDropdown from "./islands/NotificationDropdown.tsx";
 import * as $NotificationsClient from "./islands/NotificationsClient.tsx";
 import * as $OAuthCallbackHandler from "./islands/OAuthCallbackHandler.tsx";
+import * as $ProjectAnalyticsTab from "./islands/ProjectAnalyticsTab.tsx";
 import * as $ProjectCreateModal from "./islands/ProjectCreateModal.tsx";
 import * as $ProjectDetailClient from "./islands/ProjectDetailClient.tsx";
 import * as $ProjectsClient from "./islands/ProjectsClient.tsx";
@@ -48,6 +52,7 @@ const manifest = {
   routes: {
     "./routes/_404.tsx": $_404,
     "./routes/_app.tsx": $_app,
+    "./routes/analytics.tsx": $analytics,
     "./routes/auth/callback.tsx": $auth_callback,
     "./routes/dashboard.tsx": $dashboard,
     "./routes/index.tsx": $index,
@@ -61,9 +66,11 @@ const manifest = {
     "./routes/tasks.tsx": $tasks,
   },
   islands: {
+    "./islands/AnalyticsClient.tsx": $AnalyticsClient,
     "./islands/ApiMetricsTable.tsx": $ApiMetricsTable,
     "./islands/CommentBox.tsx": $CommentBox,
     "./islands/ConfirmDialog.tsx": $ConfirmDialog,
+    "./islands/DashboardAnalyticsSnapshot.tsx": $DashboardAnalyticsSnapshot,
     "./islands/DashboardClient.tsx": $DashboardClient,
     "./islands/GlobalErrorHandler.tsx": $GlobalErrorHandler,
     "./islands/InviteMemberModal.tsx": $InviteMemberModal,
@@ -73,6 +80,7 @@ const manifest = {
     "./islands/NotificationDropdown.tsx": $NotificationDropdown,
     "./islands/NotificationsClient.tsx": $NotificationsClient,
     "./islands/OAuthCallbackHandler.tsx": $OAuthCallbackHandler,
+    "./islands/ProjectAnalyticsTab.tsx": $ProjectAnalyticsTab,
     "./islands/ProjectCreateModal.tsx": $ProjectCreateModal,
     "./islands/ProjectDetailClient.tsx": $ProjectDetailClient,
     "./islands/ProjectsClient.tsx": $ProjectsClient,
