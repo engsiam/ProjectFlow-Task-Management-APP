@@ -17,7 +17,7 @@ export const listAllTasks = async (c: Context) => {
   const user = getUser(c);
   // deno-lint-ignore no-explicit-any
   const query = (c.req as any).valid("query") as ListTasksQuery;
-  const result = await taskService.listForUser(user.id, query);
+  const result = await taskService.listForUser(user.id, user.role as never, query);
   return respondOk(c, result, "Tasks");
 };
 
@@ -42,7 +42,7 @@ export const createTask = async (c: Context) => {
 export const getTask = async (c: Context) => {
   const user = getUser(c);
   const taskId = c.req.param("taskId");
-  const result = await taskService.getById(user.id, taskId);
+  const result = await taskService.getById(user.id, user.role as never, taskId);
   return respondOk(c, result, "Task");
 };
 

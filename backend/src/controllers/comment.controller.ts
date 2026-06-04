@@ -16,7 +16,7 @@ export const listComments = async (c: Context) => {
   const taskId = c.req.param("taskId");
   // deno-lint-ignore no-explicit-any
   const query = (c.req as any).valid("query") as ListCommentsQuery;
-  const result = await commentService.listForTask(user.id, taskId, query);
+  const result = await commentService.listForTask(user.id, user.role as never, taskId, query);
   return respondOk(c, result, "Comments");
 };
 

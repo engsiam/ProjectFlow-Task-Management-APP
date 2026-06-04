@@ -1,6 +1,7 @@
 // Analytics + dashboard.
 
 import { prisma } from "../prisma/client.ts";
+import type { RoleType } from "../types/domain.ts";
 
 const dashboardUserSelect = {
   id: true,
@@ -17,16 +18,19 @@ const dashboardProjectSelect = {
   ownerId: true,
 } as const;
 
-export const getDashboard = async (userId: string) => {
-  // Get project IDs first (required for all subsequent queries)
+export const getDashboard = async (userId: string, userRole: RoleType | undefined) => {
+  // Get project IDs first (required for all subsequent queries).
+  // Global VIEWER accounts see every project in the workspace.
   const myProjects = await prisma.project.findMany({
-    where: {
-      OR: [
-        { ownerId: userId },
-        { members: { some: { userId } } },
-      ],
-      status: { in: ["ACTIVE", "COMPLETED"] },
-    },
+    where: userRole === "VIEWER"
+      ? { status: { in: ["ACTIVE", "COMPLETED"] } }
+      : {
+        OR: [
+          { ownerId: userId },
+          { members: { some: { userId } } },
+        ],
+        status: { in: ["ACTIVE", "COMPLETED"] },
+      },
     select: { id: true },
   });
   const projectIds = myProjects.map((p) => p.id);
@@ -261,6 +265,7 @@ export const getDashboard = async (userId: string) => {
 
 export const getProjectAnalytics = async (
   userId: string,
+  userRole: RoleType | undefined,
   projectId: string,
 ) => {
   // Verify access
@@ -279,7 +284,7 @@ export const getProjectAnalytics = async (
   if (!project) throw new Error("Project not found");
   const isMember = project.ownerId === userId ||
     project.members.some((m) => m.userId === userId);
-  if (!isMember) throw new Error("Forbidden");
+  if (!isMember && userRole !== "VIEWER") throw new Error("Forbidden");
 
   const [statusGroups, priorityGroups, total, done, overdue] = await Promise
     .all([

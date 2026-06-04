@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { get, getList } from "../lib/api.ts";
-import { getCurrentUser, requireClientAuth } from "../lib/auth.ts";
-import { canCreateTasks, getProjectRole } from "../lib/roles.ts";
-import type { Activity, DashboardData, Project, Task } from "../lib/types.ts";
+import { getCurrentUser, requireClientAuth, saveSession } from "../lib/auth.ts";
+import { canCreateProject, canCreateTasks, getProjectRole } from "../lib/roles.ts";
+import type { Activity, DashboardData, Project, Role, Task } from "../lib/types.ts";
 import type { Priority, TaskStatus } from "../lib/types.ts";
 import {
   Avatar,
@@ -72,6 +72,9 @@ export default function DashboardClient() {
   const [projectOpen, setProjectOpen] = useState(false);
   const [taskOpen, setTaskOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<{ id: string; name: string } | null>(null);
+  const [currentUserRole, setCurrentUserRole] = useState<Role | undefined>(
+    getCurrentUser()?.role,
+  );
   const [sortField, setSortField] = useState("dueDate");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [page, setPage] = useState(0);
@@ -110,6 +113,12 @@ export default function DashboardClient() {
   useEffect(() => {
     const u = getCurrentUser();
     if (u) setCurrentUser({ id: u.id, name: u.name });
+    if (!u?.role) {
+      get<{ id: string; name: string; role: Role }>("/auth/me").then((data) => {
+        saveSession({ user: data });
+        setCurrentUserRole(data.role);
+      }).catch(() => null);
+    }
   }, []);
 
   // ── Derived data ──
@@ -199,9 +208,11 @@ export default function DashboardClient() {
               <Icon name="add_task" size={16} /> New Task
             </button>
           )}
-          <button type="button" class="dash-btn dash-btn-primary" onClick={() => setProjectOpen(true)}>
-            <Icon name="add" size={16} /> New Project
-          </button>
+          {canCreateProject(currentUserRole) && (
+            <button type="button" class="dash-btn dash-btn-primary" onClick={() => setProjectOpen(true)}>
+              <Icon name="add" size={16} /> New Project
+            </button>
+          )}
         </div>
       </div>
 

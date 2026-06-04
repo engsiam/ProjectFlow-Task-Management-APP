@@ -215,14 +215,9 @@ export default function TaskDetailModal(
                 </div>
               </div>
 
-              {/* Comment Input */}
-              {(tab === "all" || tab === "comments") && mayEditTask && (
+              {/* Comments (CommentBox hides the form for VIEWER) */}
+              {(tab === "all" || tab === "comments") && (
                 <CommentBox taskId={task.id} />
-              )}
-              {(tab === "all" || tab === "comments") && !mayEditTask && (
-                <p style={{ margin: "0 0 16px", color: "var(--muted)", fontSize: "13px" }}>
-                  You have view-only access. Commenting requires Member role or higher.
-                </p>
               )}
 
               {/* Activity Timeline */}

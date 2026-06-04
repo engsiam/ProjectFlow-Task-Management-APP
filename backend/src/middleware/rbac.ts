@@ -48,6 +48,15 @@ export const requireProjectRole = (
       await next();
       return;
     }
+    // Global VIEWER accounts have read access to every project so they can
+    // audit the workspace. They still cannot perform any project-scoped
+    // writes (those are protected by requireProjectContributor / Manager /
+    // Owner). Only apply this bypass at the lowest read tier.
+    if (minRole === "VIEWER" && (user.role as RoleType) === "VIEWER") {
+      c.set("projectRole" as never, "VIEWER" as RoleType);
+      await next();
+      return;
+    }
     const member = await prisma.projectMember.findUnique({
       where: { projectId_userId: { projectId, userId: user.id } },
       select: { role: true },

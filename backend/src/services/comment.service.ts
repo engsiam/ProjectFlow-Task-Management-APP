@@ -15,8 +15,12 @@ import type {
 const ensureProjectAccess = async (
   userId: string,
   projectId: string,
-  minRole: "VIEWER" | "TEAM_MEMBER" | "PROJECT_MANAGER" | "ADMIN" = "VIEWER",
+  options: {
+    minRole?: "VIEWER" | "TEAM_MEMBER" | "PROJECT_MANAGER" | "ADMIN";
+    userRole?: RoleType;
+  } = {},
 ) => {
+  const { minRole = "VIEWER", userRole } = options;
   const project = await prisma.project.findUnique({
     where: { id: projectId },
     select: { id: true, ownerId: true, name: true },
@@ -26,20 +30,29 @@ const ensureProjectAccess = async (
   const member = await prisma.projectMember.findUnique({
     where: { projectId_userId: { projectId, userId } },
   });
-  if (!member) throw new ForbiddenError("You are not a member of this project");
+  // Global VIEWER accounts can read every project but cannot write.
+  if (!member) {
+    if (minRole === "VIEWER" && userRole === "VIEWER") return { project };
+    throw new ForbiddenError("You are not a member of this project");
+  }
   if (!isRoleAtLeast(member.role as RoleType, minRole as RoleType)) {
     throw new ForbiddenError(`Requires role ${minRole} or higher`);
   }
   return { project };
 };
 
-export const listForTask = async (userId: string, taskId: string, query: ListCommentsQuery) => {
+export const listForTask = async (
+  userId: string,
+  userRole: RoleType | undefined,
+  taskId: string,
+  query: ListCommentsQuery,
+) => {
   const task = await prisma.task.findUnique({
     where: { id: taskId },
     select: { projectId: true },
   });
   if (!task) throw new NotFoundError("Task not found");
-  await ensureProjectAccess(userId, task.projectId, "VIEWER");
+  await ensureProjectAccess(userId, task.projectId, { minRole: "VIEWER", userRole });
   const skip = (query.page - 1) * query.limit;
   const [items, total] = await Promise.all([
     prisma.comment.findMany({
@@ -75,7 +88,7 @@ export const create = async (userId: string, taskId: string, input: CreateCommen
     select: { projectId: true, title: true, assigneeId: true, creatorId: true },
   });
   if (!task) throw new NotFoundError("Task not found");
-  await ensureProjectAccess(userId, task.projectId, "TEAM_MEMBER");
+  await ensureProjectAccess(userId, task.projectId, { minRole: "TEAM_MEMBER" });
 
   // Create comment
   const comment = await prisma.comment.create({
@@ -180,7 +193,7 @@ export const update = async (
   });
   if (!comment) throw new NotFoundError("Comment not found");
   if (comment.authorId !== userId) throw new ForbiddenError("You can only edit your own comments");
-  await ensureProjectAccess(userId, comment.task.projectId, "TEAM_MEMBER");
+  await ensureProjectAccess(userId, comment.task.projectId, { minRole: "TEAM_MEMBER" });
 
   // Re-resolve mentions
   const newMentions = extractMentions(input.content);

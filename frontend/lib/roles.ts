@@ -42,6 +42,9 @@ export const canInviteMembers = (role?: Role | null) =>
 export const canCreateTasks = (role?: Role | null) =>
   isRoleAtLeast(role, "TEAM_MEMBER");
 
+export const canComment = (role?: Role | null) =>
+  isRoleAtLeast(role, "TEAM_MEMBER");
+
 export const canArchiveProject = (role?: Role | null) => role === "ADMIN";
 
 export const canDeleteProject = (role?: Role | null) => role === "ADMIN";

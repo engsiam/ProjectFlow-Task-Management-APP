@@ -15,7 +15,7 @@ export const dashboard = async (c: Context) => {
   const key = cacheKey(user.id, "dashboard");
   const cached = cacheGet<ReturnType<typeof analyticsService.getDashboard>>(key);
   if (cached) return respondOk(c, cached, "Dashboard (cached)");
-  const result = await analyticsService.getDashboard(user.id);
+  const result = await analyticsService.getDashboard(user.id, user.role as never);
   cacheSet(key, result, DASHBOARD_CACHE_TTL);
   return respondOk(c, result, "Dashboard");
 };
@@ -24,7 +24,7 @@ export const projectAnalytics = async (c: Context) => {
   const user = getUser(c);
   const projectId = c.req.param("projectId");
   try {
-    const result = await analyticsService.getProjectAnalytics(user.id, projectId);
+    const result = await analyticsService.getProjectAnalytics(user.id, user.role as never, projectId);
     return respondOk(c, result, "Project analytics");
   } catch (err) {
     if (err instanceof Error) {

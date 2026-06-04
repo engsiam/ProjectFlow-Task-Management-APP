@@ -314,6 +314,8 @@ export const loginWithOAuth = async (provider: OAuthProvider, code: string) => {
       username = `${base}${i}`;
       if (i > 50) username = `${base}_${randomToken(4)}`;
     }
+    // New OAuth sign-ups always default to VIEWER. A project ADMIN must
+    // promote them later via the project member role controls.
     user = await prisma.user.create({
       data: {
         email: profile.email,

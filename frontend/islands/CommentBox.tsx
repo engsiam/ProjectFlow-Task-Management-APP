@@ -1,12 +1,17 @@
 import { useEffect, useState } from "preact/hooks";
 import { getList, post } from "../lib/api.ts";
+import { getCurrentUser } from "../lib/auth.ts";
+import { canComment } from "../lib/roles.ts";
 import { toast } from "../lib/toast.ts";
-import type { Comment } from "../lib/types.ts";
+import type { Comment, Role } from "../lib/types.ts";
 import { Avatar, Button, Icon } from "../components/ui.tsx";
 
 export default function CommentBox({ taskId }: { taskId: string }) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [body, setBody] = useState("");
+  const [currentRole, setCurrentRole] = useState<Role | undefined>(
+    getCurrentUser()?.role,
+  );
 
   async function load() {
     try {
@@ -37,28 +42,47 @@ export default function CommentBox({ taskId }: { taskId: string }) {
     }
   }
 
+  const mayComment = canComment(currentRole);
+
   return (
     <div style={{ display: "grid", gap: "12px" }}>
-      <form onSubmit={submit}>
-        <label class="label">@mention teammates</label>
-        <textarea
-          class="textarea"
-          value={body}
-          onInput={(e) => setBody(e.currentTarget.value)}
-          placeholder="Add a comment. Use @name to mention someone."
-        />
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            marginTop: "8px",
-          }}
-        >
-          <Button variant="primary" type="submit">
-            <Icon name="send" size={18} /> Comment
-          </Button>
-        </div>
-      </form>
+      {mayComment
+        ? (
+          <form onSubmit={submit}>
+            <label class="label">@mention teammates</label>
+            <textarea
+              class="textarea"
+              value={body}
+              onInput={(e) => setBody(e.currentTarget.value)}
+              placeholder="Add a comment. Use @name to mention someone."
+            />
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                marginTop: "8px",
+              }}
+            >
+              <Button variant="primary" type="submit">
+                <Icon name="send" size={18} /> Comment
+              </Button>
+            </div>
+          </form>
+        )
+        : (
+          <div
+            style={{
+              padding: "12px 14px",
+              border: "1px dashed var(--border)",
+              borderRadius: "8px",
+              color: "var(--muted)",
+              fontSize: "13px",
+            }}
+          >
+            You have read-only access to this project. Switch to a project member
+            role to add comments.
+          </div>
+        )}
       {comments.map((comment) => (
         <div
           class="panel"

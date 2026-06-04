@@ -19,7 +19,7 @@ export const listProjects = async (c: Context) => {
   const user = getUser(c);
   // deno-lint-ignore no-explicit-any
   const query = (c.req as any).valid("query") as ListProjectsQuery;
-  const result = await projectService.listMine(user.id, query);
+  const result = await projectService.listMine(user.id, user.role as never, query);
   return respondOk(c, result, "Projects");
 };
 
@@ -34,7 +34,7 @@ export const createProject = async (c: Context) => {
 export const getProject = async (c: Context) => {
   const user = getUser(c);
   const projectId = c.req.param("projectId");
-  const result = await projectService.getById(user.id, projectId);
+  const result = await projectService.getById(user.id, user.role as never, projectId);
   return respondOk(c, result, "Project");
 };
 
@@ -64,7 +64,7 @@ export const deleteProject = async (c: Context) => {
 export const listMembers = async (c: Context) => {
   const user = getUser(c);
   const projectId = c.req.param("projectId");
-  const result = await projectService.listMembers(user.id, projectId);
+  const result = await projectService.listMembers(user.id, user.role as never, projectId);
   return respondOk(c, { items: result, total: result.length }, "Members");
 };
 

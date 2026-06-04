@@ -92,15 +92,23 @@ const paginate = (page: number, limit: number, total: number) => ({
   hasPrev: page > 1,
 });
 
-export const listForUser = async (userId: string, query: ListTasksQuery) => {
-  const myProjects = await prisma.project.findMany({
-    where: {
+export const listForUser = async (
+  userId: string,
+  userRole: RoleType | undefined,
+  query: ListTasksQuery,
+) => {
+  // Global VIEWER accounts see tasks from every project.
+  const projectWhere = userRole === "VIEWER"
+    ? { status: { in: ["ACTIVE", "COMPLETED"] } }
+    : {
       OR: [
         { ownerId: userId },
         { members: { some: { userId } } },
       ],
       status: { in: ["ACTIVE", "COMPLETED"] },
-    },
+    };
+  const myProjects = await prisma.project.findMany({
+    where: projectWhere,
     select: { id: true },
   });
   const projectIds = myProjects.map((project) => project.id);
@@ -154,7 +162,11 @@ export const listForProject = async (
   };
 };
 
-export const getById = async (userId: string, taskId: string) => {
+export const getById = async (
+  userId: string,
+  userRole: RoleType | undefined,
+  taskId: string,
+) => {
   const task = await prisma.task.findUnique({
     where: { id: taskId },
     include: {
@@ -167,12 +179,16 @@ export const getById = async (userId: string, taskId: string) => {
   if (!task) throw new NotFoundError("Task not found");
   // Inline access check to avoid extra query — project already loaded
   if (task.project.ownerId !== userId) {
-    const member = await prisma.projectMember.findUnique({
-      where: { projectId_userId: { projectId: task.projectId, userId } },
-      select: { role: true },
-    });
-    if (!member) throw new ForbiddenError("You are not a member of this project");
-    (task.project as Record<string, unknown>).currentRole = member.role;
+    if (userRole === "VIEWER") {
+      (task.project as Record<string, unknown>).currentRole = "VIEWER";
+    } else {
+      const member = await prisma.projectMember.findUnique({
+        where: { projectId_userId: { projectId: task.projectId, userId } },
+        select: { role: true },
+      });
+      if (!member) throw new ForbiddenError("You are not a member of this project");
+      (task.project as Record<string, unknown>).currentRole = member.role;
+    }
   } else {
     (task.project as Record<string, unknown>).currentRole = "ADMIN";
   }

@@ -45,13 +45,16 @@ export const create = async (userId: string, input: CreateProjectInput) => {
   return project;
 };
 
-export const listMine = async (userId: string, query: ListProjectsQuery) => {
-  const where: Record<string, unknown> = {
-    OR: [
-      { ownerId: userId },
-      { members: { some: { userId } } },
-    ],
-  };
+export const listMine = async (userId: string, userRole: RoleType | undefined, query: ListProjectsQuery) => {
+  // Global VIEWER accounts can audit every project in the workspace.
+  const where: Record<string, unknown> = userRole === "VIEWER"
+    ? {}
+    : {
+      OR: [
+        { ownerId: userId },
+        { members: { some: { userId } } },
+      ],
+    };
   if (query.status) where.status = query.status;
   if (query.search) {
     where.AND = [
@@ -70,6 +73,12 @@ export const listMine = async (userId: string, query: ListProjectsQuery) => {
       where,
       include: {
         owner: { select: { id: true, name: true, username: true, avatar: true } },
+        members: {
+          include: {
+            user: { select: { id: true, name: true, username: true, email: true, avatar: true } },
+          },
+          orderBy: { joinedAt: "asc" },
+        },
       },
       orderBy: { updatedAt: "desc" },
       skip,
@@ -106,11 +115,14 @@ export const listMine = async (userId: string, query: ListProjectsQuery) => {
 
   const enriched = items.map((p) => {
     const grp = progressMap.get(p.id) ?? { total: 0, done: 0 };
+    const membershipRole = p.ownerId === userId ? "ADMIN" : roleMap.get(p.id) ?? null;
     return {
       ...p,
       progress: grp.total ? Math.round((grp.done / grp.total) * 100) : 0,
       taskCount: grp.total,
-      currentRole: p.ownerId === userId ? "ADMIN" : roleMap.get(p.id) ?? null,
+      // Global VIEWERs are not project members but still have read access;
+      // surface a VIEWER role so the UI can hide write affordances.
+      currentRole: membershipRole ?? (userRole === "VIEWER" ? "VIEWER" : null),
     };
   });
 
@@ -127,7 +139,11 @@ export const listMine = async (userId: string, query: ListProjectsQuery) => {
   };
 };
 
-export const getById = async (userId: string, projectId: string) => {
+export const getById = async (
+  userId: string,
+  userRole: RoleType | undefined,
+  projectId: string,
+) => {
   const project = await prisma.project.findUnique({
     where: { id: projectId },
     include: {
@@ -144,7 +160,10 @@ export const getById = async (userId: string, projectId: string) => {
   if (!project) throw new NotFoundError("Project not found");
   const isMember = project.ownerId === userId ||
     project.members.some((m) => m.userId === userId);
-  if (!isMember) throw new ForbiddenError("You are not a member of this project");
+  const isGlobalViewer = userRole === "VIEWER";
+  if (!isMember && !isGlobalViewer) {
+    throw new ForbiddenError("You are not a member of this project");
+  }
 
   const taskStatusGroups = await prisma.task.groupBy({
     by: ["status"],
@@ -154,9 +173,10 @@ export const getById = async (userId: string, projectId: string) => {
   const totalTasks = taskStatusGroups.reduce((sum, g) => sum + g._count._all, 0);
   const doneTasks = taskStatusGroups.find((g) => g.status === "DONE")?._count._all ?? 0;
   const progress = totalTasks ? Math.round((doneTasks / totalTasks) * 100) : 0;
-  const currentRole = project.ownerId === userId
+  const memberRole = project.ownerId === userId
     ? "ADMIN"
     : project.members.find((member) => member.userId === userId)?.role ?? null;
+  const currentRole = memberRole ?? (isGlobalViewer ? "VIEWER" : null);
 
   return {
     ...project,
@@ -236,7 +256,7 @@ export const remove = async (userId: string, projectId: string) => {
 // MEMBERS
 // =====================================================
 
-export const listMembers = async (userId: string, projectId: string) => {
+export const listMembers = async (userId: string, userRole: RoleType | undefined, projectId: string) => {
   const project = await prisma.project.findUnique({
     where: { id: projectId },
     include: {
@@ -251,7 +271,9 @@ export const listMembers = async (userId: string, projectId: string) => {
   if (!project) throw new NotFoundError("Project not found");
   const isMember = project.ownerId === userId ||
     project.members.some((m) => m.userId === userId);
-  if (!isMember) throw new ForbiddenError("You are not a member of this project");
+  if (!isMember && userRole !== "VIEWER") {
+    throw new ForbiddenError("You are not a member of this project");
+  }
   // Ensure owner appears as OWNER even if not in members table
   const ownerMember = project.members.find((m) => m.userId === project.ownerId);
   if (!ownerMember) {
