@@ -1,10 +1,101 @@
-import { useEffect, useMemo, useState } from "preact/hooks";
-import { get } from "../lib/api.ts";
-import { requireClientAuth } from "../lib/auth.ts";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
+import { get, getList } from "../lib/api.ts";
+import { getCurrentUser, requireClientAuth } from "../lib/auth.ts";
+import { toast } from "../lib/toast.ts";
+import { canCreateTasks, getProjectRole } from "../lib/roles.ts";
 import type { Activity, DashboardData, Project, Task } from "../lib/types.ts";
-import { Avatar, Badge, EmptyState, fmtDate, Icon, priorityTone, ProgressBar, Skeleton, StatCard } from "../components/ui.tsx";
+import type { Priority, TaskStatus } from "../lib/types.ts";
+import {
+  Avatar,
+  Badge,
+  EmptyState,
+  fmtDate,
+  Icon,
+  priorityTone,
+  ProgressBar,
+  Skeleton,
+} from "../components/ui.tsx";
 import ProjectCreateModal from "./ProjectCreateModal.tsx";
 import TaskCreateModal from "./TaskCreateModal.tsx";
+
+// Data cache: 30s TTL, survives route transitions
+const dashboardCache = {
+  data: null as DashboardData | null,
+  projects: null as Project[] | null,
+  ts: 0,
+};
+const CACHE_TTL = 30_000;
+
+function useCachedLoader() {
+  return useMemo(() => {
+    const now = Date.now();
+    const hit = dashboardCache.data && (now - dashboardCache.ts) < CACHE_TTL;
+    return {
+      data: hit ? dashboardCache.data : null,
+      projects: hit ? dashboardCache.projects : null,
+      stale: hit,
+    };
+  }, []);
+}
+
+function ProgressRing({ value, size = 64 }: { value: number; size?: number }) {
+  const stroke = 3;
+  const radius = (size - stroke) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference -
+    (Math.min(100, Math.max(0, value)) / 100) * circumference;
+  return (
+    <div
+      style={{ position: "relative", width: size, height: size, flexShrink: 0 }}
+    >
+      <svg
+        width={size}
+        height={size}
+        style={{ transform: "rotate(-90deg)", transformOrigin: "50% 50%" }}
+      >
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="var(--border)"
+          strokeWidth={stroke}
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke={value >= 80
+            ? "var(--success)"
+            : value >= 40
+            ? "var(--warning)"
+            : "var(--primary)"}
+          strokeWidth={stroke}
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          style={{ transition: "stroke-dashoffset 0.35s" }}
+        />
+      </svg>
+      <span
+        style={{
+          position: "absolute",
+          inset: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: "12px",
+          fontWeight: 700,
+          fontFamily: '"JetBrains Mono", monospace',
+          color: "var(--text)",
+        }}
+      >
+        {Math.round(value)}%
+      </span>
+    </div>
+  );
+}
 
 export default function DashboardClient() {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -13,177 +104,756 @@ export default function DashboardClient() {
   const [loading, setLoading] = useState(true);
   const [projectOpen, setProjectOpen] = useState(false);
   const [taskOpen, setTaskOpen] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const mountedRef = useRef(true);
 
-  async function load() {
+  async function load(force = false) {
     requireClientAuth();
+    // Try cache first
+    const cached = !force && dashboardCache.data &&
+      (Date.now() - dashboardCache.ts) < CACHE_TTL;
+    if (cached) {
+      setData(dashboardCache.data);
+      setProjects(dashboardCache.projects ?? []);
+      setTasks(dashboardCache.data!.myAssignedTasks ?? []);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const [dashboard, projectList] = await Promise.all([
         get<DashboardData>("/dashboard").catch(() => null),
-        get<Project[]>("/projects").catch(() => [])
+        getList<Project>("/projects", { limit: 100 }).catch(() => []),
       ]);
+      if (!mountedRef.current) return;
       setData(dashboard);
-      setProjects(Array.isArray(projectList) ? projectList : []);
+      setProjects(projectList);
       setTasks(dashboard?.myAssignedTasks ?? []);
+      // Populate cache
+      dashboardCache.data = dashboard;
+      dashboardCache.projects = projectList;
+      dashboardCache.ts = Date.now();
     } finally {
-      setLoading(false);
+      if (mountedRef.current) setLoading(false);
     }
   }
 
   useEffect(() => {
+    mountedRef.current = true;
     load();
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+  useEffect(() => {
+    setCurrentUserId(getCurrentUser()?.id ?? null);
   }, []);
 
-  const statusCounts = data?.taskCountByStatus ?? {};
-  const priorityCounts = data?.taskCountByPriority ?? {};
-  const activeProjects = data?.activeProjects?.length ? data.activeProjects : projects;
+  const statusCounts: Record<TaskStatus, number> = data?.taskCountByStatus ??
+    data?.tasks?.byStatus ?? { TODO: 0, IN_PROGRESS: 0, REVIEW: 0, DONE: 0 };
+  const priorityCounts: Record<Priority, number> = data?.taskCountByPriority ??
+    data?.tasks?.byPriority ?? { LOW: 0, MEDIUM: 0, HIGH: 0, URGENT: 0 };
+  const activeProjects = data?.activeProjects?.length
+    ? data.activeProjects
+    : projects;
+  const creatableProjects = projects.filter((project) =>
+    canCreateTasks(getProjectRole(project, currentUserId))
+  );
   const recentActivity = data?.recentActivity ?? [];
-  const taskTotal = Object.values(statusCounts).reduce((sum, value) => sum + Number(value || 0), 0);
+  const taskTotal = data?.tasks?.total ??
+    Object.values(statusCounts).reduce((sum, v) => sum + Number(v || 0), 0);
   const done = Number(statusCounts.DONE || 0);
   const velocity = taskTotal ? Math.round((done / taskTotal) * 100) : 0;
-  const overdue = data?.overdueTasks?.length ?? 0;
+  const overdue = data?.tasks?.overdue ?? data?.overdueTasks?.length ?? 0;
+  const urgentCount = Number(priorityCounts.URGENT || 0);
 
   const workloadMax = useMemo(() => {
-    const values = data?.memberWorkload?.map((item) => item.count) ?? [];
-    return Math.max(1, ...values);
+    return Math.max(1, ...(data?.memberWorkload?.map((w) => w.count) ?? []));
   }, [data]);
 
   if (loading) {
-    return <div style={{ display: "grid", gap: "16px" }}><Skeleton height={120} /><Skeleton height={320} /><Skeleton height={220} /></div>;
+    return (
+      <div class="dg">
+        <Skeleton height={96} />
+        <Skeleton height={96} />
+        <Skeleton height={96} />
+        <Skeleton height={96} />
+        <Skeleton height={320} />
+        <Skeleton height={320} />
+      </div>
+    );
   }
 
   return (
-    <div style={{ display: "grid", gap: "24px" }}>
-      <section style={{ display: "flex", justifyContent: "space-between", gap: "16px", alignItems: "center", flexWrap: "wrap" }}>
+    <div class="dg">
+      {/* ── Header Section ── */}
+      <div class="section-head">
         <div>
-          <p class="mono" style={{ margin: 0, color: "var(--muted)", fontSize: "11px" }}>LIVE WORKSPACE</p>
-          <h2 class="headline" style={{ margin: "4px 0 0", fontSize: "32px" }}>Dashboard</h2>
+          <h2 class="headline-lg">Dashboard</h2>
+          <p class="headline-sub">
+            Welcome back. Everything looks smooth today.
+          </p>
         </div>
-        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-          <button class="btn btn-secondary" onClick={() => setTaskOpen(true)}><Icon name="add_task" size={18} /> New Task</button>
-          <button class="btn btn-primary" onClick={() => setProjectOpen(true)}><Icon name="add" size={18} /> New Project</button>
+        <div class="section-actions">
+          {creatableProjects.length > 0 && (
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onClick={() => setTaskOpen(true)}
+            >
+              <Icon name="add_task" size={18} /> New Task
+            </button>
+          )}
+          <button
+            type="button"
+            class="btn btn-primary"
+            onClick={() => setProjectOpen(true)}
+          >
+            <Icon name="add" size={18} /> New Project
+          </button>
         </div>
-      </section>
-
-      <section class="grid-stats">
-        <StatCard icon="folder" label="Projects" value={data?.projectCount ?? projects.length} hint="Owned and shared workspaces" />
-        <StatCard icon="assignment" label="Active tasks" value={taskTotal || tasks.length} hint={`${done} completed`} />
-        <StatCard icon="speed" label="Completion" value={`${velocity}%`} hint="Across visible tasks" />
-        <StatCard icon="warning" label="Overdue" value={overdue} hint="Needs attention today" />
-      </section>
-
-      <section class="dashboard-grid">
-        <div style={{ display: "grid", gap: "18px" }}>
-          <div class="card" style={{ padding: "18px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
-              <h3 class="headline" style={{ margin: 0, fontSize: "24px" }}>Active Projects</h3>
-              <a class="btn" href="/projects">View all</a>
-            </div>
-            {activeProjects.length === 0
-              ? <EmptyState icon="folder_off" title="No projects yet" body="Create a project to start tracking work." />
-              : (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "14px" }}>
-                  {activeProjects.slice(0, 4).map((project) => (
-                    <a class="panel" href={`/projects/${project.id}`} style={{ padding: "16px", display: "grid", gap: "12px" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", gap: "12px" }}>
-                        <strong>{project.name}</strong>
-                        <Badge tone={project.status === "COMPLETED" ? "success" : "neutral"}>{project.status}</Badge>
-                      </div>
-                      <p style={{ margin: 0, color: "var(--muted)", minHeight: "36px" }}>{project.description ?? "No description provided."}</p>
-                      <ProgressBar value={project.progress} />
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <span style={{ color: "var(--muted)", fontSize: "13px" }}>{Math.round(project.progress ?? 0)}% complete</span>
-                        <div style={{ display: "flex" }}>{project.members?.slice(0, 3).map((member) => <Avatar user={member.user} />)}</div>
-                      </div>
-                    </a>
-                  ))}
-                </div>
-              )}
-          </div>
-
-          <div class="card" style={{ padding: "18px" }}>
-            <h3 class="headline" style={{ margin: "0 0 14px", fontSize: "24px" }}>My Assigned Tasks</h3>
-            <div style={{ display: "grid", gap: "10px" }}>
-              {(tasks.length ? tasks : data?.overdueTasks ?? []).slice(0, 5).map((task) => (
-                <a class={`task-card priority-${task.priority}`} href="/tasks">
-                  <div style={{ paddingLeft: "8px", display: "flex", justifyContent: "space-between", gap: "12px" }}>
-                    <div>
-                      <strong>{task.title}</strong>
-                      <div style={{ display: "flex", gap: "8px", marginTop: "8px", flexWrap: "wrap" }}>
-                        <Badge tone={priorityTone(task.priority)}>{task.priority}</Badge>
-                        <Badge>{fmtDate(task.dueDate)}</Badge>
-                      </div>
-                    </div>
-                    <Avatar user={task.assignee} />
-                  </div>
-                </a>
-              ))}
-              {tasks.length === 0 && !data?.overdueTasks?.length && <EmptyState icon="task_alt" title="No assigned tasks" body="Assigned work will appear here." />}
-            </div>
-          </div>
-        </div>
-
-        <aside style={{ display: "grid", gap: "18px" }}>
-          <div class="card" style={{ padding: "18px" }}>
-            <h3 class="headline" style={{ margin: "0 0 14px", fontSize: "22px" }}>Task Summary</h3>
-            <div style={{ display: "grid", gap: "10px" }}>
-              {Object.entries(statusCounts).map(([status, count]) => (
-                <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
-                    <span class="mono" style={{ fontSize: "11px", color: "var(--muted)" }}>{status}</span>
-                    <strong>{count}</strong>
-                  </div>
-                  <ProgressBar value={taskTotal ? (Number(count) / taskTotal) * 100 : 0} />
-                </div>
-              ))}
-              {Object.keys(statusCounts).length === 0 && <p style={{ color: "var(--muted)" }}>No status metrics yet.</p>}
-            </div>
-          </div>
-          <div class="card" style={{ padding: "18px" }}>
-            <h3 class="headline" style={{ margin: "0 0 14px", fontSize: "22px" }}>Priority Mix</h3>
-            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-              {Object.entries(priorityCounts).map(([priority, count]) => <Badge tone={priorityTone(priority as never)}>{priority}: {count}</Badge>)}
-              {Object.keys(priorityCounts).length === 0 && <Badge>No priority data</Badge>}
-            </div>
-          </div>
-          <div class="card" style={{ padding: "18px" }}>
-            <h3 class="headline" style={{ margin: "0 0 14px", fontSize: "22px" }}>Team Workload</h3>
-            <div style={{ display: "grid", gap: "12px" }}>
-              {(data?.memberWorkload ?? []).slice(0, 5).map((item) => (
-                <div style={{ display: "grid", gridTemplateColumns: "32px 1fr auto", gap: "10px", alignItems: "center" }}>
-                  <Avatar user={item.user} />
-                  <ProgressBar value={(item.count / workloadMax) * 100} />
-                  <strong>{item.count}</strong>
-                </div>
-              ))}
-              {!data?.memberWorkload?.length && <p style={{ color: "var(--muted)" }}>Workload appears once tasks are assigned.</p>}
-            </div>
-          </div>
-          <ActivityList items={recentActivity} />
-        </aside>
-      </section>
-      {projectOpen && <ProjectCreateModal onClose={() => setProjectOpen(false)} onCreated={load} />}
-      {taskOpen && <TaskCreateModal projects={projects} onClose={() => setTaskOpen(false)} onCreated={load} />}
-    </div>
-  );
-}
-
-function ActivityList({ items }: { items: Activity[] }) {
-  return (
-    <div class="card" style={{ padding: "18px" }}>
-      <h3 class="headline" style={{ margin: "0 0 14px", fontSize: "22px" }}>Recent Activity</h3>
-      <div style={{ display: "grid", gap: "12px" }}>
-        {items.slice(0, 6).map((item) => (
-          <div style={{ display: "grid", gridTemplateColumns: "28px 1fr", gap: "10px" }}>
-            <span class="brand-mark" style={{ width: "28px", height: "28px", background: "color-mix(in srgb, var(--primary), transparent 72%)", color: "var(--primary)" }}><Icon name="history" size={16} /></span>
-            <div>
-              <p style={{ margin: 0 }}><strong>{item.actor?.name ?? "System"}</strong> {item.action.replaceAll("_", " ").toLowerCase()}</p>
-              <p class="mono" style={{ margin: "2px 0 0", color: "var(--muted)", fontSize: "10px" }}>{new Date(item.createdAt).toLocaleString()}</p>
-            </div>
-          </div>
-        ))}
-        {items.length === 0 && <p style={{ color: "var(--muted)" }}>No recent activity yet.</p>}
       </div>
+
+      {/* ── KPI Row (4 columns) ── */}
+      <div class="dg dg-12">
+        <div class="card dg-span-3">
+          <div class="kpi-card">
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+              }}
+            >
+              <span
+                class="kpi-icon"
+                style={{
+                  background:
+                    "color-mix(in srgb, var(--primary), transparent 85%)",
+                  color: "var(--primary)",
+                }}
+              >
+                <Icon name="folder" size={18} />
+              </span>
+              <span class="kpi-trend" style={{ color: "var(--success)" }}>
+                <Icon name="trending_up" size={14} />+2
+              </span>
+            </div>
+            <p class="kpi-label">Total Projects</p>
+            <p class="kpi-value">
+              {data?.projectCount ?? data?.projects?.total ?? projects.length}
+            </p>
+          </div>
+        </div>
+
+        <div class="card dg-span-3">
+          <div class="kpi-card">
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+              }}
+            >
+              <span
+                class="kpi-icon"
+                style={{
+                  background:
+                    "color-mix(in srgb, var(--accent), transparent 85%)",
+                  color: "var(--accent)",
+                }}
+              >
+                <Icon name="task_alt" size={18} />
+              </span>
+              {urgentCount > 0 && (
+                <span
+                  class="kpi-badge"
+                  style={{
+                    background:
+                      "color-mix(in srgb, var(--danger), transparent 85%)",
+                    color: "var(--danger)",
+                  }}
+                >
+                  {urgentCount} Urgent
+                </span>
+              )}
+            </div>
+            <p class="kpi-label">Active Tasks</p>
+            <p class="kpi-value">
+              {(data?.mine?.assignedOpen ?? taskTotal) || tasks.length}
+            </p>
+          </div>
+        </div>
+
+        <div class="card dg-span-3">
+          <div class="kpi-card">
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+              }}
+            >
+              <span
+                class="kpi-icon"
+                style={{
+                  background:
+                    "color-mix(in srgb, var(--success), transparent 85%)",
+                  color: "var(--success)",
+                }}
+              >
+                <Icon name="speed" size={18} />
+              </span>
+              <div
+                style={{
+                  width: "48px",
+                  height: "6px",
+                  borderRadius: "999px",
+                  background: "var(--surface-2)",
+                  overflow: "hidden",
+                  alignSelf: "center",
+                }}
+              >
+                <div
+                  style={{
+                    height: "100%",
+                    borderRadius: "inherit",
+                    background: "var(--primary)",
+                    width: `${velocity}%`,
+                  }}
+                />
+              </div>
+            </div>
+            <p class="kpi-label">Team Velocity</p>
+            <div
+              style={{ display: "flex", alignItems: "baseline", gap: "4px" }}
+            >
+              <p class="kpi-value">{velocity}%</p>
+              <Icon
+                name="trending_up"
+                size={18}
+                style={{ color: "var(--success)" }}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="card dg-span-3">
+          <div class="kpi-card">
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+              }}
+            >
+              <span
+                class="kpi-icon"
+                style={{
+                  background:
+                    "color-mix(in srgb, var(--success), transparent 85%)",
+                  color: "var(--success)",
+                }}
+              >
+                <Icon name="check_circle" size={18} />
+              </span>
+              <span class="kpi-trend" style={{ color: "var(--muted)" }}>
+                All Systems UP
+              </span>
+            </div>
+            <p class="kpi-label">System Status</p>
+            <p class="kpi-value" style={{ color: "var(--success)" }}>Healthy</p>
+          </div>
+        </div>
+
+        {/* ── Project Progress & My Tasks (side by side) ── */}
+        <div class="card dg-span-6 card-full-height">
+          <div class="card-header">
+            <h3 class="card-title">Project Progress</h3>
+            <Icon
+              name="more_horiz"
+              size={20}
+              style={{ color: "var(--muted)" }}
+            />
+          </div>
+          <div
+            class="card-body"
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "var(--space-md)",
+            }}
+          >
+            {activeProjects.slice(0, 3).map((project) => (
+              <a
+                href={`/projects/${project.id}`}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "var(--space-md)",
+                  textDecoration: "none",
+                  color: "inherit",
+                }}
+              >
+                <ProgressRing value={project.progress ?? 0} />
+                <div>
+                  <p style={{ margin: 0, fontSize: "14px", fontWeight: 600 }}>
+                    {project.name}
+                  </p>
+                  {project.createdAt && (
+                    <p
+                      style={{
+                        margin: "2px 0 0",
+                        fontSize: "12px",
+                        color: "var(--muted)",
+                      }}
+                    >
+                      Due in {Math.max(
+                        1,
+                        Math.ceil(
+                          (new Date(project.createdAt).getTime() +
+                            30 * 86400000 - Date.now()) / 86400000,
+                        ),
+                      )} days
+                    </p>
+                  )}
+                </div>
+              </a>
+            ))}
+            {activeProjects.length === 0 && (
+              <p style={{ margin: 0, color: "var(--muted)" }}>
+                No active projects.
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div class="card dg-span-6 card-full-height">
+          <div
+            class="card-header"
+            style={{
+              borderBottom: "1px solid var(--border)",
+              marginBottom: 0,
+              padding:
+                "var(--card-padding) var(--card-padding) var(--space-md)",
+            }}
+          >
+            <h3 class="card-title">My Tasks</h3>
+            <a
+              href="/tasks"
+              class="card-desc"
+              style={{ color: "var(--primary)" }}
+            >
+              View All
+            </a>
+          </div>
+          <div class="card-body" style={{ overflowX: "auto" }}>
+            <table
+              style={{
+                width: "100%",
+                textAlign: "left",
+                borderCollapse: "collapse",
+              }}
+            >
+              <thead>
+                <tr
+                  style={{
+                    background:
+                      "color-mix(in srgb, var(--surface-2), transparent 40%)",
+                  }}
+                >
+                  <th
+                    style={{
+                      padding: "8px var(--space-md)",
+                      fontSize: "11px",
+                      fontWeight: 600,
+                      color: "var(--muted)",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Task Name
+                  </th>
+                  <th
+                    style={{
+                      padding: "8px var(--space-md)",
+                      fontSize: "11px",
+                      fontWeight: 600,
+                      color: "var(--muted)",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Priority
+                  </th>
+                  <th
+                    style={{
+                      padding: "8px var(--space-md)",
+                      fontSize: "11px",
+                      fontWeight: 600,
+                      color: "var(--muted)",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Due Date
+                  </th>
+                  <th
+                    style={{
+                      padding: "8px var(--space-md)",
+                      fontSize: "11px",
+                      fontWeight: 600,
+                      color: "var(--muted)",
+                      textTransform: "uppercase",
+                      textAlign: "right",
+                    }}
+                  >
+                    Owner
+                  </th>
+                </tr>
+              </thead>
+              <tbody style={{ borderTop: "1px solid var(--border)" }}>
+                {(tasks.length ? tasks : data?.overdueTasks ?? []).slice(0, 5)
+                  .map((task) => {
+                    const pColor =
+                      task.priority === "URGENT" || task.priority === "HIGH"
+                        ? "var(--danger)"
+                        : task.priority === "MEDIUM"
+                        ? "var(--warning)"
+                        : "var(--primary)";
+                    return (
+                      <tr
+                        style={{
+                          cursor: "pointer",
+                          transition: "background 0.15s",
+                        }}
+                        onClick={() => window.location.href = "/tasks"}
+                      >
+                        <td style={{ padding: "12px var(--space-md)" }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "var(--space-sm)",
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: "6px",
+                                height: "24px",
+                                borderRadius: "999px",
+                                background: pColor,
+                                boxShadow: `0 0 8px ${pColor}40`,
+                                flexShrink: 0,
+                              }}
+                            />
+                            <span style={{ fontSize: "14px" }}>
+                              {task.title}
+                            </span>
+                          </div>
+                        </td>
+                        <td style={{ padding: "12px var(--space-md)" }}>
+                          <span
+                            style={{
+                              padding: "2px 6px",
+                              borderRadius: "4px",
+                              background:
+                                `color-mix(in srgb, ${pColor}, transparent 80%)`,
+                              color: pColor,
+                              fontSize: "10px",
+                              fontWeight: 700,
+                              textTransform: "uppercase",
+                              border:
+                                `1px solid color-mix(in srgb, ${pColor}, transparent 70%)`,
+                            }}
+                          >
+                            {task.priority === "URGENT" ||
+                                task.priority === "HIGH"
+                              ? "High Priority"
+                              : task.priority === "MEDIUM"
+                              ? "Medium"
+                              : "Low"}
+                          </span>
+                        </td>
+                        <td
+                          style={{
+                            padding: "12px var(--space-md)",
+                            fontSize: "13px",
+                            color: "var(--muted)",
+                          }}
+                        >
+                          {fmtDate(task.dueDate)}
+                        </td>
+                        <td
+                          style={{
+                            padding: "12px var(--space-md)",
+                            textAlign: "right",
+                          }}
+                        >
+                          <Avatar user={task.assignee} size={28} />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                {(!tasks.length && !data?.overdueTasks?.length) && (
+                  <tr>
+                    <td
+                      colSpan={4}
+                      style={{
+                        padding: "var(--space-lg)",
+                        textAlign: "center",
+                        color: "var(--muted)",
+                      }}
+                    >
+                      No assigned tasks yet.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* ── Team Workload & Recent Activity ── */}
+        <div class="card dg-span-6 card-full-height">
+          <div class="card-header">
+            <h3 class="card-title">Team Workload</h3>
+            <select
+              style={{
+                background: "var(--surface-2)",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--radius-sm)",
+                padding: "4px 8px",
+                fontSize: "13px",
+                color: "var(--text)",
+              }}
+            >
+              <option>Current Week</option>
+              <option>Last Week</option>
+            </select>
+          </div>
+          <div
+            class="card-body"
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "var(--space-md)",
+            }}
+          >
+            {(data?.memberWorkload ?? []).slice(0, 5).map((item) => {
+              const pct = workloadMax
+                ? Math.round((item.count / workloadMax) * 100)
+                : 0;
+              const barColor = pct >= 80
+                ? "var(--danger)"
+                : pct >= 50
+                ? "var(--warning)"
+                : "var(--primary)";
+              return (
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "var(--space-xs)",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-end",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "var(--space-sm)",
+                      }}
+                    >
+                      <Avatar user={item.user} size={24} />
+                      <span style={{ fontSize: "14px" }}>{item.user.name}</span>
+                      <span
+                        style={{
+                          padding: "2px 6px",
+                          borderRadius: "4px",
+                          background:
+                            "color-mix(in srgb, var(--primary), transparent 85%)",
+                          color: "var(--primary)",
+                          fontSize: "9px",
+                          fontWeight: 700,
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        {item.user.role?.toLowerCase() ?? "Member"}
+                      </span>
+                    </div>
+                    <span style={{ fontSize: "12px", color: "var(--muted)" }}>
+                      {item.count}/{workloadMax} Tasks
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      height: "8px",
+                      borderRadius: "999px",
+                      background: "var(--surface-2)",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div
+                      style={{
+                        height: "100%",
+                        borderRadius: "inherit",
+                        background: barColor,
+                        width: `${pct}%`,
+                        transition: "width 0.3s",
+                      }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+            {!data?.memberWorkload?.length && (
+              <p style={{ margin: 0, color: "var(--muted)" }}>
+                Workload appears once tasks are assigned.
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div class="card dg-span-6 card-full-height">
+          <div class="card-header">
+            <h3 class="card-title">Recent Activity</h3>
+            <Icon name="history" size={20} style={{ color: "var(--muted)" }} />
+          </div>
+          <div
+            class="card-body"
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "var(--space-md)",
+            }}
+          >
+            <div
+              style={{
+                position: "relative",
+                display: "flex",
+                flexDirection: "column",
+                gap: "var(--space-md)",
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  left: "11px",
+                  top: "8px",
+                  bottom: "8px",
+                  width: "2px",
+                  background: "var(--border)",
+                  zIndex: 0,
+                }}
+              />
+              {recentActivity.slice(0, 4).map((item) => {
+                const dotStyle =
+                  item.action.includes("create") || item.action.includes("add")
+                    ? { borderColor: "var(--primary)", bg: "var(--primary)" }
+                    : item.action.includes("complete") ||
+                        item.action.includes("done")
+                    ? { borderColor: "var(--success)", bg: "var(--success)" }
+                    : item.action.includes("comment")
+                    ? { borderColor: "var(--accent)", bg: "var(--accent)" }
+                    : { borderColor: "var(--warning)", bg: "var(--warning)" };
+                return (
+                  <div
+                    style={{
+                      position: "relative",
+                      display: "flex",
+                      gap: "var(--space-sm)",
+                      paddingLeft: "32px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: 0,
+                        top: "4px",
+                        width: "24px",
+                        height: "24px",
+                        borderRadius: "999px",
+                        background: "var(--card)",
+                        border: `2px solid ${dotStyle.borderColor}`,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        zIndex: 1,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "6px",
+                          height: "6px",
+                          borderRadius: "999px",
+                          background: dotStyle.bg,
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <p
+                        style={{
+                          margin: 0,
+                          fontSize: "14px",
+                          color: "var(--muted)",
+                        }}
+                      >
+                        <strong style={{ color: "var(--text)" }}>
+                          {item.actor?.name ?? "System"}
+                        </strong>{" "}
+                        {item.action.replaceAll("_", " ").toLowerCase()}
+                      </p>
+                      <p
+                        style={{
+                          margin: "4px 0 0",
+                          fontSize: "11px",
+                          color: "var(--muted)",
+                        }}
+                      >
+                        <span
+                          style={{
+                            background: "var(--surface-2)",
+                            padding: "2px 6px",
+                            borderRadius: "4px",
+                          }}
+                        >
+                          {new Date(item.createdAt).toLocaleString()}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+              {recentActivity.length === 0 && (
+                <p style={{ margin: 0, color: "var(--muted)" }}>
+                  No recent activity yet.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+      {projectOpen && (
+        <ProjectCreateModal
+          onClose={() => setProjectOpen(false)}
+          onCreated={() => {
+            load(true);
+          }}
+        />
+      )}
+      {taskOpen && (
+        <TaskCreateModal
+          projects={creatableProjects}
+          onClose={() => setTaskOpen(false)}
+          onCreated={() => {
+            load(true);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -1,4 +1,5 @@
-You are a senior frontend engineer and product designer. Build a premium Fresh Framework frontend for a Smart Project & Task Collaboration System.
+You are a senior frontend engineer and product designer. Build a premium Fresh
+Framework frontend for a Smart Project & Task Collaboration System.
 
 ## Tech Stack
 
@@ -12,13 +13,16 @@ You are a senior frontend engineer and product designer. Build a premium Fresh F
 
 ## Product Goal
 
-Build the logged-in product experience for a team collaboration platform. Users should be able to manage projects, tasks, members, comments, notifications, analytics, and work progress.
+Build the logged-in product experience for a team collaboration platform. Users
+should be able to manage projects, tasks, members, comments, notifications,
+analytics, and work progress.
 
 This must look and feel like a premium SaaS dashboard, not a landing page.
 
 ## Main UX Principle
 
-The first screen after login must be the real dashboard. Do not create a marketing homepage as the primary experience.
+The first screen after login must be the real dashboard. Do not create a
+marketing homepage as the primary experience.
 
 The app should feel useful, polished, fast, responsive, and competition-ready.
 
@@ -198,7 +202,8 @@ Requirements:
 - Use typed API response shape
 - Show toast on errors
 - Use real API data
-- Avoid hardcoded mock data except for skeleton placeholders or demo fallback states
+- Avoid hardcoded mock data except for skeleton placeholders or demo fallback
+  states
 - Make all important actions call backend APIs
 
 ## Design System
@@ -327,7 +332,8 @@ Use Fresh islands for interactive parts:
 
 ### 4. Swagger Link
 
-- Add a developer-friendly link to backend Swagger docs in settings or sidebar footer.
+- Add a developer-friendly link to backend Swagger docs in settings or sidebar
+  footer.
 - Link: `http://localhost:8000/docs`
 
 ## Folder Structure
@@ -379,4 +385,5 @@ static/
 - API offline state is handled.
 - Code is clean, typed, and organized.
 
-Now generate the full Fresh frontend project with clean code and all required files.
+Now generate the full Fresh frontend project with clean code and all required
+files.

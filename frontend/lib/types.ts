@@ -11,11 +11,13 @@ export type User = {
   id: ID;
   name: string;
   email: string;
+  username?: string;
+  avatar?: string | null;
   avatarUrl?: string | null;
   role?: Role;
 };
 
-export type Role = "OWNER" | "MANAGER" | "MEMBER" | "VIEWER";
+export type Role = "ADMIN" | "PROJECT_MANAGER" | "TEAM_MEMBER" | "VIEWER";
 export type ProjectStatus = "ACTIVE" | "COMPLETED" | "ARCHIVED";
 export type TaskStatus = "TODO" | "IN_PROGRESS" | "REVIEW" | "DONE";
 export type Priority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
@@ -31,10 +33,19 @@ export type Project = {
   name: string;
   description?: string;
   status: ProjectStatus;
+  ownerId?: ID;
   progress?: number;
+  currentRole?: Role | null;
   owner?: User;
   members?: ProjectMember[];
   taskCount?: number;
+  taskStats?: {
+    total: number;
+    todo: number;
+    inProgress: number;
+    review: number;
+    done: number;
+  };
   createdAt?: string;
   updatedAt?: string;
 };
@@ -45,6 +56,7 @@ export type Task = {
   description?: string;
   status: TaskStatus;
   priority: Priority;
+  creatorId?: ID;
   dueDate?: string | null;
   order?: number;
   labels?: string[];
@@ -58,6 +70,7 @@ export type Task = {
 
 export type Comment = {
   id: ID;
+  content?: string;
   body: string;
   author: User;
   createdAt: string;
@@ -82,7 +95,45 @@ export type Notification = {
   createdAt: string;
 };
 
+export type SearchResult = {
+  projects: Project[];
+  tasks: Task[];
+  members: User[];
+};
+
+export type SearchGroup = {
+  label: string;
+  icon: string;
+  items: {
+    id: string;
+    title: string;
+    subtitle: string;
+    icon: string;
+    href: string;
+    iconColor?: string;
+  }[];
+};
+
 export type DashboardData = {
+  projects?: {
+    total: number;
+    active: number;
+    completed: number;
+    archived: number;
+  };
+  tasks?: {
+    total: number;
+    byStatus: Record<TaskStatus, number>;
+    byPriority: Record<Priority, number>;
+    overdue: number;
+    completed: number;
+  };
+  mine?: {
+    assignedOpen: number;
+    byStatus: Record<TaskStatus, number>;
+    overdue: number;
+  };
+  notifications?: { unread: number };
   projectCount?: number;
   activeProjects?: Project[];
   taskCountByStatus?: Record<TaskStatus, number>;

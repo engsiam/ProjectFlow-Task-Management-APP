@@ -14,7 +14,7 @@ import type {
 const ensureProjectAccess = async (
   userId: string,
   projectId: string,
-  minRole: "VIEWER" | "MEMBER" | "MANAGER" | "OWNER" = "VIEWER",
+  minRole: "VIEWER" | "TEAM_MEMBER" | "PROJECT_MANAGER" | "ADMIN" = "VIEWER",
 ) => {
   const project = await prisma.project.findUnique({
     where: { id: projectId },
@@ -26,8 +26,8 @@ const ensureProjectAccess = async (
     where: { projectId_userId: { projectId, userId } },
   });
   if (!member) throw new ForbiddenError("You are not a member of this project");
-  const rank = { VIEWER: 1, MEMBER: 2, MANAGER: 3, OWNER: 4 }[member.role as "VIEWER"];
-  const min = { VIEWER: 1, MEMBER: 2, MANAGER: 3, OWNER: 4 }[minRole];
+  const rank = { VIEWER: 1, TEAM_MEMBER: 2, PROJECT_MANAGER: 3, ADMIN: 4 }[member.role as "VIEWER"];
+  const min = { VIEWER: 1, TEAM_MEMBER: 2, PROJECT_MANAGER: 3, ADMIN: 4 }[minRole];
   if (rank < min) throw new ForbiddenError(`Requires role ${minRole} or higher`);
   return { project };
 };
@@ -74,91 +74,98 @@ export const create = async (userId: string, taskId: string, input: CreateCommen
     select: { projectId: true, title: true, assigneeId: true, creatorId: true },
   });
   if (!task) throw new NotFoundError("Task not found");
-  await ensureProjectAccess(userId, task.projectId, "MEMBER");
+  await ensureProjectAccess(userId, task.projectId, "TEAM_MEMBER");
 
-  const mentionedUsernames = extractMentions(input.content);
-
+  // Create comment
   const comment = await prisma.comment.create({
-    data: {
-      taskId,
-      authorId: userId,
-      content: input.content,
-    },
+    data: { taskId, authorId: userId, content: input.content },
     include: {
       author: { select: { id: true, name: true, username: true, avatar: true } },
     },
   });
 
-  // Resolve mentions
+  const notificationPromises: Promise<void>[] = [];
+  const mentionedUserIds = new Set<string>();
+  const projectId = task.projectId;
+
+  // Resolve mentions in parallel
+  const mentionedUsernames = extractMentions(input.content);
   if (mentionedUsernames.length > 0) {
     const users = await prisma.user.findMany({
-      where: {
-        username: { in: mentionedUsernames },
-        status: "ACTIVE",
-      },
+      where: { username: { in: mentionedUsernames }, status: "ACTIVE" },
       select: { id: true, username: true, name: true },
     });
     if (users.length > 0) {
       await prisma.mention.createMany({
-        data: users.map((u) => ({
-          commentId: comment.id,
-          userId: u.id,
-          username: u.username,
-        })),
+        data: users.map((u) => ({ commentId: comment.id, userId: u.id, username: u.username })),
       });
       for (const u of users) {
-        if (u.id === userId) continue; // don't notify self
-        await notifyUser({
-          userId: u.id,
-          type: "TASK_MENTIONED",
-          title: "You were mentioned",
-          message: `You were mentioned in a comment on "${task.title}"`,
-          data: { taskId, projectId: task.projectId, commentId: comment.id },
-        });
+        if (u.id === userId) continue;
+        mentionedUserIds.add(u.id);
+        notificationPromises.push(
+          notifyUser({
+            userId: u.id,
+            type: "TASK_MENTIONED",
+            title: "You were mentioned",
+            message: `You were mentioned in a comment on "${task.title}"`,
+            data: { taskId, projectId, commentId: comment.id },
+          }),
+        );
       }
     }
   }
 
-  // Notify task assignee/creator (but not self, not already mentioned)
-  const recipients = new Set<string>();
-  if (task.assigneeId && task.assigneeId !== userId) recipients.add(task.assigneeId);
-  if (task.creatorId && task.creatorId !== userId && task.creatorId !== task.assigneeId) {
-    recipients.add(task.creatorId);
+  // Notify assignee/creator (skip self and already-mentioned)
+  if (task.assigneeId && task.assigneeId !== userId && !mentionedUserIds.has(task.assigneeId)) {
+    notificationPromises.push(
+      notifyUser({
+        userId: task.assigneeId,
+        type: "COMMENT",
+        title: "New comment on your task",
+        message: `${comment.author.name} commented on "${task.title}"`,
+        data: { taskId, projectId, commentId: comment.id },
+      }),
+    );
   }
-  const mentioned = new Set(
-    (await prisma.mention.findMany({ where: { commentId: comment.id }, select: { userId: true } }))
-      .map((m) => m.userId),
-  );
-  for (const rid of recipients) {
-    if (mentioned.has(rid)) continue;
-    await notifyUser({
-      userId: rid,
-      type: "COMMENT",
-      title: "New comment on your task",
-      message: `${comment.author.name} commented on "${task.title}"`,
-      data: { taskId, projectId: task.projectId, commentId: comment.id },
+  if (
+    task.creatorId && task.creatorId !== userId &&
+    task.creatorId !== task.assigneeId && !mentionedUserIds.has(task.creatorId)
+  ) {
+    notificationPromises.push(
+      notifyUser({
+        userId: task.creatorId,
+        type: "COMMENT",
+        title: "New comment on your task",
+        message: `${comment.author.name} commented on "${task.title}"`,
+        data: { taskId, projectId, commentId: comment.id },
+      }),
+    );
+  }
+
+  // Run notifications and activity log in parallel
+  await Promise.all([
+    ...notificationPromises,
+    logActivity({
+      actorId: userId,
+      action: "COMMENT_ADDED",
+      entityType: "COMMENT",
+      entityId: comment.id,
+      projectId,
+      taskId,
+      metadata: { excerpt: input.content.slice(0, 100) },
+    }),
+  ]);
+
+  // Fetch mentions for response (only if there were any)
+  if (mentionedUserIds.size > 0 || task.assigneeId || task.creatorId) {
+    const mentions = await prisma.mention.findMany({
+      where: { commentId: comment.id },
+      include: { user: { select: { id: true, name: true, username: true } } },
     });
+    return { ...comment, mentions };
   }
 
-  await logActivity({
-    actorId: userId,
-    action: "COMMENT_ADDED",
-    entityType: "COMMENT",
-    entityId: comment.id,
-    projectId: task.projectId,
-    taskId,
-    metadata: { excerpt: input.content.slice(0, 100) },
-  });
-
-  return await prisma.comment.findUnique({
-    where: { id: comment.id },
-    include: {
-      author: { select: { id: true, name: true, username: true, avatar: true } },
-      mentions: {
-        include: { user: { select: { id: true, name: true, username: true } } },
-      },
-    },
-  });
+  return { ...comment, mentions: [] };
 };
 
 export const update = async (
@@ -172,7 +179,7 @@ export const update = async (
   });
   if (!comment) throw new NotFoundError("Comment not found");
   if (comment.authorId !== userId) throw new ForbiddenError("You can only edit your own comments");
-  await ensureProjectAccess(userId, comment.task.projectId, "MEMBER");
+  await ensureProjectAccess(userId, comment.task.projectId, "TEAM_MEMBER");
 
   // Re-resolve mentions
   const newMentions = extractMentions(input.content);
@@ -230,13 +237,14 @@ export const remove = async (userId: string, commentId: string) => {
     include: { task: { select: { projectId: true } } },
   });
   if (!comment) throw new NotFoundError("Comment not found");
-  const member = await prisma.projectMember.findUnique({
-    where: { projectId_userId: { projectId: comment.task.projectId, userId } },
+  const project = await prisma.project.findUnique({
+    where: { id: comment.task.projectId },
+    include: { members: { where: { userId }, select: { role: true }, take: 1 } },
   });
-  const project = await prisma.project.findUnique({ where: { id: comment.task.projectId } });
   if (!project) throw new NotFoundError("Project not found");
+  const member = project.members[0];
   const isOwner = project.ownerId === userId;
-  const isManager = isOwner || (member && (member.role === "MANAGER" || member.role === "OWNER"));
+  const isManager = isOwner || (member && (member.role === "PROJECT_MANAGER" || member.role === "ADMIN"));
   if (comment.authorId !== userId && !isManager) {
     throw new ForbiddenError("You can only delete your own comments");
   }

@@ -1,8 +1,19 @@
 import type { ComponentChildren } from "preact";
-import type { Priority, ProjectStatus, TaskStatus, User } from "../lib/types.ts";
+import type {
+  Priority,
+  ProjectStatus,
+  TaskStatus,
+  User,
+} from "../lib/types.ts";
 
-export function Icon({ name, size = 22 }: { name: string; size?: number }) {
-  return <span class="material-symbols-outlined" style={{ fontSize: `${size}px` }}>{name}</span>;
+export function Icon(
+  { name, size = 22, style }: { name: string; size?: number; style?: Record<string, string> },
+) {
+  return (
+    <span class="material-symbols-outlined" style={{ fontSize: `${size}px`, ...style }}>
+      {name}
+    </span>
+  );
 }
 
 export function Button(
@@ -13,7 +24,7 @@ export function Button(
     disabled?: boolean;
     onClick?: () => void;
     class?: string;
-  }
+  },
 ) {
   const variant = props.variant ?? "secondary";
   const cls = variant === "primary"
@@ -39,7 +50,7 @@ export function Badge(
   { children, tone = "neutral" }: {
     children: ComponentChildren;
     tone?: "neutral" | "success" | "warning" | "danger";
-  }
+  },
 ) {
   const toneClass = tone === "success"
     ? "badge-success"
@@ -51,7 +62,9 @@ export function Badge(
   return <span class={`badge ${toneClass}`}>{children}</span>;
 }
 
-export function Avatar({ user, size = 32 }: { user?: Partial<User> | null; size?: number }) {
+export function Avatar(
+  { user, size = 32 }: { user?: Partial<User> | null; size?: number },
+) {
   const initials = (user?.name ?? user?.email ?? "PF")
     .split(/[ @._-]/)
     .filter(Boolean)
@@ -60,7 +73,14 @@ export function Avatar({ user, size = 32 }: { user?: Partial<User> | null; size?
     .join("") || "PF";
   return (
     <span class="avatar" style={{ width: `${size}px`, height: `${size}px` }}>
-      {user?.avatarUrl ? <img src={user.avatarUrl} alt={user.name ?? "User"} /> : initials}
+      {user?.avatarUrl || user?.avatar
+        ? (
+          <img
+            src={user.avatarUrl ?? user.avatar ?? ""}
+            alt={user.name ?? "User"}
+          />
+        )
+        : initials}
     </span>
   );
 }
@@ -82,17 +102,27 @@ export function Skeleton({ height = 96 }: { height?: number }) {
         height: `${height}px`,
         background:
           "linear-gradient(90deg, var(--surface), color-mix(in srgb, var(--border), transparent 55%), var(--surface))",
-        backgroundSize: "220% 100%"
+        backgroundSize: "220% 100%",
       }}
     />
   );
 }
 
-export function EmptyState({ icon, title, body }: { icon: string; title: string; body: string }) {
+export function EmptyState(
+  { icon, title, body }: { icon: string; title: string; body: string },
+) {
   return (
-    <div class="panel" style={{ padding: "28px", textAlign: "center", color: "var(--muted)" }}>
+    <div
+      class="panel"
+      style={{ padding: "28px", textAlign: "center", color: "var(--muted)" }}
+    >
       <Icon name={icon} size={36} />
-      <h3 class="headline" style={{ color: "var(--text)", margin: "12px 0 4px" }}>{title}</h3>
+      <h3
+        class="headline"
+        style={{ color: "var(--text)", margin: "12px 0 4px" }}
+      >
+        {title}
+      </h3>
       <p style={{ margin: 0 }}>{body}</p>
     </div>
   );
@@ -113,22 +143,49 @@ export function statusTone(status?: TaskStatus | ProjectStatus) {
 
 export function fmtDate(date?: string | null) {
   if (!date) return "No due date";
-  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(new Date(date));
+  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric" })
+    .format(new Date(date));
+}
+
+export function LoadingSpinner(
+  { size, label }: { size?: "sm" | "lg"; label?: string },
+) {
+  const cls = size === "lg" ? "spinner spinner-lg" : "spinner";
+  return (
+    <div class="loading-screen">
+      <div class={cls} />
+      {label && <p style={{ margin: 0, fontSize: "14px" }}>{label}</p>}
+    </div>
+  );
 }
 
 export function StatCard(
-  { icon, label, value, hint }: { icon: string; label: string; value: string | number; hint?: string }
+  { icon, label, value, hint }: {
+    icon: string;
+    label: string;
+    value: string | number;
+    hint?: string;
+  },
 ) {
   return (
-    <div class="card" style={{ padding: "18px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: "12px" }}>
-        <div>
-          <p class="mono" style={{ margin: "0 0 8px", color: "var(--muted)", fontSize: "11px", textTransform: "uppercase" }}>{label}</p>
-          <strong class="headline" style={{ fontSize: "28px" }}>{value}</strong>
+    <div class="card stat-card">
+      <div class="stat-card-head">
+        <div class="stat-icon-tile">
+          <Icon name={icon} size={18} />
         </div>
-        <span class="brand-mark" style={{ width: "36px", height: "36px" }}><Icon name={icon} size={20} /></span>
+        <div class="stat-sparkline" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+          <span />
+          <span />
+        </div>
       </div>
-      {hint && <p style={{ margin: "12px 0 0", color: "var(--muted)", fontSize: "13px" }}>{hint}</p>}
+      <div>
+        <p class="mono stat-card-label">{label}</p>
+        <strong class="headline stat-card-value">{value}</strong>
+      </div>
+      {hint && <p class="stat-card-hint">{hint}</p>}
     </div>
   );
 }

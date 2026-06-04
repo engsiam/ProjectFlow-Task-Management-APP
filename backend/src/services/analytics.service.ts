@@ -2,8 +2,23 @@
 
 import { prisma } from "../prisma/client.ts";
 
+const dashboardUserSelect = {
+  id: true,
+  name: true,
+  email: true,
+  username: true,
+  avatar: true,
+} as const;
+
+const dashboardProjectSelect = {
+  id: true,
+  name: true,
+  status: true,
+  ownerId: true,
+} as const;
+
 export const getDashboard = async (userId: string) => {
-  // Projects the user is part of
+  // Get project IDs first (required for all subsequent queries)
   const myProjects = await prisma.project.findMany({
     where: {
       OR: [
@@ -16,108 +31,206 @@ export const getDashboard = async (userId: string) => {
   });
   const projectIds = myProjects.map((p) => p.id);
 
-  // Project counts
-  const [totalProjects, activeProjects, completedProjects, archivedProjects] = await Promise.all([
-    prisma.project.count({ where: { id: { in: projectIds } } }),
-    prisma.project.count({ where: { id: { in: projectIds }, status: "ACTIVE" } }),
-    prisma.project.count({ where: { id: { in: projectIds }, status: "COMPLETED" } }),
-    prisma.project.count({ where: { ownerId: userId, status: "ARCHIVED" } }),
-  ]);
+  if (projectIds.length === 0) {
+    const unreadNotifications = await prisma.notification.count({
+      where: { userId, read: false },
+    });
+    return {
+      projects: { total: 0, active: 0, completed: 0, archived: 0 },
+      tasks: {
+        total: 0,
+        byStatus: { TODO: 0, IN_PROGRESS: 0, REVIEW: 0, DONE: 0 },
+        byPriority: { LOW: 0, MEDIUM: 0, HIGH: 0, URGENT: 0 },
+        overdue: 0,
+        completed: 0,
+      },
+      mine: {
+        assignedOpen: 0,
+        byStatus: { TODO: 0, IN_PROGRESS: 0, REVIEW: 0, DONE: 0 },
+        overdue: 0,
+      },
+      notifications: { unread: unreadNotifications },
+      recentActivity: [],
+      activeProjects: [],
+      myAssignedTasks: [],
+      overdueTasks: [],
+      memberWorkload: [],
+    };
+  }
 
-  // Task status breakdown within my projects
-  const taskStatusGroups = projectIds.length
-    ? await prisma.task.groupBy({
+  // Run all data queries in parallel
+  const now = new Date();
+  const [
+    projectCountGroups,
+    taskStatusGroups,
+    taskPriorityGroups,
+    overdueTasks,
+    myAssignedOpen,
+    myAssignedGroups,
+    myOverdue,
+    myTaskItems,
+    overdueTaskItems,
+    workloadGroups,
+    unreadNotifications,
+    recentActivity,
+    archivedProjects,
+  ] = await Promise.all([
+    prisma.project.groupBy({
+      by: ["status"],
+      where: { id: { in: projectIds } },
+      _count: { _all: true },
+    }),
+    prisma.task.groupBy({
       by: ["status"],
       where: { projectId: { in: projectIds } },
       _count: { _all: true },
-    })
-    : [];
-  const taskStatus = {
+    }),
+    prisma.task.groupBy({
+      by: ["priority"],
+      where: { projectId: { in: projectIds } },
+      _count: { _all: true },
+    }),
+    prisma.task.count({
+      where: {
+        projectId: { in: projectIds },
+        dueDate: { lt: now },
+        status: { not: "DONE" },
+      },
+    }),
+    prisma.task.count({
+      where: {
+        assigneeId: userId,
+        projectId: { in: projectIds },
+        status: { not: "DONE" },
+      },
+    }),
+    prisma.task.groupBy({
+      by: ["status"],
+      where: { assigneeId: userId, projectId: { in: projectIds } },
+      _count: { _all: true },
+    }),
+    prisma.task.count({
+      where: {
+        assigneeId: userId,
+        projectId: { in: projectIds },
+        dueDate: { lt: now },
+        status: { not: "DONE" },
+      },
+    }),
+    prisma.task.findMany({
+      where: {
+        projectId: { in: projectIds },
+        OR: [{ assigneeId: userId }, { creatorId: userId }],
+      },
+      include: {
+        assignee: { select: dashboardUserSelect },
+        project: { select: dashboardProjectSelect },
+        _count: { select: { comments: true } },
+      },
+      orderBy: { updatedAt: "desc" },
+      take: 8,
+    }),
+    prisma.task.findMany({
+      where: {
+        projectId: { in: projectIds },
+        dueDate: { lt: now },
+        status: { not: "DONE" },
+      },
+      include: {
+        assignee: { select: dashboardUserSelect },
+        project: { select: dashboardProjectSelect },
+        _count: { select: { comments: true } },
+      },
+      orderBy: { dueDate: "asc" },
+      take: 8,
+    }),
+    prisma.task.groupBy({
+      by: ["assigneeId"],
+      where: {
+        projectId: { in: projectIds },
+        assigneeId: { not: null },
+        status: { not: "DONE" },
+      },
+      _count: { _all: true },
+    }),
+    prisma.notification.count({ where: { userId, read: false } }),
+    prisma.activityLog.findMany({
+      where: { projectId: { in: projectIds } },
+      include: {
+        actor: {
+          select: { id: true, name: true, username: true, avatar: true },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 10,
+    }),
+    prisma.project.count({ where: { ownerId: userId, status: "ARCHIVED" } }),
+  ]);
+
+  // Compute project counts
+  let totalProjects = 0, activeProjects = 0, completedProjects = 0;
+  for (const g of projectCountGroups) {
+    totalProjects += g._count._all;
+    if (g.status === "ACTIVE") activeProjects = g._count._all;
+    if (g.status === "COMPLETED") completedProjects = g._count._all;
+  }
+
+  // Task status breakdown
+  const taskStatus: Record<string, number> = {
     TODO: 0,
     IN_PROGRESS: 0,
     REVIEW: 0,
     DONE: 0,
   };
   for (const g of taskStatusGroups) {
-    (taskStatus as Record<string, number>)[g.status] = g._count._all;
+    taskStatus[g.status] = g._count._all;
   }
   const totalTasks = Object.values(taskStatus).reduce((a, b) => a + b, 0);
 
   // Task priority breakdown
-  const taskPriorityGroups = projectIds.length
-    ? await prisma.task.groupBy({
-      by: ["priority"],
-      where: { projectId: { in: projectIds } },
-      _count: { _all: true },
-    })
-    : [];
-  const taskPriority = { LOW: 0, MEDIUM: 0, HIGH: 0, URGENT: 0 };
+  const taskPriority: Record<string, number> = {
+    LOW: 0,
+    MEDIUM: 0,
+    HIGH: 0,
+    URGENT: 0,
+  };
   for (const g of taskPriorityGroups) {
-    (taskPriority as Record<string, number>)[g.priority] = g._count._all;
+    taskPriority[g.priority] = g._count._all;
   }
 
-  // Overdue tasks (assigned to me or in my projects, not done, due < now)
-  const overdueTasks = projectIds.length
-    ? await prisma.task.count({
-      where: {
-        projectId: { in: projectIds },
-        dueDate: { lt: new Date() },
-        status: { not: "DONE" },
-      },
-    })
-    : 0;
-
-  // Completed tasks (in my projects)
-  const completedTasks = taskStatus.DONE;
-
-  // My assigned open tasks
-  const myAssignedOpen = await prisma.task.count({
-    where: {
-      assigneeId: userId,
-      projectId: { in: projectIds },
-      status: { not: "DONE" },
-    },
-  });
-
-  // My assigned tasks by status
-  const myAssignedGroups = projectIds.length
-    ? await prisma.task.groupBy({
-      by: ["status"],
-      where: { assigneeId: userId, projectId: { in: projectIds } },
-      _count: { _all: true },
-    })
-    : [];
-  const myTaskStatus = { TODO: 0, IN_PROGRESS: 0, REVIEW: 0, DONE: 0 };
+  // My assigned by status
+  const myTaskStatus: Record<string, number> = {
+    TODO: 0,
+    IN_PROGRESS: 0,
+    REVIEW: 0,
+    DONE: 0,
+  };
   for (const g of myAssignedGroups) {
-    (myTaskStatus as Record<string, number>)[g.status] = g._count._all;
+    myTaskStatus[g.status] = g._count._all;
   }
 
-  // My overdue
-  const myOverdue = await prisma.task.count({
-    where: {
-      assigneeId: userId,
-      projectId: { in: projectIds },
-      dueDate: { lt: new Date() },
-      status: { not: "DONE" },
-    },
-  });
-
-  // Unread notifications
-  const unreadNotifications = await prisma.notification.count({
-    where: { userId, read: false },
-  });
-
-  // Recent activity (across my projects)
-  const recentActivity = projectIds.length
-    ? await prisma.activityLog.findMany({
-      where: { projectId: { in: projectIds } },
-      include: {
-        actor: { select: { id: true, name: true, username: true, avatar: true } },
-      },
-      orderBy: { createdAt: "desc" },
-      take: 10,
+  const workloadUserIds = workloadGroups
+    .map((group) => group.assigneeId)
+    .filter((id): id is string => Boolean(id));
+  const workloadUsers = workloadUserIds.length
+    ? await prisma.user.findMany({
+      where: { id: { in: workloadUserIds } },
+      select: dashboardUserSelect,
     })
     : [];
+  const workloadUserById = new Map(
+    workloadUsers.map((user) => [user.id, user]),
+  );
+  const memberWorkload = workloadGroups
+    .map((group) => {
+      if (!group.assigneeId) return null;
+      const user = workloadUserById.get(group.assigneeId);
+      return user ? { user, count: group._count._all } : null;
+    })
+    .filter((
+      item,
+    ): item is { user: typeof workloadUsers[number]; count: number } => Boolean(item))
+    .sort((a, b) => b.count - a.count);
 
   return {
     projects: {
@@ -131,7 +244,7 @@ export const getDashboard = async (userId: string) => {
       byStatus: taskStatus,
       byPriority: taskPriority,
       overdue: overdueTasks,
-      completed: completedTasks,
+      completed: taskStatus.DONE,
     },
     mine: {
       assignedOpen: myAssignedOpen,
@@ -140,43 +253,61 @@ export const getDashboard = async (userId: string) => {
     },
     notifications: { unread: unreadNotifications },
     recentActivity,
+    myAssignedTasks: myTaskItems,
+    overdueTasks: overdueTaskItems,
+    memberWorkload,
   };
 };
 
-export const getProjectAnalytics = async (userId: string, projectId: string) => {
+export const getProjectAnalytics = async (
+  userId: string,
+  projectId: string,
+) => {
   // Verify access
   const project = await prisma.project.findUnique({
     where: { id: projectId },
     include: {
       members: {
-        include: { user: { select: { id: true, name: true, username: true, avatar: true } } },
+        include: {
+          user: {
+            select: { id: true, name: true, username: true, avatar: true },
+          },
+        },
       },
     },
   });
   if (!project) throw new Error("Project not found");
-  const isMember = project.ownerId === userId || project.members.some((m) => m.userId === userId);
+  const isMember = project.ownerId === userId ||
+    project.members.some((m) => m.userId === userId);
   if (!isMember) throw new Error("Forbidden");
 
-  const [statusGroups, priorityGroups, total, done, overdue] = await Promise.all([
-    prisma.task.groupBy({
-      by: ["status"],
-      where: { projectId },
-      _count: { _all: true },
-    }),
-    prisma.task.groupBy({
-      by: ["priority"],
-      where: { projectId },
-      _count: { _all: true },
-    }),
-    prisma.task.count({ where: { projectId } }),
-    prisma.task.count({ where: { projectId, status: "DONE" } }),
-    prisma.task.count({
-      where: { projectId, dueDate: { lt: new Date() }, status: { not: "DONE" } },
-    }),
-  ]);
+  const [statusGroups, priorityGroups, total, done, overdue] = await Promise
+    .all([
+      prisma.task.groupBy({
+        by: ["status"],
+        where: { projectId },
+        _count: { _all: true },
+      }),
+      prisma.task.groupBy({
+        by: ["priority"],
+        where: { projectId },
+        _count: { _all: true },
+      }),
+      prisma.task.count({ where: { projectId } }),
+      prisma.task.count({ where: { projectId, status: "DONE" } }),
+      prisma.task.count({
+        where: {
+          projectId,
+          dueDate: { lt: new Date() },
+          status: { not: "DONE" },
+        },
+      }),
+    ]);
 
   const byStatus = { TODO: 0, IN_PROGRESS: 0, REVIEW: 0, DONE: 0 };
-  for (const g of statusGroups) (byStatus as Record<string, number>)[g.status] = g._count._all;
+  for (const g of statusGroups) {
+    (byStatus as Record<string, number>)[g.status] = g._count._all;
+  }
   const byPriority = { LOW: 0, MEDIUM: 0, HIGH: 0, URGENT: 0 };
   for (const g of priorityGroups) {
     (byPriority as Record<string, number>)[g.priority] = g._count._all;

@@ -13,6 +13,14 @@ import type {
   UpdateTaskInput,
 } from "../validators/task.validator.ts";
 
+export const listAllTasks = async (c: Context) => {
+  const user = getUser(c);
+  // deno-lint-ignore no-explicit-any
+  const query = (c.req as any).valid("query") as ListTasksQuery;
+  const result = await taskService.listForUser(user.id, query);
+  return respondOk(c, result, "Tasks");
+};
+
 export const listTasks = async (c: Context) => {
   const user = getUser(c);
   const projectId = c.req.param("projectId");

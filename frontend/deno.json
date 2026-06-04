@@ -3,17 +3,18 @@
   "tasks": {
     "check": "deno fmt --check && deno lint && deno check **/*.ts **/*.tsx",
     "fmt": "deno fmt",
-    "start": "deno run -A --watch=static/,routes/,components/,islands/,lib/,types/ dev.ts"
+    "start": "deno run -A --watch=static/,routes/,components/,islands/,lib/,types/ dev.ts",
+    "build": "deno run -A dev.ts build",
+    "preview": "deno run -A main.ts"
   },
   "imports": {
     "$fresh/": "https://deno.land/x/fresh@1.7.3/",
     "preact": "https://esm.sh/preact@10.22.0",
     "preact/": "https://esm.sh/preact@10.22.0/",
-    "@preact/signals": "https://esm.sh/@preact/signals@1.2.2",
-    "@preact/signals-core": "https://esm.sh/@preact/signals-core@1.5.1"
+    "@preact/signals": "https://esm.sh/*@preact/signals@1.2.2",
+    "@preact/signals-core": "https://esm.sh/*@preact/signals-core@1.5.1"
   },
-  "compilerOptions": {
-    "jsx": "react-jsx",
-    "jsxImportSource": "preact"
-  }
+  "compilerOptions": { "jsx": "react-jsx", "jsxImportSource": "preact" },
+  "lint": { "rules": { "tags": ["fresh", "recommended"] } },
+  "exclude": ["**/_fresh/*"]
 }

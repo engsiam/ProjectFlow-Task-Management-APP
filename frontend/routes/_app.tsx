@@ -8,12 +8,6 @@ export default function App({ Component }: AppProps) {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>ProjectFlow</title>
         <link rel="stylesheet" href="/styles.css" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html:
-              `try{const t=localStorage.getItem("projectflow.theme")||"dark";document.documentElement.classList.toggle("dark",t==="dark")}catch(_){document.documentElement.classList.add("dark")}`
-          }}
-        />
       </head>
       <body>
         <Component />

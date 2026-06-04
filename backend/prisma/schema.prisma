@@ -4,6 +4,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -76,6 +77,8 @@ model Project {
   completedAt DateTime?
 
   @@index([status])
+  @@index([ownerId])
+  @@index([ownerId, status])
 }
 
 model ProjectMember {
@@ -139,6 +142,11 @@ model Task {
   @@index([status])
   @@index([priority])
   @@index([projectId, status, order])
+  @@index([assigneeId, projectId, status])
+  @@index([projectId, dueDate, status])
+  @@index([projectId, assigneeId])
+  @@index([assigneeId])
+  @@index([dueDate])
 }
 
 // ============================================================
@@ -156,6 +164,8 @@ model Comment {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   edited    Boolean   @default(false)
+
+  @@index([taskId, createdAt])
 }
 
 model Mention {

@@ -6,10 +6,17 @@ import * as exportService from "../services/export.service.ts";
 import * as healthService from "../services/health.service.ts";
 import { respondOk } from "../utils/response.ts";
 import { getUser } from "./_helpers.ts";
+import { cacheGet, cacheSet, cacheKey } from "../utils/cache.ts";
+
+const DASHBOARD_CACHE_TTL = 10_000; // 10s
 
 export const dashboard = async (c: Context) => {
   const user = getUser(c);
+  const key = cacheKey(user.id, "dashboard");
+  const cached = cacheGet<ReturnType<typeof analyticsService.getDashboard>>(key);
+  if (cached) return respondOk(c, cached, "Dashboard (cached)");
   const result = await analyticsService.getDashboard(user.id);
+  cacheSet(key, result, DASHBOARD_CACHE_TTL);
   return respondOk(c, result, "Dashboard");
 };
 

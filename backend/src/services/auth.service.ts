@@ -36,14 +36,20 @@ const issueTokens = async (user: {
   username: string;
   name: string;
 }, meta?: { userAgent?: string; ipAddress?: string }) => {
-  const accessToken = signAccessToken({
-    sub: user.id,
-    email: user.email,
-    username: user.username,
-    name: user.name,
-  });
-  const refreshToken = signRefreshToken({ sub: user.id, jti: randomToken(16) });
-  const tokenHash = await sha256(refreshToken);
+  // Parallelize CPU-bound JWT signing + sha256 + DB write
+  const jti = randomToken(16);
+  const [accessToken, refreshToken] = await Promise.all([
+    Promise.resolve(signAccessToken({
+      sub: user.id,
+      email: user.email,
+      username: user.username,
+      name: user.name,
+    })),
+    Promise.resolve(signRefreshToken({ sub: user.id, jti })),
+  ]);
+  const [tokenHash] = await Promise.all([
+    sha256(refreshToken),
+  ]);
   const expiresAt = new Date(Date.now() + refreshTokenExpiresInSeconds() * 1000);
   await prisma.refreshToken.create({
     data: {
@@ -105,12 +111,20 @@ export const refresh = async (input: RefreshInput) => {
   if (!stored || stored.revoked || stored.expiresAt < new Date()) {
     throw new UnauthorizedError("Refresh token not recognized");
   }
-  // Rotate: revoke the old token, issue a new one
-  await prisma.refreshToken.update({
-    where: { id: stored.id },
-    data: { revoked: true },
+  // Rotate: revoke old, issue new — parallel where possible
+  const jti = randomToken(16);
+  const newRefreshToken = signRefreshToken({ sub: payload.sub, jti });
+  const [newHash] = await Promise.all([
+    sha256(newRefreshToken),
+    prisma.refreshToken.update({
+      where: { id: stored.id },
+      data: { revoked: true },
+    }),
+  ]);
+  const user = await prisma.user.findUnique({
+    where: { id: payload.sub },
+    select: { id: true, email: true, username: true, name: true, status: true },
   });
-  const user = await prisma.user.findUnique({ where: { id: payload.sub } });
   if (!user) throw new UnauthorizedError("User no longer exists");
   if (user.status === "DISABLED") throw new UnauthorizedError("Account is disabled");
   const accessToken = signAccessToken({
@@ -119,8 +133,6 @@ export const refresh = async (input: RefreshInput) => {
     username: user.username,
     name: user.name,
   });
-  const refreshToken = signRefreshToken({ sub: user.id, jti: randomToken(16) });
-  const newHash = await sha256(refreshToken);
   await prisma.refreshToken.create({
     data: {
       tokenHash: newHash,
@@ -130,7 +142,7 @@ export const refresh = async (input: RefreshInput) => {
   });
   return {
     accessToken,
-    refreshToken,
+    refreshToken: newRefreshToken,
     refreshExpiresIn: refreshTokenExpiresInSeconds(),
   };
 };

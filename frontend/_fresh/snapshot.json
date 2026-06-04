@@ -1,0 +1,322 @@
+{
+  "build_id": "5ec024fef0ee06e9a2f0265d2fd256cbbcc0f7d3",
+  "files": {
+    "island-taskfilters.js": [
+      "chunk-BYRZ2NRM.js",
+      "chunk-JP5XG2OT.js"
+    ],
+    "island-tasksclient.js": [
+      "chunk-NZU5PXDZ.js",
+      "chunk-EAVGZM34.js",
+      "chunk-XI2XOD4V.js",
+      "chunk-WOKE2CBY.js",
+      "chunk-57DYSOHU.js",
+      "chunk-X4FKS2XJ.js",
+      "chunk-X4ENSL2V.js",
+      "chunk-AOCG4NXN.js",
+      "chunk-BYRZ2NRM.js",
+      "chunk-G4CPWP5O.js",
+      "chunk-JP5XG2OT.js"
+    ],
+    "island-themetoggle.js": [
+      "chunk-P3DYQBXD.js",
+      "chunk-AOCG4NXN.js",
+      "chunk-BYRZ2NRM.js",
+      "chunk-G4CPWP5O.js",
+      "chunk-JP5XG2OT.js"
+    ],
+    "island-toastprovider.js": [
+      "chunk-AOCG4NXN.js",
+      "chunk-BYRZ2NRM.js",
+      "chunk-G4CPWP5O.js",
+      "chunk-JP5XG2OT.js"
+    ],
+    "island-searchcommand.js": [
+      "chunk-X4FKS2XJ.js",
+      "chunk-X4ENSL2V.js",
+      "chunk-BYRZ2NRM.js",
+      "chunk-G4CPWP5O.js",
+      "chunk-JP5XG2OT.js"
+    ],
+    "island-settingsclient.js": [
+      "chunk-P3DYQBXD.js",
+      "chunk-57DYSOHU.js",
+      "chunk-X4FKS2XJ.js",
+      "chunk-X4ENSL2V.js",
+      "chunk-AOCG4NXN.js",
+      "chunk-BYRZ2NRM.js",
+      "chunk-G4CPWP5O.js",
+      "chunk-JP5XG2OT.js"
+    ],
+    "chunk-P3DYQBXD.js": [
+      "chunk-AOCG4NXN.js",
+      "chunk-BYRZ2NRM.js",
+      "chunk-G4CPWP5O.js"
+    ],
+    "island-shelluser.js": [
+      "chunk-WOKE2CBY.js",
+      "chunk-57DYSOHU.js",
+      "chunk-X4FKS2XJ.js",
+      "chunk-X4ENSL2V.js",
+      "chunk-AOCG4NXN.js",
+      "chunk-BYRZ2NRM.js",
+      "chunk-G4CPWP5O.js",
+      "chunk-JP5XG2OT.js"
+    ],
+    "island-signupform.js": [
+      "chunk-57DYSOHU.js",
+      "chunk-X4FKS2XJ.js",
+      "chunk-X4ENSL2V.js",
+      "chunk-AOCG4NXN.js",
+      "chunk-BYRZ2NRM.js",
+      "chunk-G4CPWP5O.js",
+      "chunk-JP5XG2OT.js"
+    ],
+    "island-systemstatus.js": [
+      "chunk-X4ENSL2V.js",
+      "chunk-BYRZ2NRM.js",
+      "chunk-G4CPWP5O.js",
+      "chunk-JP5XG2OT.js"
+    ],
+    "island-taskcreatemodal.js": [
+      "chunk-XI2XOD4V.js",
+      "chunk-57DYSOHU.js",
+      "chunk-X4FKS2XJ.js",
+      "chunk-X4ENSL2V.js",
+      "chunk-AOCG4NXN.js",
+      "chunk-BYRZ2NRM.js",
+      "chunk-G4CPWP5O.js",
+      "chunk-JP5XG2OT.js"
+    ],
+    "island-taskdetailmodal.js": [
+      "chunk-NZU5PXDZ.js",
+      "chunk-EAVGZM34.js",
+      "chunk-WOKE2CBY.js",
+      "chunk-57DYSOHU.js",
+      "chunk-X4FKS2XJ.js",
+      "chunk-X4ENSL2V.js",
+      "chunk-AOCG4NXN.js",
+      "chunk-BYRZ2NRM.js",
+      "chunk-G4CPWP5O.js",
+      "chunk-JP5XG2OT.js"
+    ],
+    "island-taskeditmodal.js": [
+      "chunk-NZU5PXDZ.js",
+      "chunk-EAVGZM34.js",
+      "chunk-WOKE2CBY.js",
+      "chunk-57DYSOHU.js",
+      "chunk-X4FKS2XJ.js",
+      "chunk-X4ENSL2V.js",
+      "chunk-AOCG4NXN.js",
+      "chunk-BYRZ2NRM.js",
+      "chunk-G4CPWP5O.js",
+      "chunk-JP5XG2OT.js"
+    ],
+    "island-kanbanboard.js": [
+      "chunk-V2QRH25Y.js",
+      "chunk-NZU5PXDZ.js",
+      "chunk-EAVGZM34.js",
+      "chunk-XI2XOD4V.js",
+      "chunk-WOKE2CBY.js",
+      "chunk-57DYSOHU.js",
+      "chunk-X4FKS2XJ.js",
+      "chunk-X4ENSL2V.js",
+      "chunk-AOCG4NXN.js",
+      "chunk-BYRZ2NRM.js",
+      "chunk-G4CPWP5O.js",
+      "chunk-JP5XG2OT.js"
+    ],
+    "island-loginform.js": [
+      "chunk-57DYSOHU.js",
+      "chunk-X4FKS2XJ.js",
+      "chunk-X4ENSL2V.js",
+      "chunk-AOCG4NXN.js",
+      "chunk-BYRZ2NRM.js",
+      "chunk-G4CPWP5O.js",
+      "chunk-JP5XG2OT.js"
+    ],
+    "island-membersclient.js": [
+      "chunk-X4FKS2XJ.js",
+      "chunk-X4ENSL2V.js",
+      "chunk-AOCG4NXN.js",
+      "chunk-BYRZ2NRM.js",
+      "chunk-G4CPWP5O.js",
+      "chunk-JP5XG2OT.js"
+    ],
+    "island-notificationdropdown.js": [
+      "chunk-ZFAOIGNR.js",
+      "chunk-57DYSOHU.js",
+      "chunk-X4FKS2XJ.js",
+      "chunk-X4ENSL2V.js",
+      "chunk-AOCG4NXN.js",
+      "chunk-BYRZ2NRM.js",
+      "chunk-G4CPWP5O.js",
+      "chunk-JP5XG2OT.js"
+    ],
+    "island-notificationsclient.js": [
+      "chunk-ZFAOIGNR.js",
+      "chunk-57DYSOHU.js",
+      "chunk-X4FKS2XJ.js",
+      "chunk-X4ENSL2V.js",
+      "chunk-AOCG4NXN.js",
+      "chunk-BYRZ2NRM.js",
+      "chunk-G4CPWP5O.js",
+      "chunk-JP5XG2OT.js"
+    ],
+    "chunk-ZFAOIGNR.js": [],
+    "island-projectcreatemodal.js": [
+      "chunk-S4ZTSKFE.js",
+      "chunk-57DYSOHU.js",
+      "chunk-X4FKS2XJ.js",
+      "chunk-X4ENSL2V.js",
+      "chunk-AOCG4NXN.js",
+      "chunk-BYRZ2NRM.js",
+      "chunk-G4CPWP5O.js",
+      "chunk-JP5XG2OT.js"
+    ],
+    "island-projectdetailclient.js": [
+      "chunk-V2QRH25Y.js",
+      "chunk-NZU5PXDZ.js",
+      "chunk-EAVGZM34.js",
+      "chunk-XI2XOD4V.js",
+      "chunk-WOKE2CBY.js",
+      "chunk-PC4IDACZ.js",
+      "chunk-57DYSOHU.js",
+      "chunk-X4FKS2XJ.js",
+      "chunk-X4ENSL2V.js",
+      "chunk-AOCG4NXN.js",
+      "chunk-BYRZ2NRM.js",
+      "chunk-G4CPWP5O.js",
+      "chunk-JP5XG2OT.js"
+    ],
+    "chunk-V2QRH25Y.js": [
+      "chunk-NZU5PXDZ.js",
+      "chunk-XI2XOD4V.js",
+      "chunk-WOKE2CBY.js",
+      "chunk-57DYSOHU.js",
+      "chunk-X4FKS2XJ.js",
+      "chunk-X4ENSL2V.js",
+      "chunk-AOCG4NXN.js",
+      "chunk-BYRZ2NRM.js",
+      "chunk-G4CPWP5O.js",
+      "chunk-JP5XG2OT.js"
+    ],
+    "chunk-NZU5PXDZ.js": [
+      "chunk-EAVGZM34.js",
+      "chunk-WOKE2CBY.js",
+      "chunk-57DYSOHU.js",
+      "chunk-X4FKS2XJ.js",
+      "chunk-AOCG4NXN.js",
+      "chunk-BYRZ2NRM.js",
+      "chunk-G4CPWP5O.js"
+    ],
+    "island-projectsclient.js": [
+      "chunk-S4ZTSKFE.js",
+      "chunk-WOKE2CBY.js",
+      "chunk-57DYSOHU.js",
+      "chunk-X4FKS2XJ.js",
+      "chunk-X4ENSL2V.js",
+      "chunk-AOCG4NXN.js",
+      "chunk-BYRZ2NRM.js",
+      "chunk-G4CPWP5O.js",
+      "chunk-JP5XG2OT.js"
+    ],
+    "main.js": [
+      "chunk-GI7LLYGM.js",
+      "chunk-JP5XG2OT.js"
+    ],
+    "deserializer.js": [],
+    "signals.js": [
+      "chunk-GI7LLYGM.js",
+      "chunk-G4CPWP5O.js",
+      "chunk-JP5XG2OT.js"
+    ],
+    "chunk-GI7LLYGM.js": [],
+    "island-commentbox.js": [
+      "chunk-EAVGZM34.js",
+      "chunk-57DYSOHU.js",
+      "chunk-X4FKS2XJ.js",
+      "chunk-X4ENSL2V.js",
+      "chunk-AOCG4NXN.js",
+      "chunk-BYRZ2NRM.js",
+      "chunk-G4CPWP5O.js",
+      "chunk-JP5XG2OT.js"
+    ],
+    "chunk-EAVGZM34.js": [
+      "chunk-57DYSOHU.js",
+      "chunk-X4FKS2XJ.js",
+      "chunk-AOCG4NXN.js",
+      "chunk-BYRZ2NRM.js",
+      "chunk-G4CPWP5O.js"
+    ],
+    "island-confirmdialog.js": [
+      "chunk-AOCG4NXN.js",
+      "chunk-BYRZ2NRM.js",
+      "chunk-JP5XG2OT.js"
+    ],
+    "island-dashboardclient.js": [
+      "chunk-XI2XOD4V.js",
+      "chunk-S4ZTSKFE.js",
+      "chunk-WOKE2CBY.js",
+      "chunk-57DYSOHU.js",
+      "chunk-X4FKS2XJ.js",
+      "chunk-X4ENSL2V.js",
+      "chunk-AOCG4NXN.js",
+      "chunk-BYRZ2NRM.js",
+      "chunk-G4CPWP5O.js",
+      "chunk-JP5XG2OT.js"
+    ],
+    "chunk-XI2XOD4V.js": [
+      "chunk-57DYSOHU.js",
+      "chunk-X4FKS2XJ.js",
+      "chunk-AOCG4NXN.js",
+      "chunk-BYRZ2NRM.js",
+      "chunk-G4CPWP5O.js"
+    ],
+    "chunk-S4ZTSKFE.js": [
+      "chunk-57DYSOHU.js",
+      "chunk-X4FKS2XJ.js",
+      "chunk-AOCG4NXN.js",
+      "chunk-BYRZ2NRM.js",
+      "chunk-G4CPWP5O.js"
+    ],
+    "chunk-WOKE2CBY.js": [],
+    "island-globalerrorhandler.js": [
+      "chunk-G4CPWP5O.js",
+      "chunk-JP5XG2OT.js"
+    ],
+    "island-invitemembermodal.js": [
+      "chunk-PC4IDACZ.js",
+      "chunk-57DYSOHU.js",
+      "chunk-X4FKS2XJ.js",
+      "chunk-X4ENSL2V.js",
+      "chunk-AOCG4NXN.js",
+      "chunk-BYRZ2NRM.js",
+      "chunk-G4CPWP5O.js",
+      "chunk-JP5XG2OT.js"
+    ],
+    "chunk-PC4IDACZ.js": [
+      "chunk-57DYSOHU.js",
+      "chunk-X4FKS2XJ.js",
+      "chunk-AOCG4NXN.js",
+      "chunk-BYRZ2NRM.js",
+      "chunk-G4CPWP5O.js"
+    ],
+    "chunk-57DYSOHU.js": [],
+    "chunk-X4FKS2XJ.js": [
+      "chunk-X4ENSL2V.js"
+    ],
+    "chunk-X4ENSL2V.js": [],
+    "chunk-AOCG4NXN.js": [
+      "chunk-BYRZ2NRM.js"
+    ],
+    "chunk-BYRZ2NRM.js": [
+      "chunk-JP5XG2OT.js"
+    ],
+    "chunk-G4CPWP5O.js": [
+      "chunk-JP5XG2OT.js"
+    ],
+    "chunk-JP5XG2OT.js": [],
+    "metafile.json": []
+  }
+}

@@ -1,116 +1,227 @@
 import { useEffect, useState } from "preact/hooks";
 import { patch, post } from "../lib/api.ts";
+import { getCurrentUser } from "../lib/auth.ts";
+import { canCreateTasks, canEditTask, getProjectRole } from "../lib/roles.ts";
+import { toast } from "../lib/toast.ts";
 import { STATUS_COLUMNS } from "../lib/constants.ts";
 import type { Project, Task, TaskStatus } from "../lib/types.ts";
-import { Avatar, Badge, fmtDate, Icon, priorityTone } from "../components/ui.tsx";
+import {
+  Avatar,
+  Badge,
+  fmtDate,
+  Icon,
+  priorityTone,
+} from "../components/ui.tsx";
 import TaskDetailModal from "./TaskDetailModal.tsx";
+import TaskCreateModal from "./TaskCreateModal.tsx";
 
-export default function KanbanBoard({ tasks, projects, onChanged }: { tasks: Task[]; projects?: Project[]; onChanged: () => void }) {
+const priorityBorder: Record<string, string> = {
+  URGENT: "var(--danger)",
+  HIGH: "var(--danger)",
+  MEDIUM: "var(--warning)",
+  LOW: "var(--primary)",
+};
+
+const priorityLabel: Record<string, string> = {
+  URGENT: "Urgent",
+  HIGH: "High Priority",
+  MEDIUM: "Medium Priority",
+  LOW: "Low Priority",
+};
+
+export default function KanbanBoard(
+  { tasks, projects, onChanged, project }: {
+    tasks: Task[];
+    projects?: Project[];
+    onChanged: () => void;
+    project?: Project;
+  },
+) {
   const [local, setLocal] = useState<Task[]>(tasks);
   const [selected, setSelected] = useState<Task | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
+  const [createColumn, setCreateColumn] = useState<TaskStatus>("TODO");
+  const [mobileColumn, setMobileColumn] = useState(0);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  useEffect(() => {
-    setLocal(tasks);
-  }, [tasks]);
+  useEffect(() => { setCurrentUserId(getCurrentUser()?.id ?? null); }, []);
+  useEffect(() => { setLocal(tasks); }, [tasks]);
 
-  function sync(next: Task[]) {
-    setLocal(next);
-  }
+  const projectCtx = project ?? (projects ? projects[0] : undefined);
+  const currentRole = getProjectRole(projectCtx, currentUserId);
+  const mayEditTask = canEditTask(currentRole);
+  const mayCreateTasks = canCreateTasks(currentRole);
+
+  function sync(next: Task[]) { setLocal(next); }
 
   async function move(task: Task, status: TaskStatus) {
-    const previous = local;
-    const next = local.map((item) => item.id === task.id ? { ...item, status } : item);
-    sync(next);
-    try {
-      await post(`/tasks/${task.id}/move`, { status });
-      onChanged();
-    } catch {
-      sync(previous);
-      alert("Could not move task. The board was restored.");
-    }
-  }
-
-  async function quickPatch(task: Task, status: TaskStatus) {
+    if (!mayEditTask) return;
     const previous = local;
     sync(local.map((item) => item.id === task.id ? { ...item, status } : item));
     try {
-      await patch(`/tasks/${task.id}`, { status });
+      await post(`/tasks/${task.id}/move`, { status });
+      toast(`Moved to ${status.replace("_", " ")}`, "success");
       onChanged();
-    } catch {
-      sync(previous);
-    }
+    } catch { sync(previous); toast("Could not move task.", "danger"); }
+  }
+
+  async function quickPatch(task: Task, status: TaskStatus) {
+    if (!mayEditTask) return;
+    const previous = local;
+    sync(local.map((item) => item.id === task.id ? { ...item, status } : item));
+    try { await patch(`/tasks/${task.id}`, { status }); toast(`Status updated to ${status.replace("_", " ")}`, "success"); onChanged(); }
+    catch { sync(previous); toast("Could not update status.", "danger"); }
+  }
+
+  const columns = STATUS_COLUMNS.map((column) => ({
+    ...column,
+    tasks: local.filter((t) => t.status === column.key).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
+  }));
+
+  function openCreate(status: TaskStatus) {
+    setCreateColumn(status);
+    setShowCreate(true);
   }
 
   return (
-    <div class="kanban-board">
-      {STATUS_COLUMNS.map((column) => {
-        const columnTasks = local.filter((task) => task.status === column.key).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-        return (
+    <div>
+      <div class="mobile-column-indicator">
+        {columns.map((col, idx) => (
+          <button
+            type="button"
+            class={idx === mobileColumn ? "active" : ""}
+            onClick={() => setMobileColumn(idx)}
+          >
+            <Icon name={col.icon} size={16} /> {col.label} ({col.tasks.length})
+          </button>
+        ))}
+      </div>
+      <div class="kanban-board">
+        {columns.map((column, colIdx) => (
           <section
+            key={column.key}
             class="kanban-column"
-            onDragOver={(e) => e.preventDefault()}
+            data-status={column.key}
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.currentTarget.classList.add("drag-over");
+            }}
+            onDragLeave={(e) => {
+              e.currentTarget.classList.remove("drag-over");
+            }}
             onDrop={(e) => {
+              e.currentTarget.classList.remove("drag-over");
+              if (!mayEditTask) return;
               const id = e.dataTransfer?.getData("text/task-id");
               const task = local.find((item) => item.id === id);
-              if (task) move(task, column.key);
+              if (task && task.status !== column.key) move(task, column.key);
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <div class="kanban-column-header">
+              <div class="kanban-column-header-left">
                 <Icon name={column.icon} size={18} />
-                <strong>{column.label}</strong>
+                <span style={{ fontSize: "15px", fontWeight: 600 }}>{column.label}</span>
+                <span class="kanban-count">{column.tasks.length}</span>
               </div>
-              <Badge>{columnTasks.length}</Badge>
+              {mayCreateTasks && (
+                <button
+                  type="button"
+                  class="kanban-add-btn"
+                  onClick={() => openCreate(column.key)}
+                  aria-label={`Add task to ${column.label}`}
+                >
+                  <Icon name="add" size={18} />
+                </button>
+              )}
             </div>
-            <div style={{ display: "grid", gap: "10px" }}>
-              {columnTasks.map((task) => (
-                <article
-                  class={`task-card priority-${task.priority}`}
-                  draggable
-                  onDragStart={(e) => e.dataTransfer?.setData("text/task-id", task.id)}
+            <div class="kanban-cards" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              {column.tasks.map((task) => (
+                <div
+                  key={task.id}
+                  class={`task-card ${column.key === "DONE" ? "task-done" : ""}`}
+                  draggable={mayEditTask && column.key !== "DONE"}
+                  onDragStart={(e) => {
+                    if (!mayEditTask) return;
+                    const dt = e.dataTransfer;
+                    if (!dt) return;
+                    dt.setData("text/task-id", task.id);
+                    dt.effectAllowed = "move";
+                  }}
                   onClick={() => setSelected(task)}
                 >
-                  <div style={{ paddingLeft: "8px", display: "grid", gap: "10px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: "10px" }}>
-                      <strong>{task.title}</strong>
-                      <button class="btn icon-btn" style={{ minHeight: "28px", width: "28px" }} onClick={(e) => { e.stopPropagation(); setSelected(task); }}>
-                        <Icon name="open_in_new" size={16} />
-                      </button>
+                  <div class="task-card-inner">
+                    <div class="task-card-header">
+                      <Badge tone={priorityTone(task.priority)}>
+                        {priorityLabel[task.priority] || task.priority}
+                      </Badge>
+                      {mayEditTask && column.key !== "DONE" && (
+                        <span class="drag-handle" onMouseDown={(e) => e.stopPropagation()}>
+                          <Icon name="drag_indicator" size={18} />
+                        </span>
+                      )}
                     </div>
-                    <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-                      <Badge tone={priorityTone(task.priority)}>{task.priority}</Badge>
-                      <Badge>{fmtDate(task.dueDate)}</Badge>
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
-                        {task.labels?.slice(0, 2).map((label) => <span class="badge">{label}</span>)}
+                    <p style={{ margin: 0, fontSize: "14px", fontWeight: 500 }}>{task.title}</p>
+                    {task.labels && task.labels.length > 0 && (
+                      <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+                        {task.labels.slice(0, 3).map((label) => (
+                          <span key={label} class="task-label">{label}</span>
+                        ))}
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <span style={{ color: "var(--muted)", fontSize: "12px" }}><Icon name="chat_bubble" size={14} /> {task.commentCount ?? 0}</span>
-                        <Avatar user={task.assignee} size={28} />
+                    )}
+                    <div class="task-card-footer">
+                      <div class="task-meta">
+                        <Avatar user={task.assignee} size={24} />
+                        {task.dueDate && (
+                          <span
+                            class={new Date(task.dueDate) < new Date() && task.status !== "DONE" ? "overdue" : ""}
+                            style={{ fontSize: "12px" }}
+                          >
+                            {new Date(task.dueDate) < new Date() && task.status !== "DONE" ? "Overdue" : fmtDate(task.dueDate)}
+                          </span>
+                        )}
+                      </div>
+                      <div class="task-comment-count">
+                        {(task.commentCount ?? 0) > 0 && (
+                          <><Icon name="chat_bubble" size={14} /><span>{task.commentCount}</span></>
+                        )}
                       </div>
                     </div>
-                    <select
-                      class="select"
-                      value={task.status}
-                      onClick={(e) => e.stopPropagation()}
-                      onChange={(e) => quickPatch(task, e.currentTarget.value as TaskStatus)}
-                    >
-                      {STATUS_COLUMNS.map((item) => <option value={item.key}>{item.label}</option>)}
-                    </select>
                   </div>
-                </article>
-              ))}
-              {columnTasks.length === 0 && (
-                <div class="panel" style={{ padding: "20px", color: "var(--muted)", textAlign: "center" }}>
-                  Drop tasks here
                 </div>
+              ))}
+              {mayCreateTasks && (
+                <button
+                  type="button"
+                  class="kanban-add-task"
+                  onClick={() => openCreate(column.key)}
+                >
+                  <Icon name="add" size={16} /> Add task
+                </button>
+              )}
+              {column.tasks.length === 0 && (
+                <div class="kanban-dropzone">Drop tasks here</div>
               )}
             </div>
           </section>
-        );
-      })}
-      {selected && <TaskDetailModal task={selected} projects={projects ?? []} onClose={() => setSelected(null)} onSaved={() => { setSelected(null); onChanged(); }} />}
+        ))}
+      </div>
+      {selected && (
+        <TaskDetailModal
+          task={selected}
+          projects={projects ?? []}
+          onClose={() => setSelected(null)}
+          onSaved={() => { setSelected(null); onChanged(); }}
+        />
+      )}
+      {showCreate && projectCtx && (
+        <TaskCreateModal
+          projects={projectCtx ? [projectCtx] : projects ?? []}
+          projectId={projectCtx?.id}
+          initialStatus={createColumn}
+          onClose={() => setShowCreate(false)}
+          onCreated={() => { setShowCreate(false); onChanged(); }}
+        />
+      )}
     </div>
   );
 }

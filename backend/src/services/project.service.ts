@@ -30,7 +30,7 @@ export const create = async (userId: string, input: CreateProjectInput) => {
       color: input.color ?? "#6366f1",
       ownerId: userId,
       members: {
-        create: { userId, role: "OWNER" },
+        create: { userId, role: "ADMIN" },
       },
     },
   });
@@ -69,7 +69,6 @@ export const listMine = async (userId: string, query: ListProjectsQuery) => {
     prisma.project.findMany({
       where,
       include: {
-        _count: { select: { tasks: true, members: true } },
         owner: { select: { id: true, name: true, username: true, avatar: true } },
       },
       orderBy: { updatedAt: "desc" },
@@ -88,6 +87,12 @@ export const listMine = async (userId: string, query: ListProjectsQuery) => {
       _count: { _all: true },
     })
     : [];
+  const myMemberships = projectIds.length
+    ? await prisma.projectMember.findMany({
+      where: { projectId: { in: projectIds }, userId },
+      select: { projectId: true, role: true },
+    })
+    : [];
   const progressMap = new Map<string, { total: number; done: number }>();
   for (const g of taskGroups) {
     const entry = progressMap.get(g.projectId) ?? { total: 0, done: 0 };
@@ -95,6 +100,9 @@ export const listMine = async (userId: string, query: ListProjectsQuery) => {
     if (g.status === "DONE") entry.done += g._count._all;
     progressMap.set(g.projectId, entry);
   }
+  const roleMap = new Map<string, RoleType>(
+    myMemberships.map((membership) => [membership.projectId, membership.role as RoleType]),
+  );
 
   const enriched = items.map((p) => {
     const grp = progressMap.get(p.id) ?? { total: 0, done: 0 };
@@ -102,6 +110,7 @@ export const listMine = async (userId: string, query: ListProjectsQuery) => {
       ...p,
       progress: grp.total ? Math.round((grp.done / grp.total) * 100) : 0,
       taskCount: grp.total,
+      currentRole: p.ownerId === userId ? "ADMIN" : roleMap.get(p.id) ?? null,
     };
   });
 
@@ -145,10 +154,14 @@ export const getById = async (userId: string, projectId: string) => {
   const totalTasks = taskStatusGroups.reduce((sum, g) => sum + g._count._all, 0);
   const doneTasks = taskStatusGroups.find((g) => g.status === "DONE")?._count._all ?? 0;
   const progress = totalTasks ? Math.round((doneTasks / totalTasks) * 100) : 0;
+  const currentRole = project.ownerId === userId
+    ? "ADMIN"
+    : project.members.find((member) => member.userId === userId)?.role ?? null;
 
   return {
     ...project,
     progress,
+    currentRole,
     taskStats: {
       total: totalTasks,
       todo: taskStatusGroups.find((g) => g.status === "TODO")?._count._all ?? 0,
@@ -164,14 +177,15 @@ export const update = async (
   projectId: string,
   input: UpdateProjectInput,
 ) => {
-  const project = await prisma.project.findUnique({ where: { id: projectId } });
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+    include: { members: { where: { userId }, select: { role: true }, take: 1 } },
+  });
   if (!project) throw new NotFoundError("Project not found");
   if (project.ownerId !== userId) {
-    const member = await prisma.projectMember.findUnique({
-      where: { projectId_userId: { projectId, userId } },
-    });
-    if (!member || !isRoleAtLeast(member.role as RoleType, "MANAGER")) {
-      throw new ForbiddenError("Only OWNER or MANAGER can update project");
+    const member = project.members[0];
+    if (!member || !isRoleAtLeast(member.role as RoleType, "PROJECT_MANAGER")) {
+      throw new ForbiddenError("Only ADMIN or Project Manager can update project");
     }
   }
   const updated = await prisma.project.update({
@@ -256,7 +270,7 @@ export const listMembers = async (userId: string, projectId: string) => {
         id: "owner",
         projectId,
         userId: owner.id,
-        role: "OWNER",
+        role: "ADMIN",
         joinedAt: project.createdAt,
         user: owner,
       } as never);
@@ -270,20 +284,21 @@ export const invite = async (
   projectId: string,
   input: InviteInput,
 ) => {
-  const project = await prisma.project.findUnique({ where: { id: projectId } });
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+    include: { members: { where: { userId }, select: { role: true }, take: 1 } },
+  });
   if (!project) throw new NotFoundError("Project not found");
 
-  // Permission: OWNER/MANAGER only
+  // Permission: ADMIN/Project Manager only
   if (project.ownerId !== userId) {
-    const member = await prisma.projectMember.findUnique({
-      where: { projectId_userId: { projectId, userId } },
-    });
-    if (!member || !isRoleAtLeast(member.role as RoleType, "MANAGER")) {
-      throw new ForbiddenError("Only OWNER or MANAGER can invite members");
+    const member = project.members[0];
+    if (!member || !isRoleAtLeast(member.role as RoleType, "PROJECT_MANAGER")) {
+      throw new ForbiddenError("Only ADMIN or Project Manager can invite members");
     }
   }
-  if (input.role === "OWNER") {
-    throw new BadRequestError("Cannot invite as OWNER");
+  if (input.role === "ADMIN") {
+    throw new BadRequestError("Cannot invite as ADMIN");
   }
   // Check existing member
   const existingUser = await prisma.user.findUnique({ where: { email: input.email } });
@@ -451,7 +466,10 @@ export const changeRole = async (
   if (!isRoleAtLeast(role, "VIEWER")) {
     throw new BadRequestError("Invalid role");
   }
-  const project = await prisma.project.findUnique({ where: { id: projectId } });
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+    include: { members: { where: { userId: actorId }, select: { role: true }, take: 1 } },
+  });
   if (!project) throw new NotFoundError("Project not found");
   if (project.ownerId === memberId) {
     throw new BadRequestError("Cannot change OWNER's role");
@@ -462,24 +480,22 @@ export const changeRole = async (
   });
   if (!member) throw new NotFoundError("Member not found");
 
-  // Permission: OWNER can set any role except OWNER. Manager cannot promote to OWNER/MANAGER.
+  // Permission: ADMIN can set any role except ADMIN. Project Manager cannot promote to ADMIN/Project Manager.
   if (project.ownerId !== actorId) {
-    const actorMember = await prisma.projectMember.findUnique({
-      where: { projectId_userId: { projectId, userId: actorId } },
-    });
+    const actorMember = project.members[0];
     if (!actorMember) throw new ForbiddenError("Not a project member");
-    if (!isRoleAtLeast(actorMember.role as RoleType, "MANAGER")) {
-      throw new ForbiddenError("Only OWNER or MANAGER can change roles");
+    if (!isRoleAtLeast(actorMember.role as RoleType, "PROJECT_MANAGER")) {
+      throw new ForbiddenError("Only ADMIN or Project Manager can change roles");
     }
-    if (role === "OWNER") {
-      throw new ForbiddenError("Only OWNER can promote to OWNER");
+    if (role === "ADMIN") {
+      throw new ForbiddenError("Only ADMIN can promote to ADMIN");
     }
-    if (actorMember.role === "MANAGER" && member.role === "OWNER") {
-      throw new ForbiddenError("Cannot change OWNER's role");
+    if (actorMember.role === "PROJECT_MANAGER" && member.role === "ADMIN") {
+      throw new ForbiddenError("Cannot change ADMIN's role");
     }
   }
 
-  if (role === "OWNER") {
+  if (role === "ADMIN") {
     throw new BadRequestError("Use a separate endpoint to transfer ownership");
   }
 
@@ -513,7 +529,10 @@ export const removeMember = async (
   projectId: string,
   memberId: string,
 ) => {
-  const project = await prisma.project.findUnique({ where: { id: projectId } });
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+    include: { members: { where: { userId: actorId }, select: { role: true }, take: 1 } },
+  });
   if (!project) throw new NotFoundError("Project not found");
   if (project.ownerId === memberId) {
     throw new BadRequestError("Cannot remove the OWNER");
@@ -525,13 +544,11 @@ export const removeMember = async (
   if (!member) throw new NotFoundError("Member not found");
 
   if (project.ownerId !== actorId) {
-    const actorMember = await prisma.projectMember.findUnique({
-      where: { projectId_userId: { projectId, userId: actorId } },
-    });
-    if (!actorMember || !isRoleAtLeast(actorMember.role as RoleType, "MANAGER")) {
-      throw new ForbiddenError("Only OWNER or MANAGER can remove members");
+    const actorMember = project.members[0];
+    if (!actorMember || !isRoleAtLeast(actorMember.role as RoleType, "PROJECT_MANAGER")) {
+      throw new ForbiddenError("Only ADMIN or Project Manager can remove members");
     }
-    if (member.role === "OWNER" || member.role === "MANAGER") {
+    if (member.role === "ADMIN" || member.role === "PROJECT_MANAGER") {
       throw new ForbiddenError("Cannot remove a higher-ranked member");
     }
   }

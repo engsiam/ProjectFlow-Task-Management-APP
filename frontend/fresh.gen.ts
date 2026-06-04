@@ -2,10 +2,12 @@
 // This file SHOULD be checked into source version control.
 // This file is automatically updated during development when running `dev.ts`.
 
+import * as $_404 from "./routes/_404.tsx";
 import * as $_app from "./routes/_app.tsx";
 import * as $dashboard from "./routes/dashboard.tsx";
 import * as $index from "./routes/index.tsx";
 import * as $login from "./routes/login.tsx";
+import * as $members from "./routes/members.tsx";
 import * as $notifications from "./routes/notifications.tsx";
 import * as $projects_id_ from "./routes/projects/[id].tsx";
 import * as $projects_index from "./routes/projects/index.tsx";
@@ -15,9 +17,11 @@ import * as $tasks from "./routes/tasks.tsx";
 import * as $CommentBox from "./islands/CommentBox.tsx";
 import * as $ConfirmDialog from "./islands/ConfirmDialog.tsx";
 import * as $DashboardClient from "./islands/DashboardClient.tsx";
+import * as $GlobalErrorHandler from "./islands/GlobalErrorHandler.tsx";
 import * as $InviteMemberModal from "./islands/InviteMemberModal.tsx";
 import * as $KanbanBoard from "./islands/KanbanBoard.tsx";
 import * as $LoginForm from "./islands/LoginForm.tsx";
+import * as $MembersClient from "./islands/MembersClient.tsx";
 import * as $NotificationDropdown from "./islands/NotificationDropdown.tsx";
 import * as $NotificationsClient from "./islands/NotificationsClient.tsx";
 import * as $ProjectCreateModal from "./islands/ProjectCreateModal.tsx";
@@ -25,6 +29,7 @@ import * as $ProjectDetailClient from "./islands/ProjectDetailClient.tsx";
 import * as $ProjectsClient from "./islands/ProjectsClient.tsx";
 import * as $SearchCommand from "./islands/SearchCommand.tsx";
 import * as $SettingsClient from "./islands/SettingsClient.tsx";
+import * as $ShellUser from "./islands/ShellUser.tsx";
 import * as $SignupForm from "./islands/SignupForm.tsx";
 import * as $SystemStatus from "./islands/SystemStatus.tsx";
 import * as $TaskCreateModal from "./islands/TaskCreateModal.tsx";
@@ -38,10 +43,12 @@ import type { Manifest } from "$fresh/server.ts";
 
 const manifest = {
   routes: {
+    "./routes/_404.tsx": $_404,
     "./routes/_app.tsx": $_app,
     "./routes/dashboard.tsx": $dashboard,
     "./routes/index.tsx": $index,
     "./routes/login.tsx": $login,
+    "./routes/members.tsx": $members,
     "./routes/notifications.tsx": $notifications,
     "./routes/projects/[id].tsx": $projects_id_,
     "./routes/projects/index.tsx": $projects_index,
@@ -53,9 +60,11 @@ const manifest = {
     "./islands/CommentBox.tsx": $CommentBox,
     "./islands/ConfirmDialog.tsx": $ConfirmDialog,
     "./islands/DashboardClient.tsx": $DashboardClient,
+    "./islands/GlobalErrorHandler.tsx": $GlobalErrorHandler,
     "./islands/InviteMemberModal.tsx": $InviteMemberModal,
     "./islands/KanbanBoard.tsx": $KanbanBoard,
     "./islands/LoginForm.tsx": $LoginForm,
+    "./islands/MembersClient.tsx": $MembersClient,
     "./islands/NotificationDropdown.tsx": $NotificationDropdown,
     "./islands/NotificationsClient.tsx": $NotificationsClient,
     "./islands/ProjectCreateModal.tsx": $ProjectCreateModal,
@@ -63,6 +72,7 @@ const manifest = {
     "./islands/ProjectsClient.tsx": $ProjectsClient,
     "./islands/SearchCommand.tsx": $SearchCommand,
     "./islands/SettingsClient.tsx": $SettingsClient,
+    "./islands/ShellUser.tsx": $ShellUser,
     "./islands/SignupForm.tsx": $SignupForm,
     "./islands/SystemStatus.tsx": $SystemStatus,
     "./islands/TaskCreateModal.tsx": $TaskCreateModal,

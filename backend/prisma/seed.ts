@@ -3,28 +3,30 @@
 // and activity logs. Idempotent: re-runs upsert by email.
 // Run with: deno task seed  (after `deno task prisma:push`)
 
-import prismaPkg from "npm:@prisma/client@5.22.0";
+import { createRequire } from "node:module";
 import type { PrismaClient as PrismaClientType } from "npm:@prisma/client@5.22.0";
 import bcrypt from "npm:bcryptjs@2.4.3";
 
-const PrismaClientCtor =
-  (prismaPkg as unknown as { PrismaClient: new () => PrismaClientType }).PrismaClient;
+const require = createRequire(import.meta.url);
+const { PrismaClient: PrismaClientCtor } = require("../src/generated/prisma/index.js") as {
+  PrismaClient: new () => PrismaClientType;
+};
 const prisma: PrismaClientType = new PrismaClientCtor();
 
 const PASSWORD = "Password123!";
 
 const usersSeed = [
   {
-    email: "owner@example.com",
+    email: "admin@example.com",
     username: "olivia",
-    name: "Olivia Owner",
+    name: "Olivia Admin",
     bio: "Founder. Owns the platform roadmap.",
     avatar: "https://i.pravatar.cc/150?img=47",
   },
   {
-    email: "manager@example.com",
+    email: "pm@example.com",
     username: "maya",
-    name: "Maya Manager",
+    name: "Maya PM",
     bio: "Engineering manager. Loves Kanban.",
     avatar: "https://i.pravatar.cc/150?img=32",
   },
@@ -58,10 +60,10 @@ const projectsSeed = [
     description: "Cross-functional launch plan for our biggest release of the year.",
     color: "#10b981",
     members: [
-      { username: "olivia", role: "OWNER" },
-      { username: "maya", role: "MANAGER" },
-      { username: "milo", role: "MEMBER" },
-      { username: "alex", role: "MEMBER" },
+      { username: "olivia", role: "ADMIN" },
+      { username: "maya", role: "PROJECT_MANAGER" },
+      { username: "milo", role: "TEAM_MEMBER" },
+      { username: "alex", role: "TEAM_MEMBER" },
       { username: "vera", role: "VIEWER" },
     ],
   },
@@ -71,8 +73,8 @@ const projectsSeed = [
     description: "Modernize the public-facing site. Brand refresh and CMS migration.",
     color: "#6366f1",
     members: [
-      { username: "maya", role: "OWNER" },
-      { username: "milo", role: "MANAGER" },
+      { username: "maya", role: "ADMIN" },
+      { username: "milo", role: "PROJECT_MANAGER" },
       { username: "olivia", role: "VIEWER" },
     ],
   },
@@ -82,9 +84,9 @@ const projectsSeed = [
     description: "Backend reliability, observability, and performance initiatives.",
     color: "#f59e0b",
     members: [
-      { username: "alex", role: "OWNER" },
-      { username: "maya", role: "MANAGER" },
-      { username: "milo", role: "MEMBER" },
+      { username: "alex", role: "ADMIN" },
+      { username: "maya", role: "PROJECT_MANAGER" },
+      { username: "milo", role: "TEAM_MEMBER" },
     ],
   },
 ];
@@ -121,7 +123,7 @@ async function main() {
 
   // ---- Projects + members
   for (const p of projectsSeed) {
-    const ownerId = userByUsername.get(p.members.find((m) => m.role === "OWNER")!.username)!;
+    const ownerId = userByUsername.get(p.members.find((m) => m.role === "ADMIN")!.username)!;
     const existing = await prisma.project.findFirst({ where: { name: p.name }, select: { id: true } });
     const project = existing
       ? await prisma.project.update({
@@ -573,7 +575,7 @@ async function main() {
       data: {
         projectId: projectLaunch.id,
         email: "newcomer@example.com",
-        role: "MEMBER",
+        role: "TEAM_MEMBER",
         token: "demo-invitation-token-please-rotate",
         status: "PENDING",
         invitedById: oliviaId,
@@ -585,11 +587,11 @@ async function main() {
 
   console.log("Seed complete.");
   console.log("\nDemo credentials (password is the same for all):");
-  console.log("  Owner:   owner@example.com / Password123!");
-  console.log("  Manager: manager@example.com / Password123!");
-  console.log("  Member:  member@example.com / Password123!");
-  console.log("  Viewer:  viewer@example.com / Password123!");
-  console.log("  Extra:   alex@example.com / Password123!");
+  console.log("  Admin:         admin@example.com / Password123!");
+  console.log("  Project Mgr:   pm@example.com / Password123!");
+  console.log("  Team Member:   member@example.com / Password123!");
+  console.log("  Viewer:        viewer@example.com / Password123!");
+  console.log("  Extra:         alex@example.com / Password123!");
 }
 
 main()

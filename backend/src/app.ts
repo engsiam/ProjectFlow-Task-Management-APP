@@ -16,6 +16,7 @@ import { taskRouteEntries } from "./routes/task.routes.ts";
 import { commentRouteEntries } from "./routes/comment.routes.ts";
 import { notificationRouteEntries } from "./routes/notification.routes.ts";
 import { systemRouteEntries } from "./routes/system.routes.ts";
+import { uploadRouteEntries } from "./routes/upload.routes.ts";
 
 export const createApp = () => {
   const app = new OpenAPIHono();
@@ -56,6 +57,21 @@ export const createApp = () => {
       },
     }));
 
+  // Serve uploaded files
+  app.get("/uploads/*", async (c: Context) => {
+    try {
+      const file = await Deno.readFile(`.${c.req.path}`);
+      const ext = c.req.path.split(".").pop() ?? "";
+      const mime: Record<string, string> = {
+        png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg",
+        webp: "image/webp", gif: "image/gif",
+      };
+      return c.newResponse(file.buffer as ArrayBuffer, 200, { "Content-Type": mime[ext] ?? "application/octet-stream" });
+    } catch {
+      return c.json({ success: false, message: "File not found", error: { code: "NOT_FOUND" } }, 404);
+    }
+  });
+
   // Register all routes
   const allEntries = [
     ...systemRouteEntries,
@@ -65,6 +81,7 @@ export const createApp = () => {
     ...taskRouteEntries,
     ...commentRouteEntries,
     ...notificationRouteEntries,
+    ...uploadRouteEntries,
   ];
 
   for (const entry of allEntries) {

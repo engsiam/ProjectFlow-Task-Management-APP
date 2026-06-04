@@ -18,7 +18,12 @@ export default function ThemeToggle() {
   }
 
   return (
-    <button class="btn btn-secondary icon-btn" onClick={toggle} aria-label="Toggle theme">
+    <button
+      type="button"
+      class="btn btn-secondary icon-btn"
+      onClick={toggle}
+      aria-label="Toggle theme"
+    >
       <Icon name={theme === "dark" ? "light_mode" : "dark_mode"} size={19} />
     </button>
   );

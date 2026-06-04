@@ -36,7 +36,7 @@ export const listProjectsQuerySchema = z.object({
 
 export const inviteSchema = z.object({
   email: z.string().email().toLowerCase().trim(),
-  role: z.enum(ROLES as [string, ...string[]]).default("MEMBER"),
+  role: z.enum(ROLES as [string, ...string[]]).default("TEAM_MEMBER"),
   message: z.string().max(500).optional(),
 });
 

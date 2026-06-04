@@ -30,7 +30,7 @@ export const requireProjectRole = (
     });
     if (!project) throw new NotFoundError("Project not found");
     if (project.ownerId === user.id) {
-      c.set("projectRole" as never, "OWNER" as RoleType);
+      c.set("projectRole" as never, "ADMIN" as RoleType);
       await next();
       return;
     }
@@ -50,8 +50,8 @@ export const requireProjectRole = (
 export const requireProjectMember = (paramName = "projectId") =>
   requireProjectRole("VIEWER", paramName);
 export const requireProjectContributor = (paramName = "projectId") =>
-  requireProjectRole("MEMBER", paramName);
+  requireProjectRole("TEAM_MEMBER", paramName);
 export const requireProjectManager = (paramName = "projectId") =>
-  requireProjectRole("MANAGER", paramName);
+  requireProjectRole("PROJECT_MANAGER", paramName);
 export const requireProjectOwner = (paramName = "projectId") =>
-  requireProjectRole("OWNER", paramName);
+  requireProjectRole("ADMIN", paramName);

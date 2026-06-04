@@ -1,18 +1,10 @@
 // Singleton Prisma client. Reused across hot reloads in Deno --watch.
 //
-// @prisma/client is a CommonJS module. The `PrismaClient` class lives on the
-// default export (and as a real ES export from the typed subpath). At
-// runtime we use the default import; at the type level we re-export the
-// class type from the same package's full generated types.
-//
-// Deno's `export *` chain follows:
-//   npm:@prisma/client@5.22.0 -> default.d.ts -> .prisma/client/default
-//                            -> .prisma/client/index.d.ts (744KB, full types)
-//
-// The runtime default import gives us the actual `PrismaClient` constructor
-// off of the CJS module.exports bag.
+// The generated Prisma client is emitted as CommonJS. Loading it through
+// createRequire keeps runtime resolution on our project-local generated path
+// instead of Deno's internal npm package cache.
 
-import prismaPkg from "npm:@prisma/client@5.22.0";
+import { createRequire } from "node:module";
 import type { PrismaClient as PrismaClientType } from "npm:@prisma/client@5.22.0";
 import { isProd } from "../config/env.ts";
 
@@ -21,9 +13,10 @@ declare global {
   var __prisma: PrismaClientType | undefined;
 }
 
-const PrismaClientCtor =
-  (prismaPkg as unknown as { PrismaClient: new (options?: object) => PrismaClientType })
-    .PrismaClient;
+const require = createRequire(import.meta.url);
+const { PrismaClient: PrismaClientCtor } = require("../generated/prisma/index.js") as {
+  PrismaClient: new (options?: object) => PrismaClientType;
+};
 
 const prisma: PrismaClientType = globalThis.__prisma ??
   new PrismaClientCtor({ log: isProd ? ["error"] : ["warn", "error"] });

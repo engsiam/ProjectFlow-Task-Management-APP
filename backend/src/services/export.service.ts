@@ -13,7 +13,7 @@ export const exportProjectTasksCSV = async (userId: string, projectId: string) =
   if (!project) throw new NotFoundError("Project not found");
   if (project.ownerId !== userId) {
     const m = project.members.find((x) => x.userId === userId);
-    if (!m || !isRoleAtLeast(m.role as RoleType, "MANAGER")) {
+    if (!m || !isRoleAtLeast(m.role as RoleType, "PROJECT_MANAGER")) {
       throw new ForbiddenError("Only OWNER or MANAGER can export");
     }
   }

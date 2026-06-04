@@ -110,7 +110,7 @@ export const healthResponseData = z.object({
 
 // ---------- Project ----------
 export const projectStatusEnum = z.enum(["ACTIVE", "COMPLETED", "ARCHIVED"]);
-export const roleEnum = z.enum(["OWNER", "MANAGER", "MEMBER", "VIEWER"]);
+export const roleEnum = z.enum(["ADMIN", "PROJECT_MANAGER", "TEAM_MEMBER", "VIEWER"]);
 export const taskStatusEnum = z.enum(["TODO", "IN_PROGRESS", "REVIEW", "DONE"]);
 export const priorityEnum = z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]);
 
@@ -194,7 +194,7 @@ export const projectDetailSchema = z.object({
 // ---------- Invitations ----------
 export const inviteBody = z.object({
   email: z.string().email().openapi({ example: "teammate@example.com" }),
-  role: roleEnum.default("MEMBER"),
+  role: roleEnum.default("TEAM_MEMBER"),
   message: z.string().optional(),
 });
 

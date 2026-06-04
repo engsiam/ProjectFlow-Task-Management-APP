@@ -28,6 +28,34 @@ const projectIdParam = z.object({
 const taskIdParam = z.object({
   taskId: z.string().regex(/^[a-fA-F0-9]{24}$/),
 });
+const taskListQuery = z.object({
+  status: taskStatusEnum.optional(),
+  priority: priorityEnum.optional(),
+  assigneeId: z.string().regex(/^[a-fA-F0-9]{24}$/).optional(),
+  label: z.string().min(1).max(40).optional(),
+  search: z.string().max(200).optional(),
+  dueBefore: z.string().datetime().optional(),
+  dueAfter: z.string().datetime().optional(),
+  overdue: z.coerce.boolean().optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+  sort: z.string().optional(),
+});
+
+export const listUserTasksRoute = createRoute({
+  method: "get",
+  path: "/api/tasks",
+  tags: tag,
+  summary: "List tasks across accessible projects",
+  description:
+    "Returns tasks from every active or completed project the signed-in user can access.",
+  security: [{ bearerAuth: [] }],
+  request: { query: taskListQuery },
+  responses: {
+    200: jsonOkResponse("Tasks", taskListResponse),
+    ...jsonErrorResponses([]),
+  },
+});
 
 export const listTasksRoute = createRoute({
   method: "get",
@@ -39,19 +67,7 @@ export const listTasksRoute = createRoute({
   security: [{ bearerAuth: [] }],
   request: {
     params: projectIdParam,
-    query: z.object({
-      status: taskStatusEnum.optional(),
-      priority: priorityEnum.optional(),
-      assigneeId: z.string().regex(/^[a-fA-F0-9]{24}$/).optional(),
-      label: z.string().min(1).max(40).optional(),
-      search: z.string().max(200).optional(),
-      dueBefore: z.string().datetime().optional(),
-      dueAfter: z.string().datetime().optional(),
-      overdue: z.coerce.boolean().optional(),
-      page: z.coerce.number().int().min(1).default(1),
-      limit: z.coerce.number().int().min(1).max(100).default(50),
-      sort: z.string().optional(),
-    }),
+    query: taskListQuery,
   },
   responses: {
     200: jsonOkResponse("Tasks", taskListResponse),
@@ -189,6 +205,11 @@ export type RouteEntry = {
 const m = (mw: MiddlewareHandler[]) => mw;
 
 export const taskRouteEntries: RouteEntry[] = [
+  {
+    route: listUserTasksRoute,
+    handler: taskCtrl.listAllTasks as Handler,
+    middleware: m([auth()]),
+  },
   {
     route: listTasksRoute,
     handler: taskCtrl.listTasks as Handler,

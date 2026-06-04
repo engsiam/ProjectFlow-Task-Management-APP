@@ -9,12 +9,19 @@ export function getAccessToken() {
   return localStorage.getItem(ACCESS_TOKEN_KEY);
 }
 
+export function getRefreshToken() {
+  if (typeof localStorage === "undefined") return null;
+  return localStorage.getItem(REFRESH_TOKEN_KEY);
+}
+
 export function saveSession(data: {
   accessToken?: string;
   refreshToken?: string;
   user?: User;
 }) {
-  if (data.accessToken) localStorage.setItem(ACCESS_TOKEN_KEY, data.accessToken);
+  if (data.accessToken) {
+    localStorage.setItem(ACCESS_TOKEN_KEY, data.accessToken);
+  }
   if (data.refreshToken) {
     localStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken);
   }

@@ -9,9 +9,9 @@ export type ProjectStatusType = typeof ProjectStatus[keyof typeof ProjectStatus]
 export const PROJECT_STATUSES: ProjectStatusType[] = Object.values(ProjectStatus);
 
 export const Role = {
-  OWNER: "OWNER",
-  MANAGER: "MANAGER",
-  MEMBER: "MEMBER",
+  ADMIN: "ADMIN",
+  PROJECT_MANAGER: "PROJECT_MANAGER",
+  TEAM_MEMBER: "TEAM_MEMBER",
   VIEWER: "VIEWER",
 } as const;
 export type RoleType = typeof Role[keyof typeof Role];
@@ -83,9 +83,9 @@ export type ActivityActionType = typeof ActivityAction[keyof typeof ActivityActi
 // Permission matrix
 export const ROLE_RANK: Record<RoleType, number> = {
   VIEWER: 1,
-  MEMBER: 2,
-  MANAGER: 3,
-  OWNER: 4,
+  TEAM_MEMBER: 2,
+  PROJECT_MANAGER: 3,
+  ADMIN: 4,
 };
 
 export const isRoleAtLeast = (role: RoleType, min: RoleType): boolean => {
