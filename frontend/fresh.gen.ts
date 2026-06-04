@@ -4,6 +4,7 @@
 
 import * as $_404 from "./routes/_404.tsx";
 import * as $_app from "./routes/_app.tsx";
+import * as $auth_callback from "./routes/auth/callback.tsx";
 import * as $dashboard from "./routes/dashboard.tsx";
 import * as $index from "./routes/index.tsx";
 import * as $login from "./routes/login.tsx";
@@ -25,6 +26,7 @@ import * as $LoginForm from "./islands/LoginForm.tsx";
 import * as $MembersClient from "./islands/MembersClient.tsx";
 import * as $NotificationDropdown from "./islands/NotificationDropdown.tsx";
 import * as $NotificationsClient from "./islands/NotificationsClient.tsx";
+import * as $OAuthCallbackHandler from "./islands/OAuthCallbackHandler.tsx";
 import * as $ProjectCreateModal from "./islands/ProjectCreateModal.tsx";
 import * as $ProjectDetailClient from "./islands/ProjectDetailClient.tsx";
 import * as $ProjectsClient from "./islands/ProjectsClient.tsx";
@@ -46,6 +48,7 @@ const manifest = {
   routes: {
     "./routes/_404.tsx": $_404,
     "./routes/_app.tsx": $_app,
+    "./routes/auth/callback.tsx": $auth_callback,
     "./routes/dashboard.tsx": $dashboard,
     "./routes/index.tsx": $index,
     "./routes/login.tsx": $login,
@@ -69,6 +72,7 @@ const manifest = {
     "./islands/MembersClient.tsx": $MembersClient,
     "./islands/NotificationDropdown.tsx": $NotificationDropdown,
     "./islands/NotificationsClient.tsx": $NotificationsClient,
+    "./islands/OAuthCallbackHandler.tsx": $OAuthCallbackHandler,
     "./islands/ProjectCreateModal.tsx": $ProjectCreateModal,
     "./islands/ProjectDetailClient.tsx": $ProjectDetailClient,
     "./islands/ProjectsClient.tsx": $ProjectsClient,

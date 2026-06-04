@@ -136,6 +136,51 @@ export type RouteEntry = {
   middleware: import("hono").MiddlewareHandler[];
 };
 
+// ── OAuth routes ──
+export const googleAuthRoute = createRoute({
+  method: "get",
+  path: "/api/auth/google",
+  tags: tag,
+  summary: "Google OAuth login",
+  description: "Redirect to Google OAuth consent screen.",
+  responses: {
+    302: { description: "Redirect to Google" },
+  },
+});
+
+export const googleCallbackRoute = createRoute({
+  method: "get",
+  path: "/api/auth/google/callback",
+  tags: tag,
+  summary: "Google OAuth callback",
+  description: "Handle Google OAuth callback, exchange code for tokens.",
+  responses: {
+    302: { description: "Redirect to frontend with tokens" },
+  },
+});
+
+export const githubAuthRoute = createRoute({
+  method: "get",
+  path: "/api/auth/github",
+  tags: tag,
+  summary: "GitHub OAuth login",
+  description: "Redirect to GitHub OAuth consent screen.",
+  responses: {
+    302: { description: "Redirect to GitHub" },
+  },
+});
+
+export const githubCallbackRoute = createRoute({
+  method: "get",
+  path: "/api/auth/github/callback",
+  tags: tag,
+  summary: "GitHub OAuth callback",
+  description: "Handle GitHub OAuth callback, exchange code for tokens.",
+  responses: {
+    302: { description: "Redirect to frontend with tokens" },
+  },
+});
+
 export const authRouteEntries: RouteEntry[] = [
   {
     route: signupRoute,
@@ -154,6 +199,10 @@ export const authRouteEntries: RouteEntry[] = [
   },
   { route: logoutRoute, handler: authCtrl.logout as Handler, middleware: [auth()] },
   { route: meRoute, handler: authCtrl.me as Handler, middleware: [auth()] },
+  { route: googleAuthRoute, handler: authCtrl.googleAuth as Handler, middleware: [] },
+  { route: googleCallbackRoute, handler: authCtrl.googleCallback as Handler, middleware: [] },
+  { route: githubAuthRoute, handler: authCtrl.githubAuth as Handler, middleware: [] },
+  { route: githubCallbackRoute, handler: authCtrl.githubCallback as Handler, middleware: [] },
 ];
 
 // Allow unused imports re-export so we can reference bearerAuth from app

@@ -14,6 +14,7 @@ import { PUBLIC_USER_FIELDS, PUBLIC_USER_SAFE } from "../utils/serialize.ts";
 import type { LoginInput, RefreshInput, SignupInput } from "../validators/auth.validator.ts";
 import { slugifyUsername } from "../utils/id.ts";
 import { cacheGet, cacheSet } from "../utils/cache.ts";
+import { env } from "../config/env.ts";
 
 const genUsername = async (name: string, email: string): Promise<string> => {
   const base = slugifyUsername(name) || slugifyUsername(email.split("@")[0]) || "user";
@@ -180,4 +181,152 @@ export const me = async (userId: string) => {
   const result = PUBLIC_USER_SAFE(user as Parameters<typeof PUBLIC_USER_SAFE>[0]);
   cacheSet(cacheKey, result, 10_000);
   return result;
+};
+
+// ── OAuth helpers ──
+
+export type OAuthProvider = "google" | "github";
+
+async function exchangeGoogleCode(code: string): Promise<{
+  email: string;
+  name: string;
+  googleId: string;
+  avatar: string | null;
+}> {
+  const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      code,
+      client_id: env.GOOGLE_CLIENT_ID,
+      client_secret: env.GOOGLE_CLIENT_SECRET,
+      redirect_uri: `${env.OAUTH_REDIRECT_URL}/google/callback`,
+      grant_type: "authorization_code",
+    }),
+  });
+  if (!tokenRes.ok) throw new UnauthorizedError("Failed to exchange Google code");
+  const tokenData = await tokenRes.json() as { access_token: string };
+  const userRes = await fetch(
+    "https://www.googleapis.com/oauth2/v2/userinfo",
+    { headers: { Authorization: `Bearer ${tokenData.access_token}` } },
+  );
+  if (!userRes.ok) throw new UnauthorizedError("Failed to fetch Google profile");
+  const profile = await userRes.json() as {
+    id: string;
+    email: string;
+    name: string;
+    picture: string;
+  };
+  return {
+    email: profile.email.toLowerCase(),
+    name: profile.name || profile.email.split("@")[0],
+    googleId: profile.id,
+    avatar: profile.picture || null,
+  };
+}
+
+async function exchangeGithubCode(code: string): Promise<{
+  email: string;
+  name: string;
+  githubId: string;
+  avatar: string | null;
+}> {
+  const tokenRes = await fetch(
+    "https://github.com/login/oauth/access_token",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Accept: "application/json",
+      },
+      body: new URLSearchParams({
+        code,
+        client_id: env.GITHUB_CLIENT_ID,
+        client_secret: env.GITHUB_CLIENT_SECRET,
+        redirect_uri: `${env.OAUTH_REDIRECT_URL}/github/callback`,
+      }),
+    },
+  );
+  if (!tokenRes.ok) throw new UnauthorizedError("Failed to exchange GitHub code");
+  const tokenData = await tokenRes.json() as { access_token: string };
+  const userRes = await fetch("https://api.github.com/user", {
+    headers: { Authorization: `Bearer ${tokenData.access_token}` },
+  });
+  if (!userRes.ok) throw new UnauthorizedError("Failed to fetch GitHub profile");
+  const profile = await userRes.json() as {
+    id: number;
+    login: string;
+    name: string | null;
+    email: string | null;
+    avatar_url: string;
+  };
+  let email = profile.email;
+  if (!email) {
+    const emailsRes = await fetch("https://api.github.com/user/emails", {
+      headers: { Authorization: `Bearer ${tokenData.access_token}` },
+    });
+    if (emailsRes.ok) {
+      const emails = await emailsRes.json() as Array<{ email: string; primary: boolean; verified: boolean }>;
+      const primary = emails.find((e: { primary: boolean }) => e.primary);
+      email = primary?.email ?? emails[0]?.email ?? `${profile.login}@github.com`;
+    } else {
+      email = `${profile.login}@github.com`;
+    }
+  }
+  return {
+    email: email.toLowerCase(),
+    name: profile.name || profile.login,
+    githubId: String(profile.id),
+    avatar: profile.avatar_url || null,
+  };
+}
+
+export const loginWithOAuth = async (provider: OAuthProvider, code: string) => {
+  const profile = provider === "google"
+    ? await exchangeGoogleCode(code)
+    : await exchangeGithubCode(code);
+
+  const idField = provider === "google" ? "googleId" : "githubId";
+
+  let user = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { [idField]: profile[provider === "google" ? "googleId" : "githubId"] },
+        { email: profile.email },
+      ],
+    },
+  });
+
+  if (user) {
+    const updateData: Record<string, unknown> = {};
+    if (!user.password) updateData.name = profile.name;
+    if (!user.avatar && profile.avatar) updateData.avatar = profile.avatar;
+    if (!user[idField as keyof typeof user]) updateData[idField] = profile[provider === "google" ? "googleId" : "githubId"];
+    if (Object.keys(updateData).length > 0) {
+      user = await prisma.user.update({ where: { id: user.id }, data: updateData });
+    }
+  } else {
+    const base = slugifyUsername(profile.name) || slugifyUsername(profile.email.split("@")[0]) || "user";
+    let username = base;
+    let i = 0;
+    while (await prisma.user.findUnique({ where: { username } })) {
+      i++;
+      username = `${base}${i}`;
+      if (i > 50) username = `${base}_${randomToken(4)}`;
+    }
+    user = await prisma.user.create({
+      data: {
+        email: profile.email,
+        name: profile.name,
+        username,
+        avatar: profile.avatar,
+        role: "VIEWER",
+        status: "ACTIVE",
+        [idField]: profile[provider === "google" ? "googleId" : "githubId"],
+      },
+    });
+  }
+
+  const tokens = await issueTokens(user as Parameters<typeof issueTokens>[0], {});
+  return { user: PUBLIC_USER_SAFE(user as Parameters<typeof PUBLIC_USER_SAFE>[0]), ...tokens };
 };

@@ -19,11 +19,13 @@ datasource db {
 model User {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   email     String   @unique
-  password  String
+  password  String?
   name      String
   username  String   @unique
   avatar    String?
   bio       String?
+  googleId  String?
+  githubId  String?
   role      String   @default("TEAM_MEMBER") // ADMIN, PROJECT_MANAGER, TEAM_MEMBER, VIEWER
   status    String   @default("ACTIVE") // ACTIVE, DISABLED
   createdAt DateTime @default(now())

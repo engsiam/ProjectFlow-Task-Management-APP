@@ -195,14 +195,16 @@ export default function NotificationsClient() {
                         display: "flex",
                         gap: "8px",
                         alignItems: "center",
-                        flexWrap: "wrap",
+                        flexWrap: "nowrap",
                       }}
                     >
-                      <strong>{item.title}</strong>
+                      <strong>
+                        {item.title?.length > 60 ? item.title.slice(0, 60) + "…" : item.title}
+                      </strong>
                       {!item.read && <Badge tone="warning">Unread</Badge>}
                     </div>
                     <p style={{ margin: "4px 0 0", color: "var(--muted)", fontSize: "13px" }}>
-                      {item.message}
+                      {item.message?.length > 120 ? item.message.slice(0, 120) + "…" : item.message}
                     </p>
                   </div>
                 </a>

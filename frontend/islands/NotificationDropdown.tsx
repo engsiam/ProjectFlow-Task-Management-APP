@@ -190,7 +190,9 @@ export default function NotificationDropdown() {
                   </span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                      <strong style={{ fontSize: "13px" }}>{item.title}</strong>
+                      <strong style={{ fontSize: "13px" }}>
+                        {item.title?.length > 40 ? item.title.slice(0, 40) + "…" : item.title}
+                      </strong>
                       {!item.read && (
                         <span
                           style={{
@@ -208,12 +210,9 @@ export default function NotificationDropdown() {
                         margin: "2px 0 0",
                         color: "var(--muted)",
                         fontSize: "12px",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
                       }}
                     >
-                      {item.message}
+                      {item.message.length > 60 ? item.message.slice(0, 60) + "…" : item.message}
                     </p>
                   </div>
                 </div>
