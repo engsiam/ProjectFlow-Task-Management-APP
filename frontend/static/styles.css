@@ -2500,6 +2500,51 @@ a {
   flex-wrap: wrap;
 }
 
+.pd-status-select {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 4px 26px 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: calc(100% - 14px) 50%, calc(100% - 9px) 50%;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.pd-status-select:hover { opacity: 0.85; }
+.pd-status-select:disabled { opacity: 0.55; cursor: not-allowed; }
+.pd-status-select option { background: var(--surface, #1a1d24); color: var(--text, #e8eaf0); }
+
+.pd-header-dates {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--muted);
+  flex-wrap: wrap;
+}
+.pd-header-date {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+.pd-header-date-label {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.pd-header-date-sep { color: var(--muted); opacity: 0.6; }
+
 .pd-title {
   margin: 0;
   font-family: "Hanken Grotesk", Inter, sans-serif;

@@ -6,6 +6,27 @@ import type { RoleType } from "../types/domain.ts";
 
 type UserLite = { id: string; name: string; username: string; avatar: string | null };
 
+const isCompletedStatus = (status: string) =>
+  status === "COMPLETED" || status === "DONE";
+
+const normalizeTaskStatus = (
+  status: string,
+): "TODO" | "IN_PROGRESS" | "COMPLETED" | null => {
+  if (status === "TODO") return "TODO";
+  if (status === "IN_PROGRESS") return "IN_PROGRESS";
+  if (status === "COMPLETED" || status === "DONE") return "COMPLETED";
+  return null;
+};
+
+const normalizePriority = (
+  priority: string,
+): "HIGH" | "MEDIUM" | "LOW" | null => {
+  if (priority === "HIGH" || priority === "URGENT") return "HIGH";
+  if (priority === "MEDIUM") return "MEDIUM";
+  if (priority === "LOW") return "LOW";
+  return null;
+};
+
 const buildUserMap = (rows: UserLite[]) => new Map(rows.map((u) => [u.id, u]));
 
 const buildProjectFilter = (userId: string, userRole: RoleType | undefined) =>
@@ -20,14 +41,14 @@ const buildProjectFilter = (userId: string, userRole: RoleType | undefined) =>
     };
 
 export type PriorityDatum = {
-  name: "URGENT" | "HIGH" | "MEDIUM" | "LOW";
+  name: "HIGH" | "MEDIUM" | "LOW";
   label: string;
   value: number;
   color: string;
 };
 
 export type StatusDatum = {
-  name: "TODO" | "IN_PROGRESS" | "REVIEW" | "DONE";
+  name: "TODO" | "IN_PROGRESS" | "COMPLETED";
   label: string;
   value: number;
   color: string;
@@ -76,13 +97,11 @@ export type DashboardCharts = {
 };
 
 const PRIORITY_COLORS: Record<string, string> = {
-  URGENT: "#ef4444",
-  HIGH: "#f97316",
+  HIGH: "#ef4444",
   MEDIUM: "#f59e0b",
   LOW: "#3b82f6",
 };
 const PRIORITY_LABELS: Record<string, string> = {
-  URGENT: "Urgent",
   HIGH: "High",
   MEDIUM: "Medium",
   LOW: "Low",
@@ -91,14 +110,12 @@ const PRIORITY_LABELS: Record<string, string> = {
 const STATUS_COLORS: Record<string, string> = {
   TODO: "#94a3b8",
   IN_PROGRESS: "#3b82f6",
-  REVIEW: "#f59e0b",
-  DONE: "#22c55e",
+  COMPLETED: "#22c55e",
 };
 const STATUS_LABELS: Record<string, string> = {
   TODO: "To Do",
   IN_PROGRESS: "In Progress",
-  REVIEW: "In Review",
-  DONE: "Completed",
+  COMPLETED: "Completed",
 };
 
 const TREND_DAYS = 30;
@@ -174,11 +191,11 @@ export const getDashboardCharts = async (
 
   // KPI
   const totalTasks = tasks.length;
-  const completedTasks = tasks.filter((t) => t.status === "DONE").length;
+  const completedTasks = tasks.filter((t) => isCompletedStatus(t.status)).length;
   const pendingTasks = totalTasks - completedTasks;
   const now = new Date();
   const overdueTasks = tasks.filter((t) =>
-    t.status !== "DONE" && t.dueDate && t.dueDate < now
+    !isCompletedStatus(t.status) && t.dueDate && t.dueDate < now
   ).length;
   const kpi: AnalyticsKPI = {
     totalProjects: projects.length,
@@ -190,11 +207,12 @@ export const getDashboardCharts = async (
   };
 
   // Priority breakdown
-  const priorityCount: Record<string, number> = { URGENT: 0, HIGH: 0, MEDIUM: 0, LOW: 0 };
+  const priorityCount: Record<string, number> = { HIGH: 0, MEDIUM: 0, LOW: 0 };
   for (const t of tasks) {
-    if (t.priority in priorityCount) priorityCount[t.priority] += 1;
+    const p = normalizePriority(t.priority);
+    if (p) priorityCount[p] += 1;
   }
-  const byPriority: PriorityDatum[] = (["URGENT", "HIGH", "MEDIUM", "LOW"] as const).map((p) => ({
+  const byPriority: PriorityDatum[] = (["HIGH", "MEDIUM", "LOW"] as const).map((p) => ({
     name: p,
     label: PRIORITY_LABELS[p],
     value: priorityCount[p],
@@ -202,11 +220,12 @@ export const getDashboardCharts = async (
   }));
 
   // Status breakdown
-  const statusCount: Record<string, number> = { TODO: 0, IN_PROGRESS: 0, REVIEW: 0, DONE: 0 };
+  const statusCount: Record<string, number> = { TODO: 0, IN_PROGRESS: 0, COMPLETED: 0 };
   for (const t of tasks) {
-    if (t.status in statusCount) statusCount[t.status] += 1;
+    const s = normalizeTaskStatus(t.status);
+    if (s) statusCount[s] += 1;
   }
-  const byStatus: StatusDatum[] = (["TODO", "IN_PROGRESS", "REVIEW", "DONE"] as const).map((s) => ({
+  const byStatus: StatusDatum[] = (["TODO", "IN_PROGRESS", "COMPLETED"] as const).map((s) => ({
     name: s,
     label: STATUS_LABELS[s],
     value: statusCount[s],
@@ -235,8 +254,8 @@ export const getDashboardCharts = async (
     if (!t.assigneeId) continue;
     const e = productivityMap.get(t.assigneeId) ?? { completed: 0, inProgress: 0, total: 0 };
     e.total += 1;
-    if (t.status === "DONE") e.completed += 1;
-    if (t.status === "IN_PROGRESS" || t.status === "REVIEW") e.inProgress += 1;
+    if (isCompletedStatus(t.status)) e.completed += 1;
+    if (t.status === "IN_PROGRESS") e.inProgress += 1;
     productivityMap.set(t.assigneeId, e);
   }
   const productivity: ProductivityDatum[] = Array.from(productivityMap.entries())
@@ -302,11 +321,11 @@ export const getProjectCharts = async (
   });
 
   const totalTasks = tasks.length;
-  const completedTasks = tasks.filter((t) => t.status === "DONE").length;
+  const completedTasks = tasks.filter((t) => isCompletedStatus(t.status)).length;
   const pendingTasks = totalTasks - completedTasks;
   const now = new Date();
   const overdueTasks = tasks.filter((t) =>
-    t.status !== "DONE" && t.dueDate && t.dueDate < now
+    !isCompletedStatus(t.status) && t.dueDate && t.dueDate < now
   ).length;
   const kpi: AnalyticsKPI = {
     totalProjects: 1,
@@ -317,22 +336,24 @@ export const getProjectCharts = async (
     completionRate: totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0,
   };
 
-  const priorityCount: Record<string, number> = { URGENT: 0, HIGH: 0, MEDIUM: 0, LOW: 0 };
+  const priorityCount: Record<string, number> = { HIGH: 0, MEDIUM: 0, LOW: 0 };
   for (const t of tasks) {
-    if (t.priority in priorityCount) priorityCount[t.priority] += 1;
+    const p = normalizePriority(t.priority);
+    if (p) priorityCount[p] += 1;
   }
-  const byPriority: PriorityDatum[] = (["URGENT", "HIGH", "MEDIUM", "LOW"] as const).map((p) => ({
+  const byPriority: PriorityDatum[] = (["HIGH", "MEDIUM", "LOW"] as const).map((p) => ({
     name: p,
     label: PRIORITY_LABELS[p],
     value: priorityCount[p],
     color: PRIORITY_COLORS[p],
   }));
 
-  const statusCount: Record<string, number> = { TODO: 0, IN_PROGRESS: 0, REVIEW: 0, DONE: 0 };
+  const statusCount: Record<string, number> = { TODO: 0, IN_PROGRESS: 0, COMPLETED: 0 };
   for (const t of tasks) {
-    if (t.status in statusCount) statusCount[t.status] += 1;
+    const s = normalizeTaskStatus(t.status);
+    if (s) statusCount[s] += 1;
   }
-  const byStatus: StatusDatum[] = (["TODO", "IN_PROGRESS", "REVIEW", "DONE"] as const).map((s) => ({
+  const byStatus: StatusDatum[] = (["TODO", "IN_PROGRESS", "COMPLETED"] as const).map((s) => ({
     name: s,
     label: STATUS_LABELS[s],
     value: statusCount[s],
@@ -359,8 +380,8 @@ export const getProjectCharts = async (
     if (!t.assigneeId) continue;
     const e = productivityMap.get(t.assigneeId) ?? { completed: 0, inProgress: 0, total: 0 };
     e.total += 1;
-    if (t.status === "DONE") e.completed += 1;
-    if (t.status === "IN_PROGRESS" || t.status === "REVIEW") e.inProgress += 1;
+    if (isCompletedStatus(t.status)) e.completed += 1;
+    if (t.status === "IN_PROGRESS") e.inProgress += 1;
     productivityMap.set(t.assigneeId, e);
   }
   const productivity: ProductivityDatum[] = Array.from(productivityMap.entries())
@@ -405,13 +426,13 @@ const emptyCharts = (): DashboardCharts => ({
     overdueTasks: 0,
     completionRate: 0,
   },
-  byPriority: (["URGENT", "HIGH", "MEDIUM", "LOW"] as const).map((p) => ({
+  byPriority: (["HIGH", "MEDIUM", "LOW"] as const).map((p) => ({
     name: p,
     label: PRIORITY_LABELS[p],
     value: 0,
     color: PRIORITY_COLORS[p],
   })),
-  byStatus: (["TODO", "IN_PROGRESS", "REVIEW", "DONE"] as const).map((s) => ({
+  byStatus: (["TODO", "IN_PROGRESS", "COMPLETED"] as const).map((s) => ({
     name: s,
     label: STATUS_LABELS[s],
     value: 0,

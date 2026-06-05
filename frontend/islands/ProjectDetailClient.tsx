@@ -4,6 +4,7 @@ import { getCurrentUser, requireClientAuth } from "../lib/auth.ts";
 import { toast } from "../lib/toast.ts";
 import {
   canCreateTasks,
+  canEditProject,
   canInviteMembers,
   canRemoveMember,
   getAssignableRoles,
@@ -13,9 +14,17 @@ import type {
   Activity,
   Project,
   ProjectMember,
+  ProjectStatus,
   Role,
   Task,
 } from "../lib/types.ts";
+import { isCompletedStatus } from "../lib/types.ts";
+
+function statusLabel(s: ProjectStatus): string {
+  if (s === "ON_HOLD") return "On Hold";
+  if (s === "ARCHIVED") return "Archived";
+  return s.charAt(0) + s.slice(1).toLowerCase();
+}
 import ConfirmDialog from "./ConfirmDialog.tsx";
 import {
   Avatar,
@@ -51,8 +60,7 @@ const tabs: Tab[] = [
 const STATUS_DOT: Record<string, string> = {
   TODO: "var(--muted)",
   IN_PROGRESS: "var(--info)",
-  REVIEW: "var(--warning)",
-  DONE: "var(--success)",
+  COMPLETED: "var(--success)",
 };
 
 function computeHealth(
@@ -61,7 +69,8 @@ function computeHealth(
 ): { label: string; className: string } {
   const overdue =
     tasks.filter((t) =>
-      t.dueDate && new Date(t.dueDate) < new Date() && t.status !== "DONE"
+      t.dueDate && new Date(t.dueDate) < new Date() &&
+      !isCompletedStatus(t.status)
     ).length;
   if (overdue > 3 || progress < 15) {
     return { label: "Delayed", className: "delayed" };
@@ -83,6 +92,7 @@ export default function ProjectDetailClient(
   const [loading, setLoading] = useState(true);
   const [taskOpen, setTaskOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [statusSaving, setStatusSaving] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -112,13 +122,38 @@ export default function ProjectDetailClient(
     }
   }
 
+  async function changeStatus(next: ProjectStatus) {
+    if (!project || project.status === next) return;
+    setStatusSaving(true);
+    const prev = project.status;
+    setProject({ ...project, status: next });
+    try {
+      const updated = await patch<Project>(
+        `/projects/${project.id}`,
+        { status: next },
+        { loaderMessage: `Setting project to ${statusLabel(next)}…` },
+      );
+      setProject((p) => p ? { ...p, status: updated.status } : p);
+      toast(`Project marked as ${statusLabel(next)}.`, "success");
+    } catch (err) {
+      setProject((p) => p ? { ...p, status: prev } : p);
+      const msg = err instanceof Error
+        ? err.message
+        : "Could not change project status.";
+      toast(msg, "danger");
+    } finally {
+      setStatusSaving(false);
+    }
+  }
+
   useEffect(() => {
     load();
   }, [projectId]);
 
   const counts = useMemo(() => {
     return tasks.reduce<Record<string, number>>((acc, task) => {
-      acc[task.status] = (acc[task.status] ?? 0) + 1;
+      const key = isCompletedStatus(task.status) ? "COMPLETED" : task.status;
+      acc[key] = (acc[key] ?? 0) + 1;
       return acc;
     }, {});
   }, [tasks]);
@@ -142,8 +177,13 @@ export default function ProjectDetailClient(
   ).slice(0, 6);
 
   const currentRole = getProjectRole(project, currentUserId);
-  const mayInviteMembers = canInviteMembers(currentRole, project, currentUserId);
+  const mayInviteMembers = canInviteMembers(
+    currentRole,
+    project,
+    currentUserId,
+  );
   const mayCreateTasks = canCreateTasks(currentRole, project, currentUserId);
+  const mayEditProject = canEditProject(currentRole, project, currentUserId);
 
   if (loading) {
     return (
@@ -182,7 +222,47 @@ export default function ProjectDetailClient(
         <div class="pd-header-top">
           <div class="pd-header-info">
             <div class="pd-header-badges">
-              <Badge tone={statusTone(project.status)}>{project.status}</Badge>
+              {mayEditProject && project.status !== "ARCHIVED"
+                ? (
+                  <select
+                    class="pd-status-select"
+                    value={project.status}
+                    disabled={statusSaving}
+                    onChange={(e) =>
+                      changeStatus(
+                        (e.currentTarget as HTMLSelectElement)
+                          .value as ProjectStatus,
+                      )}
+                    style={`background:${
+                      statusTone(project.status).includes("success")
+                        ? "color-mix(in srgb,var(--success),transparent 88%)"
+                        : statusTone(project.status).includes("warning")
+                        ? "color-mix(in srgb,var(--warning),transparent 88%)"
+                        : statusTone(project.status).includes("muted")
+                        ? "color-mix(in srgb,var(--muted),transparent 88%)"
+                        : "color-mix(in srgb,var(--info),transparent 88%)"
+                    };color:${
+                      statusTone(project.status).includes("success")
+                        ? "var(--success)"
+                        : statusTone(project.status).includes("warning")
+                        ? "var(--warning)"
+                        : statusTone(project.status).includes("muted")
+                        ? "var(--muted)"
+                        : "var(--info)"
+                    };font-weight:600`}
+                  >
+                    <option value="ACTIVE">{statusLabel("ACTIVE")}</option>
+                    <option value="COMPLETED">
+                      {statusLabel("COMPLETED")}
+                    </option>
+                    <option value="ON_HOLD">{statusLabel("ON_HOLD")}</option>
+                  </select>
+                )
+                : (
+                  <Badge tone={statusTone(project.status)}>
+                    {statusLabel(project.status)}
+                  </Badge>
+                )}
               <span
                 class="mono"
                 style="font-size:11px;color:var(--muted);letter-spacing:0.03em"
@@ -198,6 +278,37 @@ export default function ProjectDetailClient(
             <h1 class="pd-title">{project.name}</h1>
             {project.description && <p class="pd-desc">{project.description}
             </p>}
+            {(project.startDate || project.deadline) && (
+              <div class="pd-header-dates">
+                {project.startDate && (
+                  <span class="pd-header-date">
+                    <Icon name="event" size={14} />
+                    <span class="pd-header-date-label">Start</span>
+                    <span>
+                      {new Date(project.startDate).toLocaleDateString()}
+                    </span>
+                  </span>
+                )}
+                {project.startDate && project.deadline && (
+                  <span class="pd-header-date-sep">→</span>
+                )}
+                {project.deadline && (
+                  <span
+                    class="pd-header-date"
+                    style={new Date(project.deadline) < new Date() &&
+                        project.status !== "COMPLETED"
+                      ? "color:var(--danger);font-weight:600"
+                      : ""}
+                  >
+                    <Icon name="flag" size={14} />
+                    <span class="pd-header-date-label">Deadline</span>
+                    <span>
+                      {new Date(project.deadline).toLocaleDateString()}
+                    </span>
+                  </span>
+                )}
+              </div>
+            )}
           </div>
           <div class="pd-header-actions">
             {mayInviteMembers && (
@@ -226,7 +337,7 @@ export default function ProjectDetailClient(
           <div class="pd-kpi-label">Completion</div>
           <div class="pd-kpi-value">{Math.round(completion)}%</div>
           <div class="pd-kpi-sub">
-            {counts.DONE ?? 0} of {tasks.length} tasks done
+            {counts.COMPLETED ?? 0} of {tasks.length} tasks done
           </div>
         </div>
         <div class="pd-kpi">
@@ -238,7 +349,7 @@ export default function ProjectDetailClient(
           </div>
           <div class="pd-kpi-label">Open Tasks</div>
           <div class="pd-kpi-value">{openTasks}</div>
-          <div class="pd-kpi-sub">{counts.REVIEW ?? 0} in review</div>
+          <div class="pd-kpi-sub">{counts.IN_PROGRESS ?? 0} in progress</div>
         </div>
         <div class="pd-kpi">
           <div
@@ -335,7 +446,7 @@ export default function ProjectDetailClient(
                     class="pd-progress-stat-value"
                     style="color:var(--success)"
                   >
-                    {counts.DONE ?? 0}
+                    {counts.COMPLETED ?? 0}
                   </div>
                   <div class="pd-progress-stat-label">Done</div>
                 </div>
@@ -455,14 +566,14 @@ export default function ProjectDetailClient(
                     class="pd-hc-value"
                     style={tasks.filter((t) =>
                         t.dueDate && new Date(t.dueDate) < new Date() &&
-                        t.status !== "DONE"
+                        !isCompletedStatus(t.status)
                       ).length > 0
                       ? "color:var(--danger)"
                       : ""}
                   >
                     {tasks.filter((t) =>
                       t.dueDate && new Date(t.dueDate) < new Date() &&
-                      t.status !== "DONE"
+                      !isCompletedStatus(t.status)
                     ).length}
                   </span>
                 </div>
@@ -470,14 +581,16 @@ export default function ProjectDetailClient(
                   <span class="pd-hc-label">Completion rate</span>
                   <span class="pd-hc-value">
                     {tasks.length > 0
-                      ? Math.round(((counts.DONE ?? 0) / tasks.length) * 100)
+                      ? Math.round(
+                        ((counts.COMPLETED ?? 0) / tasks.length) * 100,
+                      )
                       : 0}%
                   </span>
                 </div>
                 <div class="pd-hc-row">
                   <span class="pd-hc-label">Open vs closed</span>
                   <span class="pd-hc-value">
-                    {openTasks} / {counts.DONE ?? 0}
+                    {openTasks} / {counts.COMPLETED ?? 0}
                   </span>
                 </div>
                 <div class="pd-hc-divider" />

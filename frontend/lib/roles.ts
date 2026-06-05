@@ -55,8 +55,7 @@ export const isAssignee = (task: Task, userId?: string | null) =>
       (task.assignee?.id === userId),
   );
 
-export const canCreateProject = (role?: Role | null) =>
-  isManager(role);
+export const canCreateProject = (role?: Role | null) => isManager(role);
 
 export const canEditProject = (
   role?: Role | null,
@@ -70,23 +69,15 @@ export const canEditProject = (
 
 export const canArchiveProject = (
   role?: Role | null,
-  project?: Partial<Project> | null,
-  userId?: string | null,
-) => {
-  if (isAdmin(role)) return true;
-  if (isProjectOwner(project, userId) && isManager(role)) return true;
-  return false;
-};
+  _project?: Partial<Project> | null,
+  _userId?: string | null,
+) => isAdmin(role);
 
 export const canDeleteProject = (
   role?: Role | null,
-  project?: Partial<Project> | null,
-  userId?: string | null,
-) => {
-  if (isAdmin(role)) return true;
-  if (isProjectOwner(project, userId) && isManager(role)) return true;
-  return false;
-};
+  _project?: Partial<Project> | null,
+  _userId?: string | null,
+) => isAdmin(role);
 
 export const canInviteMembers = (
   role?: Role | null,
@@ -95,7 +86,9 @@ export const canInviteMembers = (
 ) => {
   if (isAdmin(role)) return true;
   if (isManager(role) && isProjectOwner(project, userId)) return true;
-  if (isManager(role) && project?.currentRole === "PROJECT_MANAGER") return true;
+  if (isManager(role) && project?.currentRole === "PROJECT_MANAGER") {
+    return true;
+  }
   return false;
 };
 
@@ -151,14 +144,9 @@ export const canChangeTaskStatus = (
 
 export const canDeleteTask = (
   role: Role | null | undefined,
-  task: Task,
-  userId?: string | null,
-) => {
-  if (isAdmin(role)) return true;
-  if (isManager(role)) return true;
-  if (Boolean(userId) && task.creatorId === userId) return true;
-  return false;
-};
+  _task: Task,
+  _userId?: string | null,
+) => isAdmin(role);
 
 export const canManageRoles = (role?: Role | null) => isAdmin(role);
 
@@ -193,15 +181,7 @@ export const getAssignableRoles = (
 
 export const canRemoveMember = (
   actorRole?: Role | null,
-  targetRole?: Role | null,
-  actorUserId?: string | null,
-  targetUserId?: string | null,
-) => {
-  if (!actorRole || !targetRole) return false;
-  if (actorUserId && targetUserId && actorUserId === targetUserId) return false;
-  if (actorRole === "ADMIN") return targetRole !== "ADMIN";
-  if (actorRole === "PROJECT_MANAGER") {
-    return targetRole === "TEAM_MEMBER" || targetRole === "VIEWER";
-  }
-  return false;
-};
+  _targetRole?: Role | null,
+  _actorUserId?: string | null,
+  _targetUserId?: string | null,
+) => isAdmin(actorRole);

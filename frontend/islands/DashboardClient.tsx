@@ -14,6 +14,7 @@ import type {
   Task,
 } from "../lib/types.ts";
 import type { Priority, TaskStatus } from "../lib/types.ts";
+import { isCompletedStatus } from "../lib/types.ts";
 import { Avatar, fmtDate, Icon, Skeleton } from "../components/ui.tsx";
 import ProjectCreateModal from "./ProjectCreateModal.tsx";
 import TaskCreateModal from "./TaskCreateModal.tsx";
@@ -109,13 +110,11 @@ function actionClass(action: string) {
 }
 
 const PRIORITY_RANK: Record<Priority, number> = {
-  URGENT: 0,
-  HIGH: 1,
-  MEDIUM: 2,
-  LOW: 3,
+  HIGH: 0,
+  MEDIUM: 1,
+  LOW: 2,
 };
 const PRIORITY_COLOR: Record<Priority, string> = {
-  URGENT: "var(--danger)",
   HIGH: "var(--danger)",
   MEDIUM: "var(--warning)",
   LOW: "var(--muted)",
@@ -180,7 +179,9 @@ export default function DashboardClient() {
     const u = getCurrentUser();
     if (u) setCurrentUser({ id: u.id, name: u.name });
     if (!u?.role) {
-      get<{ id: string; name: string; role: Role }>("/auth/me").then((data) => {
+      get<{ id: string; name: string; email: string; role: Role }>(
+        "/auth/me",
+      ).then((data) => {
         saveSession({ user: data });
         setCurrentUserRole(data.role);
       }).catch(() => null);
@@ -189,14 +190,14 @@ export default function DashboardClient() {
 
   // ── Derived data ──
   const statusCounts: Record<TaskStatus, number> = data?.taskCountByStatus ??
-    data?.tasks?.byStatus ?? { TODO: 0, IN_PROGRESS: 0, REVIEW: 0, DONE: 0 };
+    data?.tasks?.byStatus ?? { TODO: 0, IN_PROGRESS: 0, COMPLETED: 0 };
   const priorityCounts: Record<Priority, number> = data?.taskCountByPriority ??
-    data?.tasks?.byPriority ?? { LOW: 0, MEDIUM: 0, HIGH: 0, URGENT: 0 };
+    data?.tasks?.byPriority ?? { LOW: 0, MEDIUM: 0, HIGH: 0 };
   const taskTotal = data?.tasks?.total ??
     Object.values(statusCounts).reduce((s, v) => s + Number(v || 0), 0);
-  const done = Number(statusCounts.DONE || 0);
+  const done = Number(statusCounts.COMPLETED || 0);
   const velocity = taskTotal ? Math.round((done / taskTotal) * 100) : 0;
-  const urgentCount = Number(priorityCounts.URGENT || 0);
+  const urgentCount = Number(priorityCounts.HIGH || 0);
   const actProjects = projects.filter((p) => p.status === "ACTIVE");
   const creatableProjects = projects.filter((p) =>
     canCreateTasks(
@@ -651,8 +652,6 @@ export default function DashboardClient() {
                           ? "todo"
                           : task.status === "IN_PROGRESS"
                           ? "in_progress"
-                          : task.status === "REVIEW"
-                          ? "review"
                           : "done";
                         return (
                           <tr
@@ -684,8 +683,7 @@ export default function DashboardClient() {
                                 class="dash-priority-badge"
                                 style={{ color: pColor }}
                               >
-                                {task.priority === "URGENT" ||
-                                    task.priority === "HIGH"
+                                {task.priority === "HIGH"
                                   ? "High"
                                   : task.priority === "MEDIUM"
                                   ? "Medium"
@@ -704,12 +702,12 @@ export default function DashboardClient() {
                               style={{
                                 color: task.dueDate &&
                                     new Date(task.dueDate) < new Date() &&
-                                    task.status !== "DONE"
+                                    !isCompletedStatus(task.status)
                                   ? "var(--danger)"
                                   : "var(--muted)",
                                 fontWeight: task.dueDate &&
                                     new Date(task.dueDate) < new Date() &&
-                                    task.status !== "DONE"
+                                    !isCompletedStatus(task.status)
                                   ? 600
                                   : 400,
                               }}

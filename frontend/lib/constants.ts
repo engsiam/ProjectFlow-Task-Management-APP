@@ -21,6 +21,5 @@ export const DEMO_USERS = [
 export const STATUS_COLUMNS = [
   { key: "TODO", label: "To Do", icon: "radio_button_unchecked" },
   { key: "IN_PROGRESS", label: "In Progress", icon: "pending" },
-  { key: "REVIEW", label: "Review", icon: "rate_review" },
-  { key: "DONE", label: "Done", icon: "check_circle" },
+  { key: "COMPLETED", label: "Completed", icon: "check_circle" },
 ] as const;

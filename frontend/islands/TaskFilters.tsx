@@ -35,8 +35,7 @@ export default function TaskFilters(
         <option value="">All statuses</option>
         <option value="TODO">To Do</option>
         <option value="IN_PROGRESS">In Progress</option>
-        <option value="REVIEW">Review</option>
-        <option value="DONE">Done</option>
+        <option value="COMPLETED">Completed</option>
       </select>
       <select
         class="select"
@@ -47,7 +46,6 @@ export default function TaskFilters(
         <option value="LOW">Low</option>
         <option value="MEDIUM">Medium</option>
         <option value="HIGH">High</option>
-        <option value="URGENT">Urgent</option>
       </select>
       <input
         class="input"

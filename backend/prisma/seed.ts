@@ -42,16 +42,15 @@ const DEMO_PDF_1PAGE = (title: string) =>
       `0000000185 00000 n \n0000000295 00000 n \n` +
       `trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n360\n%%EOF\n`,
   );
-// Empty zip archive (single "readme.txt" entry) — base64 of a 124-byte zip blob.
+// Empty zip archive (single "readme.txt" entry) â€” base64 of a 124-byte zip blob.
 const DEMO_ZIP = b64ToBytes(
   "UEsDBAoAAAAAAAAAAAAAAAAAAAAAAAAAAAAJAAAAdGVzdC50eHRoZWxsbwo=",
 );
 const DEMO_DOCX_BLOB = (heading: string, body: string) =>
-  // Minimal Office Open XML (.docx) — a zip with a single document.xml.
+  // Minimal Office Open XML (.docx) â€” a zip with a single document.xml.
   // We assemble a real PKZIP container with one entry.
   (() => {
-    const xml =
-      `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
+    const xml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
       `<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">` +
       `<w:body><w:p><w:r><w:t>${heading}</w:t></w:r></w:p>` +
       `<w:p><w:r><w:t>${body}</w:t></w:r></w:p></w:body></w:document>`;
@@ -118,7 +117,7 @@ const concatBytes = (...parts: Uint8Array[]) => {
   return out;
 };
 
-// CRC-32 (polynomial 0xEDB88320) — required for a valid zip local file header.
+// CRC-32 (polynomial 0xEDB88320) â€” required for a valid zip local file header.
 const crc32 = (bytes: Uint8Array) => {
   let c: number;
   const table: number[] = [];
@@ -235,7 +234,7 @@ async function main() {
   try {
     await Deno.remove(STORAGE_DIR, { recursive: true });
   } catch (_err) {
-    // dir may not exist on first run — ignore
+    // dir may not exist on first run â€” ignore
   }
   console.log("  Done clearing.");
 
@@ -262,14 +261,29 @@ async function main() {
   // ---- Projects + members
   for (const p of projectsSeed) {
     const ownerId = userByUsername.get(p.members.find((m) => m.role === "ADMIN")!.username)!;
-    const existing = await prisma.project.findFirst({ where: { name: p.name }, select: { id: true } });
+    const existing = await prisma.project.findFirst({
+      where: { name: p.name },
+      select: { id: true },
+    });
     const project = existing
       ? await prisma.project.update({
         where: { id: existing.id },
-        data: { name: p.name, description: p.description, color: p.color, status: "ACTIVE", ownerId },
+        data: {
+          name: p.name,
+          description: p.description,
+          color: p.color,
+          status: "ACTIVE",
+          ownerId,
+        },
       })
       : await prisma.project.create({
-        data: { name: p.name, description: p.description, color: p.color, status: "ACTIVE", ownerId },
+        data: {
+          name: p.name,
+          description: p.description,
+          color: p.color,
+          status: "ACTIVE",
+          ownerId,
+        },
       });
     // Clear existing members to make seed idempotent for members
     await prisma.projectMember.deleteMany({ where: { projectId: project.id } });
@@ -336,7 +350,7 @@ async function main() {
       projectId: projectLaunch.id,
       title: "Write launch announcement blog post",
       description: "1200 words, includes screenshots and customer quotes.",
-      status: "REVIEW",
+      status: "IN_PROGRESS",
       priority: "MEDIUM",
       assignee: oliviaId,
       creator: oliviaId,
@@ -348,7 +362,7 @@ async function main() {
       projectId: projectLaunch.id,
       title: "Press kit and media assets",
       description: "Logos, screenshots, founder bios.",
-      status: "DONE",
+      status: "COMPLETED",
       priority: "LOW",
       assignee: oliviaId,
       creator: oliviaId,
@@ -361,7 +375,7 @@ async function main() {
       title: "Onboarding email sequence",
       description: "5 emails over 14 days.",
       status: "TODO",
-      priority: "URGENT",
+      priority: "HIGH",
       assignee: miloId,
       creator: mayaId,
       dueInDays: -1,
@@ -372,7 +386,7 @@ async function main() {
       projectId: projectLaunch.id,
       title: "QA pass on signup flow",
       description: "Manual + automated regression.",
-      status: "DONE",
+      status: "COMPLETED",
       priority: "HIGH",
       assignee: alexId,
       creator: mayaId,
@@ -434,7 +448,7 @@ async function main() {
       projectId: projectRedesign.id,
       title: "New case studies layout",
       description: "Tiled grid with filters.",
-      status: "REVIEW",
+      status: "IN_PROGRESS",
       priority: "LOW",
       assignee: mayaId,
       creator: mayaId,
@@ -446,7 +460,7 @@ async function main() {
       projectId: projectRedesign.id,
       title: "Image optimization pipeline",
       description: "AVIF + responsive srcset.",
-      status: "DONE",
+      status: "COMPLETED",
       priority: "MEDIUM",
       assignee: miloId,
       creator: mayaId,
@@ -461,7 +475,7 @@ async function main() {
       title: "Add tracing to billing service",
       description: "OpenTelemetry spans + dashboards.",
       status: "IN_PROGRESS",
-      priority: "URGENT",
+      priority: "HIGH",
       assignee: alexId,
       creator: alexId,
       dueInDays: 1,
@@ -484,7 +498,7 @@ async function main() {
       projectId: projectPlatform.id,
       title: "Document the incident playbook",
       description: "Runbooks for top 5 alert types.",
-      status: "DONE",
+      status: "COMPLETED",
       priority: "MEDIUM",
       assignee: alexId,
       creator: mayaId,
@@ -501,7 +515,7 @@ async function main() {
       title: "Admin: Approve launch readiness checklist",
       description: "Final go/no-go decision sign-off before the public release.",
       status: "TODO",
-      priority: "URGENT",
+      priority: "HIGH",
       assignee: oliviaId,
       creator: oliviaId,
       dueInDays: 2,
@@ -524,7 +538,7 @@ async function main() {
       projectId: projectRedesign.id,
       title: "Admin: Sign off on new brand guidelines",
       description: "Review and approve the v2 brand guide draft.",
-      status: "REVIEW",
+      status: "IN_PROGRESS",
       priority: "HIGH",
       assignee: mayaId,
       creator: oliviaId,
@@ -548,7 +562,7 @@ async function main() {
       projectId: projectPlatform.id,
       title: "Admin: Approve incident postmortem template",
       description: "Roll out the new postmortem template org-wide.",
-      status: "DONE",
+      status: "COMPLETED",
       priority: "MEDIUM",
       assignee: alexId,
       creator: oliviaId,
@@ -600,7 +614,7 @@ async function main() {
     uploader: string;
     bytes: Uint8Array;
   }> = [
-    // Q4 launch — analytics setup
+    // Q4 launch â€” analytics setup
     {
       taskIdx: 1,
       fileName: "analytics-funnel-spec.pdf",
@@ -617,7 +631,7 @@ async function main() {
       uploader: alexId,
       bytes: DEMO_PNG,
     },
-    // Q4 launch — landing page
+    // Q4 launch â€” landing page
     {
       taskIdx: 0,
       fileName: "hero-mockup-v2.png",
@@ -634,7 +648,7 @@ async function main() {
       uploader: oliviaId,
       bytes: DEMO_DOCX_BLOB("Landing Page Copy", "Hero, features, pricing, FAQ."),
     },
-    // Q4 launch — press kit
+    // Q4 launch â€” press kit
     {
       taskIdx: 3,
       fileName: "press-kit.zip",
@@ -643,7 +657,7 @@ async function main() {
       uploader: oliviaId,
       bytes: DEMO_ZIP,
     },
-    // Q4 launch — stress test
+    // Q4 launch â€” stress test
     {
       taskIdx: 6,
       fileName: "load-test-report.pdf",
@@ -652,7 +666,7 @@ async function main() {
       uploader: alexId,
       bytes: DEMO_PDF_1PAGE("Load Test Report 2x"),
     },
-    // Redesign — case studies
+    // Redesign â€” case studies
     {
       taskIdx: 10,
       fileName: "case-study-mockup.jpg",
@@ -667,9 +681,11 @@ async function main() {
       ext: ".doc",
       mime: "application/msword",
       uploader: mayaId,
-      bytes: new TextEncoder().encode("Filter UX notes\r\n\r\n- Move active filters above the grid.\r\n"),
+      bytes: new TextEncoder().encode(
+        "Filter UX notes\r\n\r\n- Move active filters above the grid.\r\n",
+      ),
     },
-    // Platform reliability — billing tracing
+    // Platform reliability â€” billing tracing
     {
       taskIdx: 13,
       fileName: "otel-spans.png",
@@ -890,7 +906,14 @@ async function main() {
 
   // Add ATTACHMENT_UPLOADED entries for every demo attachment created above.
   const allAttachments = await prisma.attachment.findMany({
-    select: { id: true, taskId: true, uploadedById: true, fileName: true, fileSize: true, mimeType: true },
+    select: {
+      id: true,
+      taskId: true,
+      uploadedById: true,
+      fileName: true,
+      fileSize: true,
+      mimeType: true,
+    },
   });
   for (const att of allAttachments) {
     const task = await prisma.task.findUnique({

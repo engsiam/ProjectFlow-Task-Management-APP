@@ -109,9 +109,20 @@ export const healthResponseData = z.object({
 });
 
 // ---------- Project ----------
-export const projectStatusEnum = z.enum(["ACTIVE", "COMPLETED", "ARCHIVED"]);
+export const projectStatusEnum = z.enum([
+  "ACTIVE",
+  "COMPLETED",
+  "ON_HOLD",
+  "ARCHIVED",
+]);
 export const roleEnum = z.enum(["ADMIN", "PROJECT_MANAGER", "TEAM_MEMBER", "VIEWER"]);
-export const taskStatusEnum = z.enum(["TODO", "IN_PROGRESS", "REVIEW", "DONE"]);
+export const taskStatusEnum = z.enum([
+  "TODO",
+  "IN_PROGRESS",
+  "COMPLETED",
+  "DONE",
+  "REVIEW",
+]);
 export const priorityEnum = z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]);
 
 export const projectSummarySchema = z.object({
@@ -131,6 +142,8 @@ export const createProjectBody = z.object({
   name: z.string().min(1).openapi({ example: "Q4 Marketing Launch" }),
   description: z.string().optional().openapi({ example: "Cross-team launch plan" }),
   color: z.string().optional().openapi({ example: "#10b981" }),
+  startDate: z.string().datetime().optional().nullable(),
+  deadline: z.string().datetime().optional().nullable(),
 });
 
 export const updateProjectBody = z.object({
@@ -138,6 +151,8 @@ export const updateProjectBody = z.object({
   description: z.string().nullable().optional(),
   color: z.string().optional(),
   status: projectStatusEnum.optional(),
+  startDate: z.string().datetime().optional().nullable(),
+  deadline: z.string().datetime().optional().nullable(),
 });
 
 export const projectListResponse = z.object({
@@ -187,6 +202,8 @@ export const projectDetailSchema = z.object({
     review: z.number().int(),
     done: z.number().int(),
   }),
+  startDate: z.string().nullable().optional(),
+  deadline: z.string().nullable().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -409,6 +426,7 @@ export const dashboardResponseData = z.object({
     total: z.number().int(),
     active: z.number().int(),
     completed: z.number().int(),
+    onHold: z.number().int(),
     archived: z.number().int(),
   }),
   tasks: z.object({
@@ -416,14 +434,12 @@ export const dashboardResponseData = z.object({
     byStatus: z.object({
       TODO: z.number().int(),
       IN_PROGRESS: z.number().int(),
-      REVIEW: z.number().int(),
-      DONE: z.number().int(),
+      COMPLETED: z.number().int(),
     }),
     byPriority: z.object({
       LOW: z.number().int(),
       MEDIUM: z.number().int(),
       HIGH: z.number().int(),
-      URGENT: z.number().int(),
     }),
     overdue: z.number().int(),
     completed: z.number().int(),
@@ -433,8 +449,7 @@ export const dashboardResponseData = z.object({
     byStatus: z.object({
       TODO: z.number().int(),
       IN_PROGRESS: z.number().int(),
-      REVIEW: z.number().int(),
-      DONE: z.number().int(),
+      COMPLETED: z.number().int(),
     }),
     overdue: z.number().int(),
   }),
@@ -457,14 +472,12 @@ export const projectAnalyticsData = z.object({
     byStatus: z.object({
       TODO: z.number().int(),
       IN_PROGRESS: z.number().int(),
-      REVIEW: z.number().int(),
-      DONE: z.number().int(),
+      COMPLETED: z.number().int(),
     }),
     byPriority: z.object({
       LOW: z.number().int(),
       MEDIUM: z.number().int(),
       HIGH: z.number().int(),
-      URGENT: z.number().int(),
     }),
   }),
   members: z.array(z.object({
@@ -497,14 +510,14 @@ export const analyticsKpiSchema = z.object({
 });
 
 export const priorityDatumSchema = z.object({
-  name: z.enum(["URGENT", "HIGH", "MEDIUM", "LOW"]),
+  name: z.enum(["HIGH", "MEDIUM", "LOW"]),
   label: z.string(),
   value: z.number().int(),
   color: z.string(),
 });
 
 export const statusDatumSchema = z.object({
-  name: z.enum(["TODO", "IN_PROGRESS", "REVIEW", "DONE"]),
+  name: z.enum(["TODO", "IN_PROGRESS", "COMPLETED"]),
   label: z.string(),
   value: z.number().int(),
   color: z.string(),

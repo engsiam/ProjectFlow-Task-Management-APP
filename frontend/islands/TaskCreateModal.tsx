@@ -6,6 +6,7 @@ import { toast } from "../lib/toast.ts";
 import type { Priority, Project, Task, TaskStatus } from "../lib/types.ts";
 import { Button, Icon } from "../components/ui.tsx";
 import FilePicker from "../components/FilePicker.tsx";
+import { validateDeadline, validateTaskTitle } from "../lib/validation.ts";
 
 interface PublicUser {
   id: string;
@@ -34,6 +35,7 @@ export default function TaskCreateModal(
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState<TaskStatus>(initialStatus ?? "TODO");
   const [priority, setPriority] = useState<Priority>("MEDIUM");
+  const allowCompletedOnCreate = false;
   const [assigneeId, setAssigneeId] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [labels, setLabels] = useState("");
@@ -83,7 +85,15 @@ export default function TaskCreateModal(
   async function submit(e: Event) {
     e.preventDefault();
     if (!selectedProject) return setError("Choose a project first.");
-    if (!title.trim()) return setError("Task title is required.");
+    const titleCheck = validateTaskTitle(title, []);
+    if (!titleCheck.ok) return setError(titleCheck.message);
+    const dueCheck = validateDeadline(toIsoDate(dueDate) ?? null, false);
+    if (!dueCheck.ok) return setError(dueCheck.message);
+    if (status === "COMPLETED" && !allowCompletedOnCreate) {
+      return setError(
+        "Tasks cannot be created already completed. Start as To Do and mark done after work is finished.",
+      );
+    }
     setLoading(true);
     setError("");
     try {
@@ -100,7 +110,7 @@ export default function TaskCreateModal(
           assigneeId: assigneeId || undefined,
           dueDate: toIsoDate(dueDate),
           labels: labelList,
-        });
+        }, { loaderMessage: "Creating task…" });
       } else {
         created = await createTaskWithAttachments(
           selectedProject,
@@ -233,8 +243,6 @@ export default function TaskCreateModal(
             >
               <option value="TODO">To Do</option>
               <option value="IN_PROGRESS">In Progress</option>
-              <option value="REVIEW">Review</option>
-              <option value="DONE">Done</option>
             </select>
           </div>
           <div>
@@ -247,7 +255,6 @@ export default function TaskCreateModal(
               <option value="LOW">Low</option>
               <option value="MEDIUM">Medium</option>
               <option value="HIGH">High</option>
-              <option value="URGENT">Urgent</option>
             </select>
           </div>
           <div>

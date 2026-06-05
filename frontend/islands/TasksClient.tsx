@@ -1,8 +1,13 @@
 import { useEffect, useMemo, useState } from "preact/hooks";
-import { getList } from "../lib/api.ts";
+import { del, getList, patch } from "../lib/api.ts";
 import { getCurrentUser, requireClientAuth } from "../lib/auth.ts";
 import { toast } from "../lib/toast.ts";
-import { canCreateTasks, getProjectRole } from "../lib/roles.ts";
+import {
+  canCreateTasks,
+  canDeleteTask,
+  canEditTask,
+  getProjectRole,
+} from "../lib/roles.ts";
 import type { Priority, Project, Task, TaskStatus } from "../lib/types.ts";
 import {
   Avatar,
@@ -46,6 +51,11 @@ export default function TasksClient() {
   const [status, setStatus] = useState<TaskStatus | "">("");
   const [priority, setPriority] = useState<Priority | "">("");
   const [label, setLabel] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [sort, setSort] = useState("-updatedAt");
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   async function load() {
@@ -159,6 +169,157 @@ export default function TasksClient() {
     });
   }, [tasks, query, status, priority, label]);
 
+  const sorted = useMemo(() => {
+    const list = [...filtered];
+    if (sort === "-updatedAt") {
+      list.sort((a, b) =>
+        new Date(b.updatedAt ?? 0).getTime() -
+        new Date(a.updatedAt ?? 0).getTime()
+      );
+    } else if (sort === "title") {
+      list.sort((a, b) => a.title.localeCompare(b.title));
+    } else if (sort === "-priority") {
+      const order: Record<Priority, number> = { HIGH: 0, MEDIUM: 1, LOW: 2 };
+      list.sort((a, b) => order[a.priority] - order[b.priority]);
+    }
+    return list;
+  }, [filtered, sort]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [query, status, priority, label, sort]);
+
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [query, status, priority, label]);
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
+  const pageTasks = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return sorted.slice(start, start + pageSize);
+  }, [sorted, page, pageSize]);
+
+  const selectable = pageTasks.filter((task) => {
+    const role = getProjectRole(
+      projects.find((p) => p.id === task.projectId) ?? null,
+      currentUserId,
+    );
+    return canEditTask(role, task, currentUserId);
+  });
+  const selectableIds = new Set(selectable.map((t) => t.id));
+
+  function toggleOne(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAllVisible() {
+    setSelectedIds((prev) => {
+      const allSelected = selectableIds.size > 0 &&
+        [...selectableIds].every((id) => prev.has(id));
+      if (allSelected) {
+        const next = new Set(prev);
+        for (const id of selectableIds) next.delete(id);
+        return next;
+      }
+      const next = new Set(prev);
+      for (const id of selectableIds) next.add(id);
+      return next;
+    });
+  }
+
+  async function bulkUpdateStatus(next: TaskStatus) {
+    if (selectedIds.size === 0) return;
+    setBulkBusy(true);
+    const ids = [...selectedIds];
+    let success = 0;
+    let lastErr: string | null = null;
+    for (const id of ids) {
+      try {
+        await patch(`/tasks/${id}`, { status: next }, {
+          skipLoader: true,
+          silent: true,
+        });
+        success++;
+      } catch (err) {
+        lastErr = err instanceof Error ? err.message : "Update failed";
+      }
+    }
+    setBulkBusy(false);
+    if (success > 0) {
+      toast(`Updated ${success} task${success === 1 ? "" : "s"}.`, "success");
+      await load();
+    }
+    if (lastErr) toast(lastErr, "danger");
+  }
+
+  async function bulkUpdatePriority(next: Priority) {
+    if (selectedIds.size === 0) return;
+    setBulkBusy(true);
+    const ids = [...selectedIds];
+    let success = 0;
+    let lastErr: string | null = null;
+    for (const id of ids) {
+      try {
+        await patch(`/tasks/${id}`, { priority: next }, {
+          skipLoader: true,
+          silent: true,
+        });
+        success++;
+      } catch (err) {
+        lastErr = err instanceof Error ? err.message : "Update failed";
+      }
+    }
+    setBulkBusy(false);
+    if (success > 0) {
+      toast(`Updated ${success} task${success === 1 ? "" : "s"}.`, "success");
+      await load();
+    }
+    if (lastErr) toast(lastErr, "danger");
+  }
+
+  async function bulkDelete() {
+    if (selectedIds.size === 0) return;
+    const targets = tasks.filter((t) => selectedIds.has(t.id));
+    const deletable = targets.filter((task) => {
+      const project = projects.find((p) => p.id === task.projectId) ?? null;
+      const role = getProjectRole(project, currentUserId);
+      return canDeleteTask(role, task);
+    });
+    if (deletable.length === 0) {
+      toast("You don't have permission to delete these tasks.", "warning");
+      return;
+    }
+    if (
+      !confirm(
+        `Delete ${deletable.length} task${deletable.length === 1 ? "" : "s"}?`,
+      )
+    ) {
+      return;
+    }
+    setBulkBusy(true);
+    let success = 0;
+    let lastErr: string | null = null;
+    for (const task of deletable) {
+      try {
+        await del(`/tasks/${task.id}`, { skipLoader: true, silent: true });
+        success++;
+      } catch (err) {
+        lastErr = err instanceof Error ? err.message : "Delete failed";
+      }
+    }
+    setBulkBusy(false);
+    if (success > 0) {
+      toast(`Deleted ${success} task${success === 1 ? "" : "s"}.`, "success");
+      await load();
+    }
+    if (lastErr) toast(lastErr, "danger");
+  }
+
   if (loading) {
     return (
       <div style={{ display: "grid", gap: "16px" }}>
@@ -210,7 +371,7 @@ export default function TasksClient() {
             gap: "12px",
           }}
         >
-          {(["TODO", "IN_PROGRESS", "REVIEW", "DONE"] as const).map((s) => {
+          {(["TODO", "IN_PROGRESS", "COMPLETED"] as const).map((s) => {
             const count = tasks.filter((t) => t.status === s).length;
             return (
               <div
@@ -229,7 +390,8 @@ export default function TasksClient() {
         style={{
           padding: "12px",
           display: "grid",
-          gridTemplateColumns: "2fr repeat(3, minmax(140px, 1fr))",
+          gridTemplateColumns:
+            "2fr repeat(3, minmax(140px, 1fr)) minmax(120px, 1fr)",
           gap: "10px",
         }}
       >
@@ -247,8 +409,7 @@ export default function TasksClient() {
           <option value="">All statuses</option>
           <option value="TODO">To Do</option>
           <option value="IN_PROGRESS">In Progress</option>
-          <option value="REVIEW">Review</option>
-          <option value="DONE">Done</option>
+          <option value="COMPLETED">Completed</option>
         </select>
         <select
           class="select"
@@ -259,7 +420,6 @@ export default function TasksClient() {
           <option value="LOW">Low</option>
           <option value="MEDIUM">Medium</option>
           <option value="HIGH">High</option>
-          <option value="URGENT">Urgent</option>
         </select>
         <input
           class="input"
@@ -267,8 +427,72 @@ export default function TasksClient() {
           value={label}
           onInput={(e) => setLabel(e.currentTarget.value)}
         />
+        <select
+          class="select"
+          value={sort}
+          onChange={(e) => setSort(e.currentTarget.value)}
+        >
+          <option value="-updatedAt">Recently updated</option>
+          <option value="title">Title (A→Z)</option>
+          <option value="-priority">Priority (High first)</option>
+        </select>
       </section>
-      {filtered.length === 0
+      {selectedIds.size > 0 && (
+        <section
+          class="panel"
+          style={{
+            padding: "10px 12px",
+            display: "flex",
+            gap: "10px",
+            alignItems: "center",
+            flexWrap: "wrap",
+          }}
+        >
+          <strong>{selectedIds.size} selected</strong>
+          <select
+            class="select"
+            disabled={bulkBusy}
+            onChange={(e) => {
+              const v = e.currentTarget.value as TaskStatus;
+              if (v) bulkUpdateStatus(v);
+              e.currentTarget.value = "";
+            }}
+          >
+            <option value="">Set status…</option>
+            <option value="TODO">To Do</option>
+            <option value="IN_PROGRESS">In Progress</option>
+            <option value="COMPLETED">Completed</option>
+          </select>
+          <select
+            class="select"
+            disabled={bulkBusy}
+            onChange={(e) => {
+              const v = e.currentTarget.value as Priority;
+              if (v) bulkUpdatePriority(v);
+              e.currentTarget.value = "";
+            }}
+          >
+            <option value="">Set priority…</option>
+            <option value="LOW">Low</option>
+            <option value="MEDIUM">Medium</option>
+            <option value="HIGH">High</option>
+          </select>
+          <Button
+            variant="danger"
+            disabled={bulkBusy}
+            onClick={bulkDelete}
+          >
+            <Icon name="delete" size={16} /> Delete
+          </Button>
+          <Button
+            disabled={bulkBusy}
+            onClick={() => setSelectedIds(new Set())}
+          >
+            Clear
+          </Button>
+        </section>
+      )}
+      {sorted.length === 0
         ? (
           <EmptyState
             icon="search_off"
@@ -281,6 +505,14 @@ export default function TasksClient() {
             <table class="task-table">
               <thead>
                 <tr>
+                  <th style={{ width: "36px" }}>
+                    <input
+                      type="checkbox"
+                      checked={selectableIds.size > 0 &&
+                        [...selectableIds].every((id) => selectedIds.has(id))}
+                      onChange={toggleAllVisible}
+                    />
+                  </th>
                   <th>Task</th>
                   <th>Status</th>
                   <th>Priority</th>
@@ -290,59 +522,118 @@ export default function TasksClient() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((task) => (
-                  <tr
-                    style={{ cursor: "pointer" }}
-                    onClick={() => setSelected(task)}
-                  >
-                    <td>
-                      <div style={{ display: "grid", gap: "2px" }}>
-                        <span class="mono page-kicker">
-                          TSK-{task.id.slice(-4).toUpperCase()}
-                        </span>
-                        <strong>{task.title}</strong>
-                        <span
-                          style={{ color: "var(--muted)", fontSize: "12px" }}
+                {pageTasks.map((task) => {
+                  const project = projects.find((p) => p.id === task.projectId);
+                  const role = getProjectRole(project ?? null, currentUserId);
+                  const editable = canEditTask(role, task, currentUserId);
+                  return (
+                    <tr
+                      style={{ cursor: "pointer" }}
+                      onClick={() => setSelected(task)}
+                    >
+                      <td onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(task.id)}
+                          disabled={!editable}
+                          onChange={() => toggleOne(task.id)}
+                        />
+                      </td>
+                      <td>
+                        <div style={{ display: "grid", gap: "2px" }}>
+                          <span class="mono page-kicker">
+                            TSK-{task.id.slice(-4).toUpperCase()}
+                          </span>
+                          <strong>{task.title}</strong>
+                          <span
+                            style={{ color: "var(--muted)", fontSize: "12px" }}
+                          >
+                            {task.project?.name ?? project?.name ?? ""}
+                          </span>
+                        </div>
+                      </td>
+                      <td>
+                        <Badge tone={statusTone(task.status)}>
+                          {task.status.replace("_", " ")}
+                        </Badge>
+                      </td>
+                      <td>
+                        <Badge tone={priorityTone(task.priority)}>
+                          {task.priority}
+                        </Badge>
+                      </td>
+                      <td style={{ color: "var(--muted)", fontSize: "13px" }}>
+                        {fmtDate(task.dueDate)}
+                      </td>
+                      <td>
+                        <Avatar user={task.assignee} size={28} />
+                      </td>
+                      <td>
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "6px",
+                            flexWrap: "wrap",
+                          }}
                         >
-                          {task.project?.name ?? ""}
-                        </span>
-                      </div>
-                    </td>
-                    <td>
-                      <Badge tone={statusTone(task.status)}>
-                        {task.status.replace("_", " ")}
-                      </Badge>
-                    </td>
-                    <td>
-                      <Badge tone={priorityTone(task.priority)}>
-                        {task.priority}
-                      </Badge>
-                    </td>
-                    <td style={{ color: "var(--muted)", fontSize: "13px" }}>
-                      {fmtDate(task.dueDate)}
-                    </td>
-                    <td>
-                      <Avatar user={task.assignee} size={28} />
-                    </td>
-                    <td>
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: "6px",
-                          flexWrap: "wrap",
-                        }}
-                      >
-                        {task.labels?.slice(0, 3).map((item) => (
-                          <Badge key={item}>{item}</Badge>
-                        ))}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                          {task.labels?.slice(0, 3).map((item) => (
+                            <Badge key={item}>{item}</Badge>
+                          ))}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         )}
+      {sorted.length > 0 && (
+        <section
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "10px",
+          }}
+        >
+          <span style={{ color: "var(--muted)", fontSize: "13px" }}>
+            Showing {(page - 1) * pageSize + 1}–
+            {Math.min(page * pageSize, sorted.length)} of {sorted.length}
+          </span>
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <select
+              class="select"
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.currentTarget.value));
+                setPage(1);
+              }}
+            >
+              <option value="10">10 / page</option>
+              <option value="20">20 / page</option>
+              <option value="50">50 / page</option>
+              <option value="100">100 / page</option>
+            </select>
+            <Button
+              disabled={page === 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              ‹ Prev
+            </Button>
+            <span style={{ fontSize: "13px", color: "var(--muted)" }}>
+              Page {page} of {totalPages}
+            </span>
+            <Button
+              disabled={page === totalPages}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            >
+              Next ›
+            </Button>
+          </div>
+        </section>
+      )}
       {open && (
         <TaskCreateModal
           projects={creatableProjects}

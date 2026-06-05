@@ -18,9 +18,40 @@ export type User = {
 };
 
 export type Role = "ADMIN" | "PROJECT_MANAGER" | "TEAM_MEMBER" | "VIEWER";
-export type ProjectStatus = "ACTIVE" | "COMPLETED" | "ARCHIVED";
-export type TaskStatus = "TODO" | "IN_PROGRESS" | "REVIEW" | "DONE";
-export type Priority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+export type ProjectStatus = "ACTIVE" | "COMPLETED" | "ON_HOLD" | "ARCHIVED";
+export type TaskStatus = "TODO" | "IN_PROGRESS" | "COMPLETED";
+export type Priority = "LOW" | "MEDIUM" | "HIGH";
+
+export const isCompletedStatus = (status?: string | null) =>
+  status === "COMPLETED" || status === "DONE";
+
+export const normalizeTaskStatus = (
+  status?: string | null,
+): TaskStatus | null => {
+  if (status === "TODO") return "TODO";
+  if (status === "IN_PROGRESS") return "IN_PROGRESS";
+  if (status === "COMPLETED" || status === "DONE") return "COMPLETED";
+  return null;
+};
+
+export const normalizePriority = (
+  priority?: string | null,
+): Priority | null => {
+  if (priority === "HIGH" || priority === "URGENT") return "HIGH";
+  if (priority === "MEDIUM") return "MEDIUM";
+  if (priority === "LOW") return "LOW";
+  return null;
+};
+
+export const normalizeProjectStatus = (
+  status?: string | null,
+): ProjectStatus | null => {
+  if (status === "ACTIVE") return "ACTIVE";
+  if (status === "COMPLETED") return "COMPLETED";
+  if (status === "ON_HOLD") return "ON_HOLD";
+  if (status === "ARCHIVED") return "ARCHIVED";
+  return null;
+};
 
 export type ProjectMember = {
   id: ID;
@@ -46,6 +77,8 @@ export type Project = {
     review: number;
     done: number;
   };
+  startDate?: string | null;
+  deadline?: string | null;
   createdAt?: string;
   updatedAt?: string;
 };

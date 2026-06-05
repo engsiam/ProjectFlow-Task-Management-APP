@@ -4,13 +4,13 @@ import { getCurrentUser } from "../lib/auth.ts";
 import {
   canChangeTaskStatus,
   canCreateTasks,
-  canEditTask,
   getProjectRole,
   isAssignee,
 } from "../lib/roles.ts";
 import { toast } from "../lib/toast.ts";
 import { STATUS_COLUMNS } from "../lib/constants.ts";
 import type { Project, Task, TaskStatus } from "../lib/types.ts";
+import { isCompletedStatus } from "../lib/types.ts";
 import {
   Avatar,
   Badge,
@@ -22,14 +22,12 @@ import TaskDetailModal from "./TaskDetailModal.tsx";
 import TaskCreateModal from "./TaskCreateModal.tsx";
 
 const priorityBorder: Record<string, string> = {
-  URGENT: "var(--danger)",
   HIGH: "var(--danger)",
   MEDIUM: "var(--warning)",
   LOW: "var(--primary)",
 };
 
 const priorityLabel: Record<string, string> = {
-  URGENT: "Urgent",
   HIGH: "High Priority",
   MEDIUM: "Medium Priority",
   LOW: "Low Priority",
@@ -174,13 +172,15 @@ export default function KanbanBoard(
               {column.tasks.map((task) => {
                 const mayEditThis = canEditThisTask(task);
                 const isAssignedToMe = isAssignee(task, currentUserId);
+                const isDone = isCompletedStatus(task.status) ||
+                  column.key === "COMPLETED";
                 return (
                 <div
                   key={task.id}
                   class={`task-card ${
-                    column.key === "DONE" ? "task-done" : ""
+                    isDone ? "task-done" : ""
                   } ${isAssignedToMe ? "task-assigned-to-me" : ""}`}
-                  draggable={mayEditThis && column.key !== "DONE"}
+                  draggable={mayEditThis && !isDone}
                   onDragStart={(e) => {
                     if (!mayEditThis) {
                       e.preventDefault();
@@ -198,7 +198,7 @@ export default function KanbanBoard(
                       <Badge tone={priorityTone(task.priority)}>
                         {priorityLabel[task.priority] || task.priority}
                       </Badge>
-                      {mayEditThis && column.key !== "DONE" && (
+                      {mayEditThis && !isDone && (
                         <span
                           class="drag-handle"
                           onMouseDown={(e) => e.stopPropagation()}
@@ -229,13 +229,13 @@ export default function KanbanBoard(
                         {task.dueDate && (
                           <span
                             class={new Date(task.dueDate) < new Date() &&
-                                task.status !== "DONE"
+                                !isCompletedStatus(task.status)
                               ? "overdue"
                               : ""}
                             style={{ fontSize: "12px" }}
                           >
                             {new Date(task.dueDate) < new Date() &&
-                                task.status !== "DONE"
+                                !isCompletedStatus(task.status)
                               ? "Overdue"
                               : fmtDate(task.dueDate)}
                           </span>

@@ -136,15 +136,15 @@ export function EmptyState(
 }
 
 export function priorityTone(priority?: Priority) {
-  if (priority === "URGENT" || priority === "HIGH") return "danger";
+  if (priority === "HIGH") return "danger";
   if (priority === "MEDIUM") return "warning";
   return "neutral";
 }
 
 export function statusTone(status?: TaskStatus | ProjectStatus) {
-  if (status === "DONE" || status === "COMPLETED") return "success";
-  if (status === "REVIEW" || status === "IN_PROGRESS") return "warning";
-  if (status === "ARCHIVED") return "danger";
+  if (status === "COMPLETED") return "success";
+  if (status === "IN_PROGRESS") return "warning";
+  if (status === "ARCHIVED" || status === "ON_HOLD") return "danger";
   return "neutral";
 }
 

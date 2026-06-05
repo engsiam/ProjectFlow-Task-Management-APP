@@ -10,6 +10,8 @@ export const createProjectSchema = z.object({
     .string()
     .regex(/^#([0-9a-fA-F]{6})$/, "Color must be a hex code like #6366f1")
     .optional(),
+  startDate: z.string().datetime().nullable().optional(),
+  deadline: z.string().datetime().nullable().optional(),
 });
 
 export const updateProjectSchema = z.object({
@@ -20,6 +22,8 @@ export const updateProjectSchema = z.object({
     .regex(/^#([0-9a-fA-F]{6})$/)
     .optional(),
   status: z.enum(PROJECT_STATUSES as [string, ...string[]]).optional(),
+  startDate: z.string().datetime().nullable().optional(),
+  deadline: z.string().datetime().nullable().optional(),
 });
 
 export const projectIdParamSchema = z.object({

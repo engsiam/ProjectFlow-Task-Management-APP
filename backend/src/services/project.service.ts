@@ -14,11 +14,12 @@ import { randomToken } from "../utils/id.ts";
 import { logActivity } from "./activity.service.ts";
 import { notifyUser } from "./notification.service.ts";
 
-const PROGRESS_STATUSES = ["TODO", "IN_PROGRESS", "REVIEW", "DONE"] as const;
+const PROGRESS_STATUSES = ["TODO", "IN_PROGRESS", "COMPLETED"] as const;
+const isCompleted = (status: string) => status === "DONE" || status === "COMPLETED";
 
 const computeProgress = (tasks: { status: string }[]) => {
   if (tasks.length === 0) return 0;
-  const done = tasks.filter((t) => t.status === "DONE").length;
+  const done = tasks.filter((t) => isCompleted(t.status)).length;
   return Math.round((done / tasks.length) * 100);
 };
 
@@ -29,6 +30,8 @@ export const create = async (userId: string, input: CreateProjectInput) => {
       description: input.description ?? null,
       color: input.color ?? "#6366f1",
       ownerId: userId,
+      ...(input.startDate !== undefined ? { startDate: input.startDate ?? null } : {}),
+      ...(input.deadline !== undefined ? { deadline: input.deadline ?? null } : {}),
       members: {
         create: { userId, role: "ADMIN" },
       },
@@ -45,21 +48,23 @@ export const create = async (userId: string, input: CreateProjectInput) => {
   return project;
 };
 
-export const listMine = async (userId: string, userRole: RoleType | undefined, query: ListProjectsQuery) => {
+export const listMine = async (
+  userId: string,
+  userRole: RoleType | undefined,
+  query: ListProjectsQuery,
+) => {
   // Global ADMIN/PROJECT_MANAGER can manage the whole workspace, and VIEWER
   // accounts audit every project. Everyone else only sees projects they
   // own or are a member of.
   const isGlobalRole = userRole && isRoleAtLeast(userRole, "PROJECT_MANAGER");
   const isGlobalViewer = userRole === "VIEWER";
   const isGlobalManager = isGlobalRole;
-  const where: Record<string, unknown> = isGlobalRole || isGlobalViewer
-    ? {}
-    : {
-      OR: [
-        { ownerId: userId },
-        { members: { some: { userId } } },
-      ],
-    };
+  const where: Record<string, unknown> = isGlobalRole || isGlobalViewer ? {} : {
+    OR: [
+      { ownerId: userId },
+      { members: { some: { userId } } },
+    ],
+  };
   if (query.status) where.status = query.status;
   if (query.search) {
     where.AND = [
@@ -111,7 +116,7 @@ export const listMine = async (userId: string, userRole: RoleType | undefined, q
   for (const g of taskGroups) {
     const entry = progressMap.get(g.projectId) ?? { total: 0, done: 0 };
     entry.total += g._count._all;
-    if (g.status === "DONE") entry.done += g._count._all;
+    if (isCompleted(g.status)) entry.done += g._count._all;
     progressMap.set(g.projectId, entry);
   }
   const roleMap = new Map<string, RoleType>(
@@ -180,7 +185,9 @@ export const getById = async (
     _count: { _all: true },
   });
   const totalTasks = taskStatusGroups.reduce((sum, g) => sum + g._count._all, 0);
-  const doneTasks = taskStatusGroups.find((g) => g.status === "DONE")?._count._all ?? 0;
+  const doneTasks = taskStatusGroups
+    .filter((g) => isCompleted(g.status))
+    .reduce((sum, g) => sum + g._count._all, 0);
   const progress = totalTasks ? Math.round((doneTasks / totalTasks) * 100) : 0;
   const memberRole = project.ownerId === userId
     ? "ADMIN"
@@ -198,7 +205,6 @@ export const getById = async (
       total: totalTasks,
       todo: taskStatusGroups.find((g) => g.status === "TODO")?._count._all ?? 0,
       inProgress: taskStatusGroups.find((g) => g.status === "IN_PROGRESS")?._count._all ?? 0,
-      review: taskStatusGroups.find((g) => g.status === "REVIEW")?._count._all ?? 0,
       done: doneTasks,
     },
   };
@@ -227,11 +233,19 @@ export const update = async (
       ...(input.description !== undefined ? { description: input.description } : {}),
       ...(input.color !== undefined ? { color: input.color } : {}),
       ...(input.status !== undefined ? { status: input.status } : {}),
+      ...(input.startDate !== undefined ? { startDate: input.startDate ?? null } : {}),
+      ...(input.deadline !== undefined ? { deadline: input.deadline ?? null } : {}),
     },
   });
   await logActivity({
     actorId: userId,
-    action: input.status === "ARCHIVED" ? "PROJECT_ARCHIVED" : "PROJECT_UPDATED",
+    action: input.status === "ARCHIVED"
+      ? "PROJECT_ARCHIVED"
+      : input.status === "ON_HOLD"
+      ? "PROJECT_UPDATED"
+      : input.status === "COMPLETED"
+      ? "PROJECT_COMPLETED"
+      : "PROJECT_UPDATED",
     entityType: "PROJECT",
     entityId: projectId,
     projectId,
@@ -257,6 +271,42 @@ export const archive = async (userId: string, projectId: string) => {
   return updated;
 };
 
+export const setOnHold = async (userId: string, projectId: string) => {
+  const project = await prisma.project.findUnique({ where: { id: projectId } });
+  if (!project) throw new NotFoundError("Project not found");
+  const updated = await prisma.project.update({
+    where: { id: projectId },
+    data: { status: "ON_HOLD" },
+  });
+  await logActivity({
+    actorId: userId,
+    action: "PROJECT_UPDATED",
+    entityType: "PROJECT",
+    entityId: projectId,
+    projectId,
+    metadata: { changes: { status: "ON_HOLD" } },
+  });
+  return updated;
+};
+
+export const resume = async (userId: string, projectId: string) => {
+  const project = await prisma.project.findUnique({ where: { id: projectId } });
+  if (!project) throw new NotFoundError("Project not found");
+  const updated = await prisma.project.update({
+    where: { id: projectId },
+    data: { status: "ACTIVE" },
+  });
+  await logActivity({
+    actorId: userId,
+    action: "PROJECT_UPDATED",
+    entityType: "PROJECT",
+    entityId: projectId,
+    projectId,
+    metadata: { changes: { status: "ACTIVE" } },
+  });
+  return updated;
+};
+
 export const remove = async (userId: string, projectId: string) => {
   const project = await prisma.project.findUnique({ where: { id: projectId } });
   if (!project) throw new NotFoundError("Project not found");
@@ -268,7 +318,11 @@ export const remove = async (userId: string, projectId: string) => {
 // MEMBERS
 // =====================================================
 
-export const listMembers = async (userId: string, userRole: RoleType | undefined, projectId: string) => {
+export const listMembers = async (
+  userId: string,
+  userRole: RoleType | undefined,
+  projectId: string,
+) => {
   const project = await prisma.project.findUnique({
     where: { id: projectId },
     include: {

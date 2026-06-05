@@ -3,6 +3,18 @@
 import { prisma } from "../prisma/client.ts";
 import type { RoleType } from "../types/domain.ts";
 
+const isCompleted = (status: string) =>
+  status === "DONE" || status === "COMPLETED";
+
+const normalizePriority = (
+  priority: string,
+): "HIGH" | "MEDIUM" | "LOW" | null => {
+  if (priority === "HIGH" || priority === "URGENT") return "HIGH";
+  if (priority === "MEDIUM") return "MEDIUM";
+  if (priority === "LOW") return "LOW";
+  return null;
+};
+
 const dashboardUserSelect = {
   id: true,
   name: true,
@@ -40,17 +52,17 @@ export const getDashboard = async (userId: string, userRole: RoleType | undefine
       where: { userId, read: false },
     });
     return {
-      projects: { total: 0, active: 0, completed: 0, archived: 0 },
+      projects: { total: 0, active: 0, completed: 0, onHold: 0, archived: 0 },
       tasks: {
         total: 0,
-        byStatus: { TODO: 0, IN_PROGRESS: 0, REVIEW: 0, DONE: 0 },
-        byPriority: { LOW: 0, MEDIUM: 0, HIGH: 0, URGENT: 0 },
+        byStatus: { TODO: 0, IN_PROGRESS: 0, COMPLETED: 0 },
+        byPriority: { LOW: 0, MEDIUM: 0, HIGH: 0 },
         overdue: 0,
         completed: 0,
       },
       mine: {
         assignedOpen: 0,
-        byStatus: { TODO: 0, IN_PROGRESS: 0, REVIEW: 0, DONE: 0 },
+        byStatus: { TODO: 0, IN_PROGRESS: 0, COMPLETED: 0 },
         overdue: 0,
       },
       notifications: { unread: unreadNotifications },
@@ -98,14 +110,14 @@ export const getDashboard = async (userId: string, userRole: RoleType | undefine
       where: {
         projectId: { in: projectIds },
         dueDate: { lt: now },
-        status: { not: "DONE" },
+        status: { notIn: ["DONE", "COMPLETED"] },
       },
     }),
     prisma.task.count({
       where: {
         assigneeId: userId,
         projectId: { in: projectIds },
-        status: { not: "DONE" },
+        status: { notIn: ["DONE", "COMPLETED"] },
       },
     }),
     prisma.task.groupBy({
@@ -118,7 +130,7 @@ export const getDashboard = async (userId: string, userRole: RoleType | undefine
         assigneeId: userId,
         projectId: { in: projectIds },
         dueDate: { lt: now },
-        status: { not: "DONE" },
+        status: { notIn: ["DONE", "COMPLETED"] },
       },
     }),
     prisma.task.findMany({
@@ -138,7 +150,7 @@ export const getDashboard = async (userId: string, userRole: RoleType | undefine
       where: {
         projectId: { in: projectIds },
         dueDate: { lt: now },
-        status: { not: "DONE" },
+        status: { notIn: ["DONE", "COMPLETED"] },
       },
       include: {
         assignee: { select: dashboardUserSelect },
@@ -153,7 +165,7 @@ export const getDashboard = async (userId: string, userRole: RoleType | undefine
       where: {
         projectId: { in: projectIds },
         assigneeId: { not: null },
-        status: { not: "DONE" },
+        status: { notIn: ["DONE", "COMPLETED"] },
       },
       _count: { _all: true },
     }),
@@ -172,22 +184,26 @@ export const getDashboard = async (userId: string, userRole: RoleType | undefine
   ]);
 
   // Compute project counts
-  let totalProjects = 0, activeProjects = 0, completedProjects = 0;
+  let totalProjects = 0, activeProjects = 0, completedProjects = 0, onHoldProjects = 0;
   for (const g of projectCountGroups) {
     totalProjects += g._count._all;
     if (g.status === "ACTIVE") activeProjects = g._count._all;
     if (g.status === "COMPLETED") completedProjects = g._count._all;
+    if (g.status === "ON_HOLD") onHoldProjects = g._count._all;
   }
 
   // Task status breakdown
   const taskStatus: Record<string, number> = {
     TODO: 0,
     IN_PROGRESS: 0,
-    REVIEW: 0,
-    DONE: 0,
+    COMPLETED: 0,
   };
   for (const g of taskStatusGroups) {
-    taskStatus[g.status] = g._count._all;
+    if (g.status === "TODO" || g.status === "IN_PROGRESS") {
+      taskStatus[g.status] = g._count._all;
+    } else if (isCompleted(g.status)) {
+      taskStatus.COMPLETED += g._count._all;
+    }
   }
   const totalTasks = Object.values(taskStatus).reduce((a, b) => a + b, 0);
 
@@ -196,21 +212,24 @@ export const getDashboard = async (userId: string, userRole: RoleType | undefine
     LOW: 0,
     MEDIUM: 0,
     HIGH: 0,
-    URGENT: 0,
   };
   for (const g of taskPriorityGroups) {
-    taskPriority[g.priority] = g._count._all;
+    const p = normalizePriority(g.priority);
+    if (p) taskPriority[p] = g._count._all;
   }
 
   // My assigned by status
   const myTaskStatus: Record<string, number> = {
     TODO: 0,
     IN_PROGRESS: 0,
-    REVIEW: 0,
-    DONE: 0,
+    COMPLETED: 0,
   };
   for (const g of myAssignedGroups) {
-    myTaskStatus[g.status] = g._count._all;
+    if (g.status === "TODO" || g.status === "IN_PROGRESS") {
+      myTaskStatus[g.status] = g._count._all;
+    } else if (isCompleted(g.status)) {
+      myTaskStatus.COMPLETED += g._count._all;
+    }
   }
 
   const workloadUserIds = workloadGroups
@@ -241,6 +260,7 @@ export const getDashboard = async (userId: string, userRole: RoleType | undefine
       total: totalProjects,
       active: activeProjects,
       completed: completedProjects,
+      onHold: onHoldProjects,
       archived: archivedProjects,
     },
     tasks: {
@@ -248,7 +268,7 @@ export const getDashboard = async (userId: string, userRole: RoleType | undefine
       byStatus: taskStatus,
       byPriority: taskPriority,
       overdue: overdueTasks,
-      completed: taskStatus.DONE,
+      completed: taskStatus.COMPLETED,
     },
     mine: {
       assignedOpen: myAssignedOpen,
@@ -299,29 +319,36 @@ export const getProjectAnalytics = async (
         _count: { _all: true },
       }),
       prisma.task.count({ where: { projectId } }),
-      prisma.task.count({ where: { projectId, status: "DONE" } }),
+      prisma.task.count({
+        where: { projectId, status: { in: ["DONE", "COMPLETED"] } },
+      }),
       prisma.task.count({
         where: {
           projectId,
           dueDate: { lt: new Date() },
-          status: { not: "DONE" },
+          status: { notIn: ["DONE", "COMPLETED"] },
         },
       }),
     ]);
 
-  const byStatus = { TODO: 0, IN_PROGRESS: 0, REVIEW: 0, DONE: 0 };
+  const byStatus = { TODO: 0, IN_PROGRESS: 0, COMPLETED: 0 };
   for (const g of statusGroups) {
-    (byStatus as Record<string, number>)[g.status] = g._count._all;
+    if (g.status === "TODO" || g.status === "IN_PROGRESS") {
+      (byStatus as Record<string, number>)[g.status] = g._count._all;
+    } else if (isCompleted(g.status)) {
+      (byStatus as Record<string, number>).COMPLETED += g._count._all;
+    }
   }
-  const byPriority = { LOW: 0, MEDIUM: 0, HIGH: 0, URGENT: 0 };
+  const byPriority = { LOW: 0, MEDIUM: 0, HIGH: 0 };
   for (const g of priorityGroups) {
-    (byPriority as Record<string, number>)[g.priority] = g._count._all;
+    const p = normalizePriority(g.priority);
+    if (p) (byPriority as Record<string, number>)[p] = g._count._all;
   }
 
   // Member workload: tasks per assignee in this project
   const memberWorkload = project.members.map((m) => {
     const open = statusGroups
-      .filter((g) => g.status !== "DONE")
+      .filter((g) => !isCompleted(g.status))
       .reduce((s, g) => s + 0, 0); // placeholder, replaced below
     return {
       user: m.user,
@@ -341,7 +368,7 @@ export const getProjectAnalytics = async (
     if (!g.assigneeId) continue;
     const entry = workloadMap.get(g.assigneeId) ?? { total: 0, open: 0 };
     entry.total += g._count._all;
-    if (g.status !== "DONE") entry.open += g._count._all;
+    if (!isCompleted(g.status)) entry.open += g._count._all;
     workloadMap.set(g.assigneeId, entry);
   }
   const memberStats = project.members.map((m) => {

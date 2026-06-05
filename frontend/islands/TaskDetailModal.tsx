@@ -10,6 +10,7 @@ import type {
   Task,
   TaskStatus,
 } from "../lib/types.ts";
+import { isCompletedStatus } from "../lib/types.ts";
 import {
   Avatar,
   Badge,
@@ -19,6 +20,7 @@ import {
   priorityTone,
   statusTone,
 } from "../components/ui.tsx";
+import { validateDeadline, validateTaskTitle } from "../lib/validation.ts";
 import CommentBox from "./CommentBox.tsx";
 import ConfirmDialog from "./ConfirmDialog.tsx";
 import TaskAttachments from "./TaskAttachments.tsx";
@@ -70,6 +72,37 @@ export default function TaskDetailModal(
   async function save() {
     if (!mayEditTask) return;
     setError("");
+    const titleCheck = validateTaskTitle(
+      title,
+      [task.title],
+      task.title,
+    );
+    if (!titleCheck.ok) {
+      setError(titleCheck.message);
+      toast(titleCheck.message, "danger");
+      return;
+    }
+    const dueCheck = validateDeadline(toIsoDate(dueDate) ?? null, false);
+    if (!dueCheck.ok) {
+      setError(dueCheck.message);
+      toast(dueCheck.message, "danger");
+      return;
+    }
+    if (isCompletedStatus(task.status) && title.trim() !== task.title) {
+      const msg = "Completed tasks cannot be edited.";
+      setError(msg);
+      toast(msg, "danger");
+      return;
+    }
+    if (
+      isCompletedStatus(task.status) &&
+      status !== "COMPLETED"
+    ) {
+      const msg = "Completed tasks cannot be reopened.";
+      setError(msg);
+      toast(msg, "danger");
+      return;
+    }
     try {
       await patch(`/tasks/${task.id}`, {
         title,
@@ -78,7 +111,7 @@ export default function TaskDetailModal(
         priority,
         dueDate: toIsoDate(dueDate),
         labels: labels.split(",").map((l) => l.trim()).filter(Boolean),
-      });
+      }, { loaderMessage: "Saving task changes…" });
       toast("Task saved.", "success");
       onSaved();
     } catch (err) {
@@ -105,8 +138,6 @@ export default function TaskDetailModal(
     ? "var(--muted)"
     : status === "IN_PROGRESS"
     ? "var(--warning)"
-    : status === "REVIEW"
-    ? "var(--accent)"
     : "var(--success)";
 
   return (
@@ -269,7 +300,7 @@ export default function TaskDetailModal(
                   name="priority_high"
                   size={18}
                   style={{
-                    color: priority === "URGENT" || priority === "HIGH"
+                    color: priority === "HIGH"
                       ? "var(--danger)"
                       : "var(--muted)",
                   }}

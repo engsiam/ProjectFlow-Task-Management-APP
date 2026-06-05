@@ -3,6 +3,7 @@
 export const ProjectStatus = {
   ACTIVE: "ACTIVE",
   COMPLETED: "COMPLETED",
+  ON_HOLD: "ON_HOLD",
   ARCHIVED: "ARCHIVED",
 } as const;
 export type ProjectStatusType = typeof ProjectStatus[keyof typeof ProjectStatus];
@@ -20,6 +21,7 @@ export const ROLES: RoleType[] = Object.values(Role);
 export const TaskStatus = {
   TODO: "TODO",
   IN_PROGRESS: "IN_PROGRESS",
+  COMPLETED: "COMPLETED",
   REVIEW: "REVIEW",
   DONE: "DONE",
 } as const;

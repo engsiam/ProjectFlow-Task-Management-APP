@@ -68,7 +68,7 @@ const buildWhere = (base: Record<string, unknown>, query: ListTasksQuery) => {
   }
   if (query.overdue) {
     where.dueDate = { lt: new Date() };
-    where.status = { not: "DONE" };
+    where.status = { notIn: ["DONE", "COMPLETED"] };
   }
   return where;
 };
@@ -207,8 +207,10 @@ export const create = async (userId: string, projectId: string, input: CreateTas
     select: { id: true, name: true, status: true, ownerId: true },
   });
   if (!project) throw new NotFoundError("Project not found");
-  if (project.status === "ARCHIVED") {
-    throw new BadRequestError("Cannot add tasks to an archived project");
+  if (project.status === "ARCHIVED" || project.status === "ON_HOLD") {
+    throw new BadRequestError(
+      `Cannot add tasks to a ${project.status === "ON_HOLD" ? "project on hold" : "archived project"}`,
+    );
   }
   if (project.ownerId !== userId) {
     const member = await prisma.projectMember.findUnique({
@@ -227,6 +229,38 @@ export const create = async (userId: string, projectId: string, input: CreateTas
       throw new BadRequestError("Assignee not found");
     }
   }
+
+  // Cannot create a task already marked as completed
+  if (input.status === "COMPLETED" || input.status === "DONE") {
+    throw new BadRequestError(
+      "A new task cannot start in the completed state",
+    );
+  }
+
+  // Past dates are not allowed for deadlines
+  if (input.dueDate) {
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    if (new Date(input.dueDate) < startOfToday) {
+      throw new BadRequestError("Please select a valid deadline");
+    }
+  }
+
+  // Duplicate title guard inside the same project
+  const trimmedTitle = input.title?.trim();
+  if (trimmedTitle) {
+    const duplicate = await prisma.task.findFirst({
+      where: {
+        projectId,
+        title: { equals: trimmedTitle },
+      },
+      select: { id: true },
+    });
+    if (duplicate) {
+      throw new BadRequestError("This task already exists in the project");
+    }
+  }
+
   // Compute next order in the column
   let order = input.order;
   if (order === undefined) {
@@ -300,7 +334,7 @@ export const update = async (userId: string, taskId: string, input: UpdateTaskIn
   }
 
   // Validate assignee exists and is active
-  if (input.assigneeId) {
+  if (input.assigneeId !== undefined) {
     const assigneeUser = await prisma.user.findUnique({
       where: { id: input.assigneeId },
       select: { id: true, status: true },
@@ -310,9 +344,51 @@ export const update = async (userId: string, taskId: string, input: UpdateTaskIn
     }
   }
 
+  // Completed tasks cannot be reassigned or moved
+  const existingIsDone = existing.status === "DONE" ||
+    existing.status === "COMPLETED";
+  if (existingIsDone) {
+    if (input.assigneeId !== undefined && input.assigneeId !== existing.assigneeId) {
+      throw new BadRequestError("Completed tasks cannot be reassigned");
+    }
+    if (input.status !== undefined && input.status !== "DONE" &&
+        input.status !== "COMPLETED") {
+      throw new BadRequestError("Completed tasks cannot be reopened");
+    }
+  }
+
+  // Past dates are not allowed for deadlines (unless the task is already overdue)
+  if (input.dueDate !== undefined && input.dueDate !== null) {
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    if (new Date(input.dueDate) < startOfToday) {
+      throw new BadRequestError("Please select a valid deadline");
+    }
+  }
+
+  // Duplicate title guard inside the same project
+  if (input.title !== undefined) {
+    const trimmed = input.title.trim();
+    if (trimmed) {
+      const duplicate = await prisma.task.findFirst({
+        where: {
+          projectId: existing.projectId,
+          title: { equals: trimmed },
+          id: { not: taskId },
+        },
+        select: { id: true },
+      });
+      if (duplicate) {
+        throw new BadRequestError("This task already exists in the project");
+      }
+    }
+  }
+
   const isDoneChange = input.status && input.status !== existing.status;
-  const isDoneNow = (input.status ?? existing.status) === "DONE";
-  const wasDoneBefore = existing.status === "DONE";
+  const isDoneNow = (input.status ?? existing.status) === "DONE" ||
+    (input.status ?? existing.status) === "COMPLETED";
+  const wasDoneBefore = existing.status === "DONE" ||
+    existing.status === "COMPLETED";
 
   const task = await prisma.task.update({
     where: { id: taskId },
@@ -414,7 +490,7 @@ export const update = async (userId: string, taskId: string, input: UpdateTaskIn
         userId: existing.creatorId,
         type: "TASK_STATUS",
         title: "Task completed",
-        message: `"${task.title}" was marked as DONE`,
+        message: `"${task.title}" was marked as completed`,
         data: { taskId, projectId: existing.projectId },
       });
     }
@@ -458,9 +534,11 @@ export const move = async (userId: string, taskId: string, input: MoveTaskInput)
     data: {
       status: input.status,
       order: newOrder,
-      completedAt: input.status === "DONE" && existing.status !== "DONE"
+      completedAt: (input.status === "DONE" || input.status === "COMPLETED") &&
+          existing.status !== "DONE" && existing.status !== "COMPLETED"
         ? new Date()
-        : input.status !== "DONE" && existing.status === "DONE"
+        : input.status !== "DONE" && input.status !== "COMPLETED" &&
+          (existing.status === "DONE" || existing.status === "COMPLETED")
         ? null
         : undefined,
     },
