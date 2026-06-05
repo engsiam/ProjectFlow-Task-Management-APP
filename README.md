@@ -351,17 +351,28 @@ ProjectFlow is **production-verified** for [Deno Deploy](https://deno.com/deploy
    | **Entrypoint** | `src/server.ts` |
    | **Framework Preset** | *No Preset* |
    | **Runtime** | Deno Deploy (Deno 2.x) |
+   | **Install Command** | *(leave empty — Deno Deploy runs `deno install` automatically)* |
+   | **Build Command** | `deno task build:deploy` — runs `prisma generate` so the platform-correct Prisma engine binary is produced for the Linux Deploy runtime (Deno Deploy auto-runs `deno install`) |
+   | **Health Check Path** | `/readyz` |
 
-4. Add environment variables in **Settings → Environment Variables** (see [Backend env](#-environment-variables) above).
+   > ⚠️ **Why the Build Command is required:** the Prisma generated client at `backend/src/generated/prisma/` contains a *platform-specific* engine binary (`.dll.node` on Windows, `.so.node` on Linux). It's gitignored on purpose. Without a Build Command, Deploy clones the repo without the engine and the app crashes on boot with `MODULE_NOT_FOUND`.
+
+4. Add environment variables in **Settings → Environment Variables** (see [Backend env](#-environment-variables) above). At minimum:
+   - `DATABASE_URL` — MongoDB Atlas connection string
+   - `JWT_ACCESS_SECRET` — 32+ random bytes
+   - `JWT_REFRESH_SECRET` — 32+ random bytes
 5. Click **Deploy** → your API is live at `https://<project>.deno.dev` 🎉
 
 ### ✅ Pre-flight checklist
 
-- [ ] `deno task prisma:generate` was run locally
-- [ ] `backend/src/generated/prisma/**` is **committed** (required for Prisma to load on Deploy)
+- [ ] `deno task prisma:generate` runs cleanly **locally**
+- [ ] **`src/generated/` stays gitignored** — the Build Command regenerates it for Linux
+- [ ] **Build Command is set** to `deno task build:deploy` in Deploy settings
+- [ ] **Health Check Path is set** to `/readyz` in Deploy settings
 - [ ] `DATABASE_URL` points to MongoDB Atlas (Deploy cannot reach `localhost`)
 - [ ] `FRONTEND_URL` matches your deployed frontend's origin
 - [ ] `JWT_*_SECRET` is set to strong random values
+- [ ] First deploy: check Deploy logs for `[server] Deploy runtime: skipping eager DB connect; /readyz will validate.`
 
 ### 🩺 Health & warmup
 

@@ -9,7 +9,8 @@
     "prisma:push": "deno run -A npm:prisma@5.22.0 db push",
     "prisma:studio": "deno run -A npm:prisma@5.22.0 studio",
     "seed": "deno task prisma:ensure && deno run --unstable-detect-cjs -A prisma/seed.ts",
-    "typecheck": "deno check src/**/*.ts prisma/seed.ts"
+    "typecheck": "deno check src/**/*.ts prisma/seed.ts",
+    "build:deploy": "deno task prisma:generate"
   },
   "imports": {
     "@prisma/client": "npm:@prisma/client@5.22.0",

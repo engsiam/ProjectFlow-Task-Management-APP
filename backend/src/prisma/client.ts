@@ -5,8 +5,11 @@
 // instead of Deno's internal npm package cache.
 //
 // Deno Deploy support: `node:module.createRequire` is available in the Deploy
-// runtime. The generated client must be committed to the repo (run
-// `deno task prisma:generate` locally) so the import resolves at boot.
+// runtime. The Prisma engine binary inside `src/generated/prisma/` is
+// PLATFORM-SPECIFIC (a Windows DLL locally, a Linux .so.node on Deploy), so
+// the generated folder must be regenerated on the target. We do this via the
+// Deploy "Build Command" which runs `deno task prisma:generate` before
+// the entry point boots.
 
 import { createRequire } from "node:module";
 import type { PrismaClient as PrismaClientType } from "npm:@prisma/client@5.22.0";
@@ -27,7 +30,7 @@ try {
     "[Prisma] Failed to load generated client at src/generated/prisma/index.js.",
   );
   console.error(
-    "[Prisma] Run `deno task prisma:generate` and commit the generated files.",
+    "[Prisma] Run `deno task prisma:generate` locally, AND on Deno Deploy set the Build Command to `deno task prisma:generate` so the platform-correct engine binary is generated for the target runtime.",
   );
   throw err;
 }
