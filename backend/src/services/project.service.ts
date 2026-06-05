@@ -167,7 +167,6 @@ export const getById = async (
         },
         orderBy: { joinedAt: "asc" },
       },
-      _count: { select: { tasks: true, invitations: true } },
     },
   });
   if (!project) throw new NotFoundError("Project not found");
@@ -179,6 +178,9 @@ export const getById = async (
     throw new ForbiddenError("You are not a member of this project");
   }
 
+  // Single groupBy gives us per-status counts + overall total in one query,
+  // using the existing {projectId, status, order} index. Avoids a full
+  // collection scan that a `_count` include would trigger on MongoDB.
   const taskStatusGroups = await prisma.task.groupBy({
     by: ["status"],
     where: { projectId },
@@ -325,10 +327,20 @@ export const listMembers = async (
 ) => {
   const project = await prisma.project.findUnique({
     where: { id: projectId },
-    include: {
+    select: {
+      id: true,
+      ownerId: true,
+      createdAt: true,
       members: {
-        include: {
-          user: { select: { id: true, name: true, username: true, email: true, avatar: true } },
+        select: {
+          id: true,
+          projectId: true,
+          userId: true,
+          role: true,
+          joinedAt: true,
+          user: {
+            select: { id: true, name: true, username: true, email: true, avatar: true },
+          },
         },
         orderBy: { joinedAt: "asc" },
       },

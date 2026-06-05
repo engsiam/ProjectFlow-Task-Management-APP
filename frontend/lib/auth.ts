@@ -1,4 +1,6 @@
 import type { Role, User } from "./types.ts";
+import { post } from "./api.ts";
+import { setNavBypass } from "./loader.ts";
 
 const ACCESS_TOKEN_KEY = "projectflow.accessToken";
 const REFRESH_TOKEN_KEY = "projectflow.refreshToken";
@@ -62,6 +64,19 @@ export function clearSession() {
   localStorage.removeItem(ACCESS_TOKEN_KEY);
   localStorage.removeItem(REFRESH_TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
+}
+
+export async function logout(redirectTo = "/login") {
+  setNavBypass(true);
+  clearSession();
+  try {
+    await post("/auth/logout", undefined, { skipLoader: true, silent: true });
+  } catch {
+    // ignore — we are logging out either way
+  }
+  if (typeof location !== "undefined") {
+    location.href = redirectTo;
+  }
 }
 
 export function requireClientAuth() {

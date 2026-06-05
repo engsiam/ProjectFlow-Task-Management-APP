@@ -58,8 +58,10 @@ export default function ProjectsClient() {
   const mayCreate = canCreateProject(currentUserRole);
 
   const activeCount = projects.filter((p) => p.status === "ACTIVE").length;
+  const onHoldCount = projects.filter((p) => p.status === "ON_HOLD").length;
   const completedCount =
     projects.filter((p) => p.status === "COMPLETED").length;
+  const archivedCount = projects.filter((p) => p.status === "ARCHIVED").length;
 
   return (
     <div class="pc-page">
@@ -93,11 +95,24 @@ export default function ProjectsClient() {
           {projects.length > 0 && (
             <div class="pc-page-counts">
               <span class="pc-count-badge">{activeCount} Active</span>
+              {onHoldCount > 0 && (
+                <span class="pc-count-badge pc-count-badge--hold">
+                  {onHoldCount} On Hold
+                </span>
+              )}
               {completedCount > 0 && (
                 <span class="pc-count-badge pc-count-badge--done">
                   {completedCount} Completed
                 </span>
               )}
+              {archivedCount > 0 && (
+                <span class="pc-count-badge pc-count-badge--archived">
+                  {archivedCount} Archived
+                </span>
+              )}
+              <span class="pc-count-badge pc-count-badge--total">
+                {projects.length} Total
+              </span>
             </div>
           )}
           {mayCreate && (

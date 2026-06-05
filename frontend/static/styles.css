@@ -2135,6 +2135,21 @@ a {
   font-family: "JetBrains Mono", ui-monospace, monospace;
 }
 
+.field-error {
+  color: var(--danger);
+  font-size: 12px;
+  line-height: 1.35;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+.field-error::before {
+  content: "⚠";
+  font-size: 11px;
+  flex-shrink: 0;
+  line-height: 1.4;
+}
+
 .badge {
   display: inline-flex;
   align-items: center;
@@ -3383,6 +3398,22 @@ a {
 .pc-count-badge--done {
   background: color-mix(in srgb, var(--success), transparent 85%);
   color: var(--success);
+}
+
+.pc-count-badge--hold {
+  background: color-mix(in srgb, var(--warning), transparent 85%);
+  color: var(--warning);
+}
+
+.pc-count-badge--archived {
+  background: color-mix(in srgb, var(--muted), transparent 80%);
+  color: var(--muted);
+}
+
+.pc-count-badge--total {
+  background: color-mix(in srgb, var(--text), transparent 88%);
+  color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--text), transparent 78%);
 }
 
 .pc-skeleton-grid {

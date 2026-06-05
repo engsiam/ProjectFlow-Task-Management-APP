@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState } from "preact/hooks";
-import { clearSession, getCurrentUser } from "../lib/auth.ts";
-import { post } from "../lib/api.ts";
-import { toast } from "../lib/toast.ts";
+import { getCurrentUser, logout } from "../lib/auth.ts";
 import { Avatar, Icon } from "../components/ui.tsx";
 import { roleLabel } from "../lib/roles.ts";
 import type { User } from "../lib/types.ts";
@@ -32,12 +30,8 @@ export default function ShellUser() {
     };
   }, []);
 
-  function logout() {
-    toast("Logged out.", "success");
-    clearSession();
-    // Fire-and-forget: don't wait for server response
-    post("/auth/logout").catch(() => null);
-    location.href = "/login";
+  function handleLogout() {
+    logout("/login");
   }
 
   return (
@@ -83,7 +77,7 @@ export default function ShellUser() {
             type="button"
             class="shell-user-menu-link shell-user-menu-logout"
             role="menuitem"
-            onClick={logout}
+            onClick={handleLogout}
           >
             <Icon name="logout" size={18} /> Logout
           </button>

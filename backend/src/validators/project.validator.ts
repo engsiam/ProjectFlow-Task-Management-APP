@@ -5,13 +5,17 @@ import { PROJECT_STATUSES, ROLES } from "../types/domain.ts";
 
 export const createProjectSchema = z.object({
   name: z.string().min(1, "Project name is required").max(100).trim(),
-  description: z.string().max(2000).nullable().optional(),
+  description: z
+    .string()
+    .min(1, "Description is required")
+    .max(2000)
+    .trim(),
   color: z
     .string()
     .regex(/^#([0-9a-fA-F]{6})$/, "Color must be a hex code like #6366f1")
     .optional(),
-  startDate: z.string().datetime().nullable().optional(),
-  deadline: z.string().datetime().nullable().optional(),
+  startDate: z.string().datetime("Start date is required"),
+  deadline: z.string().datetime("Deadline is required"),
 });
 
 export const updateProjectSchema = z.object({

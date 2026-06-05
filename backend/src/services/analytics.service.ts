@@ -3,8 +3,7 @@
 import { prisma } from "../prisma/client.ts";
 import type { RoleType } from "../types/domain.ts";
 
-const isCompleted = (status: string) =>
-  status === "DONE" || status === "COMPLETED";
+const isCompleted = (status: string) => status === "DONE" || status === "COMPLETED";
 
 const normalizePriority = (
   priority: string,
@@ -34,15 +33,13 @@ export const getDashboard = async (userId: string, userRole: RoleType | undefine
   // Get project IDs first (required for all subsequent queries).
   // Global VIEWER accounts see every project in the workspace.
   const myProjects = await prisma.project.findMany({
-    where: userRole === "VIEWER"
-      ? { status: { in: ["ACTIVE", "COMPLETED"] } }
-      : {
-        OR: [
-          { ownerId: userId },
-          { members: { some: { userId } } },
-        ],
-        status: { in: ["ACTIVE", "COMPLETED"] },
-      },
+    where: userRole === "VIEWER" ? { status: { in: ["ACTIVE", "COMPLETED"] } } : {
+      OR: [
+        { ownerId: userId },
+        { members: { some: { userId } } },
+      ],
+      status: { in: ["ACTIVE", "COMPLETED"] },
+    },
     select: { id: true },
   });
   const projectIds = myProjects.map((p) => p.id);
@@ -138,10 +135,15 @@ export const getDashboard = async (userId: string, userRole: RoleType | undefine
         projectId: { in: projectIds },
         OR: [{ assigneeId: userId }, { creatorId: userId }],
       },
-      include: {
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        priority: true,
+        dueDate: true,
+        updatedAt: true,
         assignee: { select: dashboardUserSelect },
         project: { select: dashboardProjectSelect },
-        _count: { select: { comments: true } },
       },
       orderBy: { updatedAt: "desc" },
       take: 8,
@@ -152,10 +154,15 @@ export const getDashboard = async (userId: string, userRole: RoleType | undefine
         dueDate: { lt: now },
         status: { notIn: ["DONE", "COMPLETED"] },
       },
-      include: {
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        priority: true,
+        dueDate: true,
+        updatedAt: true,
         assignee: { select: dashboardUserSelect },
         project: { select: dashboardProjectSelect },
-        _count: { select: { comments: true } },
       },
       orderBy: { dueDate: "asc" },
       take: 8,
@@ -172,16 +179,26 @@ export const getDashboard = async (userId: string, userRole: RoleType | undefine
     prisma.notification.count({ where: { userId, read: false } }),
     prisma.activityLog.findMany({
       where: { projectId: { in: projectIds } },
-      include: {
-        actor: {
-          select: { id: true, name: true, username: true, avatar: true },
-        },
-      },
       orderBy: { createdAt: "desc" },
       take: 10,
     }),
     prisma.project.count({ where: { ownerId: userId, status: "ARCHIVED" } }),
   ]);
+  // Bulk-fetch recent activity actors (single IN query, no $lookup per row).
+  const recentActivityActorIds = [...new Set(recentActivity.map((a) => a.actorId))];
+  const recentActivityActors = recentActivityActorIds.length
+    ? await prisma.user.findMany({
+      where: { id: { in: recentActivityActorIds } },
+      select: { id: true, name: true, username: true, avatar: true },
+    })
+    : [];
+  const recentActorById = new Map(
+    recentActivityActors.map((u) => [u.id, u]),
+  );
+  const recentActivityEnriched = recentActivity.map((a) => ({
+    ...a,
+    actor: recentActorById.get(a.actorId) ?? null,
+  }));
 
   // Compute project counts
   let totalProjects = 0, activeProjects = 0, completedProjects = 0, onHoldProjects = 0;
@@ -276,7 +293,7 @@ export const getDashboard = async (userId: string, userRole: RoleType | undefine
       overdue: myOverdue,
     },
     notifications: { unread: unreadNotifications },
-    recentActivity,
+    recentActivity: recentActivityEnriched,
     myAssignedTasks: myTaskItems,
     overdueTasks: overdueTaskItems,
     memberWorkload,

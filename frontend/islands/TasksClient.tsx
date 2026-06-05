@@ -383,6 +383,17 @@ export default function TasksClient() {
               </div>
             );
           })}
+          <div
+            class="panel"
+            style={{
+              padding: "14px",
+              textAlign: "center",
+              border: "1px solid var(--border)",
+            }}
+          >
+            <p class="mono page-kicker">Total</p>
+            <strong style={{ fontSize: "24px" }}>{tasks.length}</strong>
+          </div>
         </section>
       )}
       <section

@@ -39,6 +39,7 @@ import {
 import KanbanBoard from "./KanbanBoard.tsx";
 import TaskCreateModal from "./TaskCreateModal.tsx";
 import InviteMemberModal from "./InviteMemberModal.tsx";
+import ProjectEditModal from "./ProjectEditModal.tsx";
 import ProjectAnalyticsTab from "./ProjectAnalyticsTab.tsx";
 
 type Tab =
@@ -92,6 +93,7 @@ export default function ProjectDetailClient(
   const [loading, setLoading] = useState(true);
   const [taskOpen, setTaskOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [statusSaving, setStatusSaving] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
@@ -311,6 +313,11 @@ export default function ProjectDetailClient(
             )}
           </div>
           <div class="pd-header-actions">
+            {mayEditProject && project.status !== "ARCHIVED" && (
+              <Button onClick={() => setEditOpen(true)}>
+                <Icon name="edit" size={16} /> Edit
+              </Button>
+            )}
             {mayInviteMembers && (
               <Button onClick={() => setInviteOpen(true)}>
                 <Icon name="person_add" size={16} /> Invite
@@ -703,6 +710,16 @@ export default function ProjectDetailClient(
           projectId={project.id}
           onClose={() => setInviteOpen(false)}
           onInvited={() => {
+            load();
+          }}
+        />
+      )}
+      {editOpen && (
+        <ProjectEditModal
+          project={project}
+          onClose={() => setEditOpen(false)}
+          onSaved={(next) => {
+            setProject(next);
             load();
           }}
         />

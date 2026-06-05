@@ -155,6 +155,8 @@ model Task {
   @@index([projectId, assigneeId])
   @@index([assigneeId])
   @@index([dueDate])
+  @@index([projectId, updatedAt])
+  @@index([projectId, createdAt])
 }
 
 model Attachment {

@@ -1,8 +1,9 @@
 import { useState } from "preact/hooks";
-import { post } from "../lib/api.ts";
+import { patch } from "../lib/api.ts";
 import { toast } from "../lib/toast.ts";
 import { Button, Icon } from "../components/ui.tsx";
 import { validateProjectDates, validateProjectName } from "../lib/validation.ts";
+import type { Project, ProjectStatus } from "../lib/types.ts";
 
 type FormErrors = Partial<
   Record<"name" | "description" | "startDate" | "deadline", string>
@@ -14,13 +15,38 @@ function inputStyle(hasError: boolean) {
     : undefined;
 }
 
-export default function ProjectCreateModal(
-  { onClose, onCreated }: { onClose: () => void; onCreated: () => void },
+function toDateInput(value?: string | null): string {
+  if (!value) return "";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toISOString().slice(0, 10);
+}
+
+function toIsoStart(value: string): string {
+  return new Date(`${value}T00:00:00.000Z`).toISOString();
+}
+function toIsoEnd(value: string): string {
+  return new Date(`${value}T23:59:59.000Z`).toISOString();
+}
+
+const STATUS_OPTIONS: { value: ProjectStatus; label: string }[] = [
+  { value: "ACTIVE", label: "Active" },
+  { value: "COMPLETED", label: "Completed" },
+  { value: "ON_HOLD", label: "On Hold" },
+];
+
+export default function ProjectEditModal(
+  { project, onClose, onSaved }: {
+    project: Project;
+    onClose: () => void;
+    onSaved: (next: Project) => void;
+  },
 ) {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [deadline, setDeadline] = useState("");
+  const [name, setName] = useState(project.name ?? "");
+  const [description, setDescription] = useState(project.description ?? "");
+  const [status, setStatus] = useState<ProjectStatus>(project.status);
+  const [startDate, setStartDate] = useState(toDateInput(project.startDate));
+  const [deadline, setDeadline] = useState(toDateInput(project.deadline));
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
 
@@ -41,9 +67,7 @@ export default function ProjectCreateModal(
     } else if (description.trim().length > 2000) {
       next.description = "Description must be 2000 characters or fewer.";
     }
-    if (!startDate) {
-      next.startDate = "Start date is required.";
-    }
+    if (!startDate) next.startDate = "Start date is required.";
     if (!deadline) {
       next.deadline = "Deadline is required.";
     } else if (startDate) {
@@ -64,20 +88,20 @@ export default function ProjectCreateModal(
     setLoading(true);
     setErrors({});
     try {
-      await post("/projects", {
+      const updated = await patch<Project>(`/projects/${project.id}`, {
         name: name.trim(),
         description: description.trim(),
-        status: "ACTIVE",
-        startDate: new Date(`${startDate}T00:00:00.000Z`).toISOString(),
-        deadline: new Date(`${deadline}T23:59:59.000Z`).toISOString(),
-      }, { loaderMessage: "Creating project…" });
-      toast(`"${name.trim()}" created!`, "success");
-      onCreated();
+        status,
+        startDate: toIsoStart(startDate),
+        deadline: toIsoEnd(deadline),
+      }, { loaderMessage: "Saving project changes…" });
+      toast("Project updated.", "success");
+      onSaved(updated);
       onClose();
     } catch (err) {
       const msg = err instanceof Error
         ? err.message
-        : "Project could not be created.";
+        : "Project could not be updated.";
       toast(msg, "danger");
       setErrors({ name: msg });
     } finally {
@@ -101,7 +125,7 @@ export default function ProjectCreateModal(
             marginBottom: "16px",
           }}
         >
-          <h2 class="headline" style={{ margin: 0 }}>Create Project</h2>
+          <h2 class="headline" style={{ margin: 0 }}>Edit Project</h2>
           <button
             type="button"
             class="btn icon-btn"
@@ -112,60 +136,71 @@ export default function ProjectCreateModal(
           </button>
         </div>
 
-        <label class="label" for="pf-project-name">
+        <label class="label" for="pf-edit-name">
           Project name <span style="color:var(--danger)">*</span>
         </label>
         <input
-          id="pf-project-name"
+          id="pf-edit-name"
           class="input"
           value={name}
           onInput={(e) => {
             setName(e.currentTarget.value);
             clearError("name");
           }}
-          placeholder="e.g. Q4 Marketing Launch"
           aria-invalid={Boolean(errors.name)}
-          aria-describedby={errors.name ? "pf-project-name-err" : undefined}
+          aria-describedby={errors.name ? "pf-edit-name-err" : undefined}
           style={inputStyle(Boolean(errors.name))}
         />
         {errors.name && (
           <p
-            id="pf-project-name-err"
-            class="field-error"
+            id="pf-edit-name-err"
             style="color:var(--danger);font-size:12px;margin:4px 0 0"
           >
             {errors.name}
           </p>
         )}
 
-        <label class="label" for="pf-project-desc" style={{ marginTop: "14px" }}>
+        <label class="label" for="pf-edit-desc" style={{ marginTop: "14px" }}>
           Description <span style="color:var(--danger)">*</span>
         </label>
         <textarea
-          id="pf-project-desc"
+          id="pf-edit-desc"
           class="textarea"
           value={description}
           onInput={(e) => {
             setDescription(e.currentTarget.value);
             clearError("description");
           }}
-          placeholder="What is this project about?"
           rows={3}
           aria-invalid={Boolean(errors.description)}
           aria-describedby={errors.description
-            ? "pf-project-desc-err"
+            ? "pf-edit-desc-err"
             : undefined}
           style={inputStyle(Boolean(errors.description))}
         />
         {errors.description && (
           <p
-            id="pf-project-desc-err"
-            class="field-error"
+            id="pf-edit-desc-err"
             style="color:var(--danger);font-size:12px;margin:4px 0 0"
           >
             {errors.description}
           </p>
         )}
+
+        <label class="label" for="pf-edit-status" style={{ marginTop: "14px" }}>
+          Status
+        </label>
+        <select
+          id="pf-edit-status"
+          class="select"
+          value={status}
+          onChange={(e) =>
+            setStatus((e.currentTarget as HTMLSelectElement).value as ProjectStatus)}
+        >
+          {STATUS_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
 
         <div
           style={{
@@ -176,11 +211,11 @@ export default function ProjectCreateModal(
           }}
         >
           <div>
-            <label class="label" for="pf-project-start">
+            <label class="label" for="pf-edit-start">
               Start date <span style="color:var(--danger)">*</span>
             </label>
             <input
-              id="pf-project-start"
+              id="pf-edit-start"
               class="input"
               type="date"
               value={startDate}
@@ -190,14 +225,13 @@ export default function ProjectCreateModal(
               }}
               aria-invalid={Boolean(errors.startDate)}
               aria-describedby={errors.startDate
-                ? "pf-project-start-err"
+                ? "pf-edit-start-err"
                 : undefined}
               style={inputStyle(Boolean(errors.startDate))}
             />
             {errors.startDate && (
               <p
-                id="pf-project-start-err"
-                class="field-error"
+                id="pf-edit-start-err"
                 style="color:var(--danger);font-size:12px;margin:4px 0 0"
               >
                 {errors.startDate}
@@ -205,11 +239,11 @@ export default function ProjectCreateModal(
             )}
           </div>
           <div>
-            <label class="label" for="pf-project-deadline">
+            <label class="label" for="pf-edit-deadline">
               Deadline <span style="color:var(--danger)">*</span>
             </label>
             <input
-              id="pf-project-deadline"
+              id="pf-edit-deadline"
               class="input"
               type="date"
               value={deadline}
@@ -219,14 +253,13 @@ export default function ProjectCreateModal(
               }}
               aria-invalid={Boolean(errors.deadline)}
               aria-describedby={errors.deadline
-                ? "pf-project-deadline-err"
+                ? "pf-edit-deadline-err"
                 : undefined}
               style={inputStyle(Boolean(errors.deadline))}
             />
             {errors.deadline && (
               <p
-                id="pf-project-deadline-err"
-                class="field-error"
+                id="pf-edit-deadline-err"
                 style="color:var(--danger);font-size:12px;margin:4px 0 0"
               >
                 {errors.deadline}
@@ -245,7 +278,7 @@ export default function ProjectCreateModal(
         >
           <Button onClick={onClose}>Cancel</Button>
           <Button variant="primary" type="submit" disabled={loading}>
-            {loading ? "Creating..." : "Create project"}
+            {loading ? "Saving..." : "Save changes"}
           </Button>
         </div>
       </form>

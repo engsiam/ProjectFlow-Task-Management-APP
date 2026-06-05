@@ -1,5 +1,10 @@
 import { useEffect } from "preact/hooks";
-import { LOADER_EVENT_NAME, type LoaderState } from "../lib/loader.ts";
+import {
+  isNavBypassed,
+  LOADER_EVENT_NAME,
+  NAV_BYPASS_EVENT_NAME,
+  type LoaderState,
+} from "../lib/loader.ts";
 import { toast } from "../lib/toast.ts";
 
 const isModifiedEvent = (event: MouseEvent) =>
@@ -29,6 +34,7 @@ export default function NavigationGuard() {
     function attachBeforeUnload() {
       if (beforeUnloadHandler) return;
       beforeUnloadHandler = (e: BeforeUnloadEvent) => {
+        if (isNavBypassed()) return undefined;
         e.preventDefault();
         e.returnValue =
           "An operation is in progress. Are you sure you want to leave?";
@@ -91,6 +97,7 @@ export default function NavigationGuard() {
 
     function onClick(event: MouseEvent) {
       if (!isLoading) return;
+      if (isNavBypassed()) return;
       if (isModifiedEvent(event)) return;
       if (event.button !== 0) return;
       if (event.defaultPrevented) return;
@@ -126,11 +133,13 @@ export default function NavigationGuard() {
 
     function onPopState() {
       if (!isLoading) return;
+      if (isNavBypassed()) return;
       pinHistory();
     }
 
     function onKeyDown(event: KeyboardEvent) {
       if (!isLoading) return;
+      if (isNavBypassed()) return;
       const target = event.target as HTMLElement | null;
       const tag = target?.tagName;
       const isEditable =
@@ -150,13 +159,23 @@ export default function NavigationGuard() {
       }
     }
 
+    function onNavBypass() {
+      // When bypass flips off while loader is still active, re-arm
+      // the guard. When bypass flips on, the existing handlers
+      // will short-circuit on their own checks.
+      if (!isLoading) return;
+      if (!isNavBypassed()) attachBeforeUnload();
+    }
+
     addEventListener(LOADER_EVENT_NAME, onLoader);
+    addEventListener(NAV_BYPASS_EVENT_NAME, onNavBypass);
     addEventListener("click", onClick, true);
     addEventListener("popstate", onPopState);
     addEventListener("keydown", onKeyDown);
 
     return () => {
       removeEventListener(LOADER_EVENT_NAME, onLoader);
+      removeEventListener(NAV_BYPASS_EVENT_NAME, onNavBypass);
       removeEventListener("click", onClick, true);
       removeEventListener("popstate", onPopState);
       removeEventListener("keydown", onKeyDown);

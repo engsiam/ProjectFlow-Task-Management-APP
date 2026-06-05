@@ -42,17 +42,28 @@ export const listProjectActivity = async (
   const [items, total] = await Promise.all([
     prisma.activityLog.findMany({
       where: { projectId },
-      include: {
-        actor: { select: { id: true, name: true, username: true, avatar: true } },
-      },
       orderBy: { createdAt: "desc" },
       skip,
       take: limit,
     }),
     prisma.activityLog.count({ where: { projectId } }),
   ]);
+  // Bulk-fetch the unique actors (one IN query) instead of an N+1 $lookup
+  // per row. The `[projectId, createdAt]` index makes the findMany fast.
+  const actorIds = [...new Set(items.map((i) => i.actorId))];
+  const actors = actorIds.length
+    ? await prisma.user.findMany({
+      where: { id: { in: actorIds } },
+      select: { id: true, name: true, username: true, avatar: true },
+    })
+    : [];
+  const actorById = new Map(actors.map((a) => [a.id, a]));
+  const enriched = items.map((item) => ({
+    ...item,
+    actor: actorById.get(item.actorId) ?? null,
+  }));
   return {
-    items,
+    items: enriched,
     pagination: {
       page,
       limit,

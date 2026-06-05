@@ -8,11 +8,13 @@ export type LoaderState = {
 };
 
 const LOADER_EVENT = "projectflow:loader";
+const NAV_BYPASS_EVENT = "projectflow:nav-bypass";
 
 let count = 0;
 let message = "Loading...";
 let tone: LoaderTone = "default";
 const stack: { message: string; tone: LoaderTone }[] = [];
+let navBypass = false;
 
 function emit() {
   const top = stack[stack.length - 1];
@@ -67,6 +69,21 @@ export function getLoaderState(): LoaderState {
 }
 
 export const LOADER_EVENT_NAME = LOADER_EVENT;
+export const NAV_BYPASS_EVENT_NAME = NAV_BYPASS_EVENT;
+
+export function isNavBypassed(): boolean {
+  return navBypass;
+}
+
+export function setNavBypass(value: boolean) {
+  if (navBypass === value) return;
+  navBypass = value;
+  if (typeof globalThis.dispatchEvent === "function") {
+    globalThis.dispatchEvent(
+      new CustomEvent<boolean>(NAV_BYPASS_EVENT, { detail: value }),
+    );
+  }
+}
 
 export async function withLoader<T>(
   task: Promise<T>,

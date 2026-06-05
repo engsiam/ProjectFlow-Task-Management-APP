@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "preact/hooks";
-import { get, patch, post } from "../lib/api.ts";
+import { get, patch } from "../lib/api.ts";
 import {
-  clearSession,
   getAccessToken,
   getCurrentUser,
+  logout,
   saveSession,
 } from "../lib/auth.ts";
 import { API_BASE_URL, SWAGGER_URL } from "../lib/constants.ts";
@@ -108,11 +108,8 @@ export default function SettingsClient() {
     }
   }
 
-  async function logout() {
-    toast("Logged out.", "success");
-    clearSession();
-    post("/auth/logout").catch(() => null);
-    location.href = "/login";
+  async function handleLogout() {
+    await logout("/login");
   }
 
   if (loading) return <Skeleton height={360} />;
@@ -230,7 +227,7 @@ export default function SettingsClient() {
           >
             <Icon name="code" size={18} /> Swagger docs
           </a>
-          <Button variant="danger" onClick={logout}>
+          <Button variant="danger" onClick={handleLogout}>
             <Icon name="logout" size={18} /> Logout
           </Button>
         </div>

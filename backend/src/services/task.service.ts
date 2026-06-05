@@ -28,12 +28,39 @@ const taskProjectSelect = {
   ownerId: true,
 } as const;
 
+// NOTE: do not put `_count` (or any per-row relation count) in this include.
+// MongoDB's per-row count is N+1 and dominates latency for project task
+// lists. Use `getCommentCounts(taskIds)` to attach `commentCount` in bulk
+// (single groupBy query) and add it to the response items in the caller.
 const taskInclude = {
   assignee: { select: taskUserSelect },
   creator: { select: taskUserSelect },
   project: { select: taskProjectSelect },
-  _count: { select: { comments: true } },
 } as const;
+
+async function getCommentCounts(taskIds: string[]): Promise<Map<string, number>> {
+  const map = new Map<string, number>();
+  if (taskIds.length === 0) return map;
+  const groups = await prisma.comment.groupBy({
+    by: ["taskId"],
+    where: { taskId: { in: taskIds } },
+    _count: { _all: true },
+  });
+  for (const g of groups) {
+    map.set(g.taskId, g._count._all);
+  }
+  return map;
+}
+
+function attachCommentCounts<T extends { id: string }>(
+  items: T[],
+  counts: Map<string, number>,
+): (T & { commentCount: number })[] {
+  return items.map((item) => ({
+    ...item,
+    commentCount: counts.get(item.id) ?? 0,
+  }));
+}
 
 const sortableTaskFields = new Set([
   "createdAt",
@@ -136,9 +163,10 @@ export const listForUser = async (
       take: query.limit,
     }),
   ]);
+  const counts = await getCommentCounts(items.map((t) => t.id));
 
   return {
-    items,
+    items: attachCommentCounts(items, counts),
     pagination: paginate(query.page, query.limit, total),
   };
 };
@@ -160,9 +188,10 @@ export const listForProject = async (
       take: query.limit,
     }),
   ]);
+  const counts = await getCommentCounts(items.map((t) => t.id));
 
   return {
-    items,
+    items: attachCommentCounts(items, counts),
     pagination: paginate(query.page, query.limit, total),
   };
 };
@@ -178,10 +207,16 @@ export const getById = async (
       assignee: { select: { id: true, name: true, username: true, avatar: true } },
       creator: { select: { id: true, name: true, username: true, avatar: true } },
       project: { select: { id: true, name: true, color: true, status: true, ownerId: true } },
-      _count: { select: { comments: true } },
     },
   });
   if (!task) throw new NotFoundError("Task not found");
+  // Cheap single-row comment count via a focused aggregation.
+  const commentGroups = await prisma.comment.groupBy({
+    by: ["taskId"],
+    where: { taskId },
+    _count: { _all: true },
+  });
+  (task as Record<string, unknown>).commentCount = commentGroups[0]?._count._all ?? 0;
   // Inline access check to avoid extra query — project already loaded
   if (task.project.ownerId !== userId) {
     if (userRole === "VIEWER") {
@@ -209,7 +244,9 @@ export const create = async (userId: string, projectId: string, input: CreateTas
   if (!project) throw new NotFoundError("Project not found");
   if (project.status === "ARCHIVED" || project.status === "ON_HOLD") {
     throw new BadRequestError(
-      `Cannot add tasks to a ${project.status === "ON_HOLD" ? "project on hold" : "archived project"}`,
+      `Cannot add tasks to a ${
+        project.status === "ON_HOLD" ? "project on hold" : "archived project"
+      }`,
     );
   }
   if (project.ownerId !== userId) {
@@ -218,7 +255,9 @@ export const create = async (userId: string, projectId: string, input: CreateTas
       select: { id: true, role: true },
     });
     if (!member) throw new ForbiddenError("You are not a member of this project");
-    if (!isRoleAtLeast(member.role as RoleType, "TEAM_MEMBER")) throw new ForbiddenError("Requires role Team Member or higher");
+    if (!isRoleAtLeast(member.role as RoleType, "TEAM_MEMBER")) {
+      throw new ForbiddenError("Requires role Team Member or higher");
+    }
   }
   if (input.assigneeId) {
     const assigneeUser = await prisma.user.findUnique({
@@ -322,7 +361,9 @@ export const update = async (userId: string, taskId: string, input: UpdateTaskIn
       select: { id: true, role: true },
     });
     if (!member) throw new ForbiddenError("You are not a member of this project");
-    if (!isRoleAtLeast(member.role as RoleType, "TEAM_MEMBER")) throw new ForbiddenError("Requires role Team Member or higher");
+    if (!isRoleAtLeast(member.role as RoleType, "TEAM_MEMBER")) {
+      throw new ForbiddenError("Requires role Team Member or higher");
+    }
     // Members below PROJECT_MANAGER can only update tasks they own or are assigned to
     if (
       !isRoleAtLeast(member.role as RoleType, "PROJECT_MANAGER") &&
@@ -351,8 +392,10 @@ export const update = async (userId: string, taskId: string, input: UpdateTaskIn
     if (input.assigneeId !== undefined && input.assigneeId !== existing.assigneeId) {
       throw new BadRequestError("Completed tasks cannot be reassigned");
     }
-    if (input.status !== undefined && input.status !== "DONE" &&
-        input.status !== "COMPLETED") {
+    if (
+      input.status !== undefined && input.status !== "DONE" &&
+      input.status !== "COMPLETED"
+    ) {
       throw new BadRequestError("Completed tasks cannot be reopened");
     }
   }
@@ -453,15 +496,16 @@ export const update = async (userId: string, taskId: string, input: UpdateTaskIn
   }
 
   // Notify assignee on any field change (title, description, priority, dueDate, status)
-  const hasContentChange =
-    input.title !== undefined || input.description !== undefined ||
+  const hasContentChange = input.title !== undefined || input.description !== undefined ||
     input.priority !== undefined || input.dueDate !== undefined ||
     input.labels !== undefined;
   if (hasContentChange && existing.assigneeId && existing.assigneeId !== userId) {
     const changedFields: string[] = [];
     if (input.title !== undefined && input.title !== existing.title) changedFields.push("title");
     if (input.description !== undefined) changedFields.push("description");
-    if (input.priority !== undefined && input.priority !== existing.priority) changedFields.push("priority");
+    if (input.priority !== undefined && input.priority !== existing.priority) {
+      changedFields.push("priority");
+    }
     if (input.dueDate !== undefined) changedFields.push("due date");
     if (input.labels !== undefined) changedFields.push("labels");
     if (changedFields.length > 0) {
@@ -511,7 +555,9 @@ export const move = async (userId: string, taskId: string, input: MoveTaskInput)
       select: { id: true, role: true },
     });
     if (!member) throw new ForbiddenError("You are not a member of this project");
-    if (!isRoleAtLeast(member.role as RoleType, "TEAM_MEMBER")) throw new ForbiddenError("Requires role Team Member or higher");
+    if (!isRoleAtLeast(member.role as RoleType, "TEAM_MEMBER")) {
+      throw new ForbiddenError("Requires role Team Member or higher");
+    }
     if (
       !isRoleAtLeast(member.role as RoleType, "PROJECT_MANAGER") &&
       existing.assigneeId !== userId &&
@@ -538,7 +584,7 @@ export const move = async (userId: string, taskId: string, input: MoveTaskInput)
           existing.status !== "DONE" && existing.status !== "COMPLETED"
         ? new Date()
         : input.status !== "DONE" && input.status !== "COMPLETED" &&
-          (existing.status === "DONE" || existing.status === "COMPLETED")
+            (existing.status === "DONE" || existing.status === "COMPLETED")
         ? null
         : undefined,
     },
@@ -567,7 +613,9 @@ export const reorder = async (userId: string, taskId: string, input: ReorderTask
       select: { id: true, role: true },
     });
     if (!member) throw new ForbiddenError("You are not a member of this project");
-    if (!isRoleAtLeast(member.role as RoleType, "TEAM_MEMBER")) throw new ForbiddenError("Requires role Team Member or higher");
+    if (!isRoleAtLeast(member.role as RoleType, "TEAM_MEMBER")) {
+      throw new ForbiddenError("Requires role Team Member or higher");
+    }
     if (
       !isRoleAtLeast(member.role as RoleType, "PROJECT_MANAGER") &&
       existing.assigneeId !== userId &&
@@ -596,7 +644,9 @@ export const remove = async (userId: string, taskId: string) => {
       select: { id: true, role: true },
     });
     if (!member) throw new ForbiddenError("You are not a member of this project");
-    if (!isRoleAtLeast(member.role as RoleType, "TEAM_MEMBER")) throw new ForbiddenError("Requires role Team Member or higher");
+    if (!isRoleAtLeast(member.role as RoleType, "TEAM_MEMBER")) {
+      throw new ForbiddenError("Requires role Team Member or higher");
+    }
     userRole = member.role as string;
   }
   // Only ADMIN/Project Manager or the creator can delete
