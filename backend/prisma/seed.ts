@@ -1,6 +1,7 @@
 // Prisma seed: 5 users, 3 projects, members with mixed roles, invitations,
 // tasks across all Kanban columns, comments with mentions, notifications,
-// and activity logs. Idempotent: re-runs upsert by email.
+// activity logs, and demo file attachments on multiple tasks.
+// Idempotent: re-runs upsert by email.
 // Run with: deno task seed  (after `deno task prisma:push`)
 
 import { createRequire } from "node:module";
@@ -14,6 +15,124 @@ const { PrismaClient: PrismaClientCtor } = require("../src/generated/prisma/inde
 const prisma: PrismaClientType = new PrismaClientCtor();
 
 const PASSWORD = "Password123!";
+const STORAGE_DIR = "uploads/attachments";
+
+const b64ToBytes = (b64: string) => Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+
+// Minimal but valid sample files so the demo attachments open in viewers.
+const DEMO_PNG = b64ToBytes(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+);
+const DEMO_JPG = b64ToBytes(
+  "/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////2wBDAf//////////////////////////////////////////////////////////////////////////////////wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFAEBAAAAAAAAAAAAAAAAAAAAAP/EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAMAwEAAhEDEQA/AL+AB//Z",
+);
+const DEMO_PDF_1PAGE = (title: string) =>
+  new TextEncoder().encode(
+    `%PDF-1.4\n` +
+      `1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n` +
+      `2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n` +
+      `3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R ` +
+      `/Resources << /Font << /F1 5 0 R >> >> >>\nendobj\n` +
+      `4 0 obj\n<< /Length 70 >>\nstream\nBT /F1 18 Tf 72 720 Td ` +
+      `(${title.replace(/[()\\]/g, "_")}) Tj 0 -28 Td ` +
+      `/F1 11 Tf (ProjectFlow demo attachment) Tj ET\nendstream\nendobj\n` +
+      `5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n` +
+      `xref\n0 6\n0000000000 65535 f \n` +
+      `0000000010 00000 n \n0000000053 00000 n \n0000000098 00000 n \n` +
+      `0000000185 00000 n \n0000000295 00000 n \n` +
+      `trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n360\n%%EOF\n`,
+  );
+// Empty zip archive (single "readme.txt" entry) — base64 of a 124-byte zip blob.
+const DEMO_ZIP = b64ToBytes(
+  "UEsDBAoAAAAAAAAAAAAAAAAAAAAAAAAAAAAJAAAAdGVzdC50eHRoZWxsbwo=",
+);
+const DEMO_DOCX_BLOB = (heading: string, body: string) =>
+  // Minimal Office Open XML (.docx) — a zip with a single document.xml.
+  // We assemble a real PKZIP container with one entry.
+  (() => {
+    const xml =
+      `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
+      `<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">` +
+      `<w:body><w:p><w:r><w:t>${heading}</w:t></w:r></w:p>` +
+      `<w:p><w:r><w:t>${body}</w:t></w:r></w:p></w:body></w:document>`;
+    const xmlBytes = new TextEncoder().encode(xml);
+    const nameBytes = new TextEncoder().encode("word/document.xml");
+    const filenameField = new Uint8Array(30 + nameBytes.length);
+    const dv = new DataView(filenameField.buffer);
+    dv.setUint32(0, 0x04034b50, true); // local file header
+    dv.setUint16(4, 20, true); // version
+    dv.setUint16(6, 0, true); // flags
+    dv.setUint16(8, 0, true); // compression = stored
+    dv.setUint16(10, 0, true); // mod time
+    dv.setUint16(12, 0, true); // mod date
+    dv.setUint32(14, crc32(xmlBytes), true);
+    dv.setUint32(18, xmlBytes.length, true);
+    dv.setUint32(22, xmlBytes.length, true);
+    dv.setUint16(26, nameBytes.length, true);
+    dv.setUint16(28, 0, true); // extra length
+    filenameField.set(nameBytes, 30);
+    // Central directory
+    const cd = new Uint8Array(46 + nameBytes.length);
+    const cdv = new DataView(cd.buffer);
+    cdv.setUint32(0, 0x02014b50, true);
+    cdv.setUint16(4, 20, true);
+    cdv.setUint16(6, 20, true);
+    cdv.setUint16(8, 0, true);
+    cdv.setUint16(10, 0, true);
+    cdv.setUint16(12, 0, true);
+    cdv.setUint16(14, 0, true);
+    cdv.setUint32(16, crc32(xmlBytes), true);
+    cdv.setUint32(20, xmlBytes.length, true);
+    cdv.setUint32(24, xmlBytes.length, true);
+    cdv.setUint16(28, nameBytes.length, true);
+    cdv.setUint16(30, 0, true);
+    cdv.setUint16(32, 0, true);
+    cdv.setUint16(34, 0, true);
+    cdv.setUint16(36, 0, true);
+    cdv.setUint32(38, 0, true);
+    cd.set(nameBytes, 42);
+    const localOffset = 0;
+    const cdOffset = filenameField.length + xmlBytes.length;
+    cdv.setUint32(42, localOffset, true);
+    const eocd = new Uint8Array(22);
+    const ev = new DataView(eocd.buffer);
+    ev.setUint32(0, 0x06054b50, true);
+    ev.setUint16(4, 0, true);
+    ev.setUint16(6, 0, true);
+    ev.setUint16(8, 1, true);
+    ev.setUint16(10, 1, true);
+    ev.setUint32(12, cd.length, true);
+    ev.setUint32(16, cdOffset, true);
+    ev.setUint16(20, 0, true);
+    return concatBytes(filenameField, xmlBytes, cd, eocd);
+  })();
+
+const concatBytes = (...parts: Uint8Array[]) => {
+  const total = parts.reduce((s, p) => s + p.length, 0);
+  const out = new Uint8Array(total);
+  let off = 0;
+  for (const p of parts) {
+    out.set(p, off);
+    off += p.length;
+  }
+  return out;
+};
+
+// CRC-32 (polynomial 0xEDB88320) — required for a valid zip local file header.
+const crc32 = (bytes: Uint8Array) => {
+  let c: number;
+  const table: number[] = [];
+  for (let n = 0; n < 256; n++) {
+    c = n;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1;
+    table[n] = c >>> 0;
+  }
+  let crc = 0 ^ -1;
+  for (let i = 0; i < bytes.length; i++) {
+    crc = (crc >>> 8) ^ table[(crc ^ bytes[i]) & 0xff];
+  }
+  return (crc ^ -1) >>> 0;
+};
 
 const usersSeed = [
   {
@@ -104,6 +223,7 @@ async function main() {
   await prisma.activityLog.deleteMany({});
   await prisma.mention.deleteMany({});
   await prisma.comment.deleteMany({});
+  await prisma.attachment.deleteMany({});
   await prisma.notification.deleteMany({});
   await prisma.refreshToken.deleteMany({});
   await prisma.task.deleteMany({});
@@ -111,6 +231,12 @@ async function main() {
   await prisma.projectMember.deleteMany({});
   await prisma.project.deleteMany({});
   await prisma.user.deleteMany({});
+  // Wipe seeded attachment files from disk so the demo stays idempotent.
+  try {
+    await Deno.remove(STORAGE_DIR, { recursive: true });
+  } catch (_err) {
+    // dir may not exist on first run — ignore
+  }
   console.log("  Done clearing.");
 
   // ---- Users
@@ -366,6 +492,70 @@ async function main() {
       labels: ["docs"],
       order: 1000,
     },
+
+    // ---- Admin (Olivia) CRUD tasks ----
+    // These tasks exercise every CRUD operation an admin can perform on a task:
+    // create, edit, move across columns, complete, and reassign.
+    {
+      projectId: projectLaunch.id,
+      title: "Admin: Approve launch readiness checklist",
+      description: "Final go/no-go decision sign-off before the public release.",
+      status: "TODO",
+      priority: "URGENT",
+      assignee: oliviaId,
+      creator: oliviaId,
+      dueInDays: 2,
+      labels: ["admin", "launch"],
+      order: 4000,
+    },
+    {
+      projectId: projectLaunch.id,
+      title: "Admin: Coordinate cross-team launch sync",
+      description: "Bring together marketing, support, and engineering for the final sync.",
+      status: "IN_PROGRESS",
+      priority: "HIGH",
+      assignee: mayaId,
+      creator: oliviaId,
+      dueInDays: 1,
+      labels: ["admin", "coordination"],
+      order: 5000,
+    },
+    {
+      projectId: projectRedesign.id,
+      title: "Admin: Sign off on new brand guidelines",
+      description: "Review and approve the v2 brand guide draft.",
+      status: "REVIEW",
+      priority: "HIGH",
+      assignee: mayaId,
+      creator: oliviaId,
+      dueInDays: 3,
+      labels: ["admin", "branding"],
+      order: 3000,
+    },
+    {
+      projectId: projectRedesign.id,
+      title: "Admin: Reassign blog migration to backend track",
+      description: "Move the MDX blog migration to the platform team for tooling support.",
+      status: "IN_PROGRESS",
+      priority: "MEDIUM",
+      assignee: alexId,
+      creator: oliviaId,
+      dueInDays: 4,
+      labels: ["admin", "reassignment"],
+      order: 4000,
+    },
+    {
+      projectId: projectPlatform.id,
+      title: "Admin: Approve incident postmortem template",
+      description: "Roll out the new postmortem template org-wide.",
+      status: "DONE",
+      priority: "MEDIUM",
+      assignee: alexId,
+      creator: oliviaId,
+      dueInDays: -4,
+      labels: ["admin", "process"],
+      order: 3000,
+    },
   ];
 
   const createdTasks: { id: string; title: string; projectId: string; assignee: string | null }[] =
@@ -397,6 +587,147 @@ async function main() {
     });
   }
   console.log(`  tasks: ${createdTasks.length}`);
+
+  // ---- Demo file attachments (on-disk + DB records) ----
+  // The records reference real bytes on disk so the upload/download UI works
+  // end-to-end after a fresh seed.
+  const taskByIndex = (idx: number) => createdTasks[idx];
+  const attachmentSeeds: Array<{
+    taskIdx: number;
+    fileName: string;
+    ext: string;
+    mime: string;
+    uploader: string;
+    bytes: Uint8Array;
+  }> = [
+    // Q4 launch — analytics setup
+    {
+      taskIdx: 1,
+      fileName: "analytics-funnel-spec.pdf",
+      ext: ".pdf",
+      mime: "application/pdf",
+      uploader: mayaId,
+      bytes: DEMO_PDF_1PAGE("Q4 Launch Funnel Spec"),
+    },
+    {
+      taskIdx: 1,
+      fileName: "retention-dashboard.png",
+      ext: ".png",
+      mime: "image/png",
+      uploader: alexId,
+      bytes: DEMO_PNG,
+    },
+    // Q4 launch — landing page
+    {
+      taskIdx: 0,
+      fileName: "hero-mockup-v2.png",
+      ext: ".png",
+      mime: "image/png",
+      uploader: miloId,
+      bytes: DEMO_PNG,
+    },
+    {
+      taskIdx: 0,
+      fileName: "landing-copy.docx",
+      ext: ".docx",
+      mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      uploader: oliviaId,
+      bytes: DEMO_DOCX_BLOB("Landing Page Copy", "Hero, features, pricing, FAQ."),
+    },
+    // Q4 launch — press kit
+    {
+      taskIdx: 3,
+      fileName: "press-kit.zip",
+      ext: ".zip",
+      mime: "application/zip",
+      uploader: oliviaId,
+      bytes: DEMO_ZIP,
+    },
+    // Q4 launch — stress test
+    {
+      taskIdx: 6,
+      fileName: "load-test-report.pdf",
+      ext: ".pdf",
+      mime: "application/pdf",
+      uploader: alexId,
+      bytes: DEMO_PDF_1PAGE("Load Test Report 2x"),
+    },
+    // Redesign — case studies
+    {
+      taskIdx: 10,
+      fileName: "case-study-mockup.jpg",
+      ext: ".jpg",
+      mime: "image/jpeg",
+      uploader: miloId,
+      bytes: DEMO_JPG,
+    },
+    {
+      taskIdx: 10,
+      fileName: "filter-ux-notes.doc",
+      ext: ".doc",
+      mime: "application/msword",
+      uploader: mayaId,
+      bytes: new TextEncoder().encode("Filter UX notes\r\n\r\n- Move active filters above the grid.\r\n"),
+    },
+    // Platform reliability — billing tracing
+    {
+      taskIdx: 13,
+      fileName: "otel-spans.png",
+      ext: ".png",
+      mime: "image/png",
+      uploader: alexId,
+      bytes: DEMO_PNG,
+    },
+    {
+      taskIdx: 13,
+      fileName: "billing-trace-architecture.pdf",
+      ext: ".pdf",
+      mime: "application/pdf",
+      uploader: mayaId,
+      bytes: DEMO_PDF_1PAGE("Billing Trace Architecture"),
+    },
+    // Admin tasks
+    {
+      taskIdx: 16,
+      fileName: "launch-readiness-checklist.pdf",
+      ext: ".pdf",
+      mime: "application/pdf",
+      uploader: oliviaId,
+      bytes: DEMO_PDF_1PAGE("Launch Readiness Checklist"),
+    },
+    {
+      taskIdx: 18,
+      fileName: "brand-guidelines-v2.zip",
+      ext: ".zip",
+      mime: "application/zip",
+      uploader: oliviaId,
+      bytes: DEMO_ZIP,
+    },
+  ];
+
+  let attachmentsCreated = 0;
+  for (const seed of attachmentSeeds) {
+    const task = taskByIndex(seed.taskIdx);
+    if (!task) continue;
+    const taskDir = `${STORAGE_DIR}/${task.id}`;
+    await Deno.mkdir(taskDir, { recursive: true });
+    const storedName = `${crypto.randomUUID()}${seed.ext}`;
+    const fullPath = `${taskDir}/${storedName}`;
+    await Deno.writeFile(fullPath, seed.bytes);
+    await prisma.attachment.create({
+      data: {
+        taskId: task.id,
+        uploadedById: seed.uploader,
+        fileName: seed.fileName,
+        storedName,
+        mimeType: seed.mime,
+        fileSize: seed.bytes.length,
+        storagePath: fullPath,
+      },
+    });
+    attachmentsCreated += 1;
+  }
+  console.log(`  attachments: ${attachmentsCreated}`);
 
   // ---- Comments with mentions
   await prisma.comment.deleteMany({ where: { taskId: { in: createdTasks.map((t) => t.id) } } });
@@ -503,6 +834,46 @@ async function main() {
       entityId: projectPlatform.id,
       meta: { name: projectPlatform.name },
     },
+    // Admin (Olivia) demonstrating full task CRUD lifecycle.
+    {
+      projectId: projectLaunch.id,
+      actor: oliviaId,
+      action: "TASK_CREATED",
+      entityType: "TASK",
+      entityId: createdTasks[15].id,
+      meta: { title: createdTasks[15].title },
+    },
+    {
+      projectId: projectLaunch.id,
+      actor: oliviaId,
+      action: "TASK_MOVED",
+      entityType: "TASK",
+      entityId: createdTasks[16].id,
+      meta: { from: "TODO", to: "IN_PROGRESS" },
+    },
+    {
+      projectId: projectRedesign.id,
+      actor: oliviaId,
+      action: "TASK_UPDATED",
+      entityType: "TASK",
+      entityId: createdTasks[18].id,
+      meta: { fields: ["assigneeId", "labels"] },
+    },
+    {
+      projectId: projectPlatform.id,
+      actor: oliviaId,
+      action: "TASK_MOVED",
+      entityType: "TASK",
+      entityId: createdTasks[19].id,
+      meta: { from: "REVIEW", to: "DONE" },
+    },
+    {
+      projectId: projectPlatform.id,
+      actor: oliviaId,
+      action: "TASK_COMPLETED",
+      entityType: "TASK",
+      entityId: createdTasks[19].id,
+    },
   ];
   for (const a of activitySeeds) {
     await prisma.activityLog.create({
@@ -516,7 +887,30 @@ async function main() {
       },
     });
   }
-  console.log(`  activity: ${activitySeeds.length}`);
+
+  // Add ATTACHMENT_UPLOADED entries for every demo attachment created above.
+  const allAttachments = await prisma.attachment.findMany({
+    select: { id: true, taskId: true, uploadedById: true, fileName: true, fileSize: true, mimeType: true },
+  });
+  for (const att of allAttachments) {
+    const task = await prisma.task.findUnique({
+      where: { id: att.taskId },
+      select: { projectId: true },
+    });
+    if (!task) continue;
+    await prisma.activityLog.create({
+      data: {
+        actorId: att.uploadedById,
+        action: "ATTACHMENT_UPLOADED",
+        entityType: "attachment",
+        entityId: att.id,
+        taskId: att.taskId,
+        projectId: task.projectId,
+        metadata: { fileName: att.fileName, fileSize: att.fileSize, mimeType: att.mimeType },
+      },
+    });
+  }
+  console.log(`  activity: ${activitySeeds.length + allAttachments.length}`);
 
   // ---- Notifications
   await prisma.notification.deleteMany({});

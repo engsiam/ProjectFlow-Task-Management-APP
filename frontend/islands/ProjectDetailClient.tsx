@@ -9,7 +9,13 @@ import {
   getAssignableRoles,
   getProjectRole,
 } from "../lib/roles.ts";
-import type { Activity, Project, ProjectMember, Role, Task } from "../lib/types.ts";
+import type {
+  Activity,
+  Project,
+  ProjectMember,
+  Role,
+  Task,
+} from "../lib/types.ts";
 import ConfirmDialog from "./ConfirmDialog.tsx";
 import {
   Avatar,
@@ -26,8 +32,21 @@ import TaskCreateModal from "./TaskCreateModal.tsx";
 import InviteMemberModal from "./InviteMemberModal.tsx";
 import ProjectAnalyticsTab from "./ProjectAnalyticsTab.tsx";
 
-type Tab = "Overview" | "Board" | "Tasks" | "Members" | "Activity" | "Analytics";
-const tabs: Tab[] = ["Overview", "Board", "Tasks", "Members", "Activity", "Analytics"];
+type Tab =
+  | "Overview"
+  | "Board"
+  | "Tasks"
+  | "Members"
+  | "Activity"
+  | "Analytics";
+const tabs: Tab[] = [
+  "Overview",
+  "Board",
+  "Tasks",
+  "Members",
+  "Activity",
+  "Analytics",
+];
 
 const STATUS_DOT: Record<string, string> = {
   TODO: "var(--muted)",
@@ -36,14 +55,26 @@ const STATUS_DOT: Record<string, string> = {
   DONE: "var(--success)",
 };
 
-function computeHealth(progress: number, tasks: Task[]): { label: string; className: string } {
-  const overdue = tasks.filter((t) => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== "DONE").length;
-  if (overdue > 3 || progress < 15) return { label: "Delayed", className: "delayed" };
-  if (overdue > 0 || progress < 50) return { label: "At Risk", className: "at-risk" };
+function computeHealth(
+  progress: number,
+  tasks: Task[],
+): { label: string; className: string } {
+  const overdue =
+    tasks.filter((t) =>
+      t.dueDate && new Date(t.dueDate) < new Date() && t.status !== "DONE"
+    ).length;
+  if (overdue > 3 || progress < 15) {
+    return { label: "Delayed", className: "delayed" };
+  }
+  if (overdue > 0 || progress < 50) {
+    return { label: "At Risk", className: "at-risk" };
+  }
   return { label: "On Track", className: "on-track" };
 }
 
-export default function ProjectDetailClient({ projectId }: { projectId: string }) {
+export default function ProjectDetailClient(
+  { projectId }: { projectId: string },
+) {
   const [project, setProject] = useState<Project | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [members, setMembers] = useState<ProjectMember[]>([]);
@@ -54,7 +85,9 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
   const [inviteOpen, setInviteOpen] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  useEffect(() => { setCurrentUserId(getCurrentUser()?.id ?? null); }, []);
+  useEffect(() => {
+    setCurrentUserId(getCurrentUser()?.id ?? null);
+  }, []);
 
   async function load() {
     requireClientAuth();
@@ -62,18 +95,26 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
     try {
       const [p, t, m, a] = await Promise.all([
         get<Project>(`/projects/${projectId}`),
-        getList<Task>(`/projects/${projectId}/tasks`, { limit: 100 }).catch(() => []),
-        getList<ProjectMember>(`/projects/${projectId}/members`, { limit: 100 }).catch(() => []),
-        getList<Activity>(`/projects/${projectId}/activity`, { limit: 100 }).catch(() => []),
+        getList<Task>(`/projects/${projectId}/tasks`, { limit: 100 }).catch(
+          () => [],
+        ),
+        getList<ProjectMember>(`/projects/${projectId}/members`, { limit: 100 })
+          .catch(() => []),
+        getList<Activity>(`/projects/${projectId}/activity`, { limit: 100 })
+          .catch(() => []),
       ]);
       setProject(p);
       setTasks(Array.isArray(t) ? t : []);
       setMembers(Array.isArray(m) ? m : p.members ?? []);
       setActivity(Array.isArray(a) ? a : []);
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   }
 
-  useEffect(() => { load(); }, [projectId]);
+  useEffect(() => {
+    load();
+  }, [projectId]);
 
   const counts = useMemo(() => {
     return tasks.reduce<Record<string, number>>((acc, task) => {
@@ -91,7 +132,9 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
 
   const earliestDue = dueSoon[0]?.dueDate;
   const daysToDue = earliestDue
-    ? Math.ceil((new Date(earliestDue).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    ? Math.ceil(
+      (new Date(earliestDue).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
+    )
     : null;
 
   const recentTasks = [...tasks].sort((a, b) =>
@@ -106,7 +149,13 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
     return (
       <div style={{ display: "grid", gap: "12px" }}>
         <Skeleton height={120} />
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(4, 1fr)",
+            gap: "12px",
+          }}
+        >
           <Skeleton height={88} />
           <Skeleton height={88} />
           <Skeleton height={88} />
@@ -117,7 +166,13 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
     );
   }
   if (!project) {
-    return <EmptyState icon="folder_off" title="Project not found" body="The backend did not return this project." />;
+    return (
+      <EmptyState
+        icon="folder_off"
+        title="Project not found"
+        body="The backend did not return this project."
+      />
+    );
   }
 
   return (
@@ -128,7 +183,10 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
           <div class="pd-header-info">
             <div class="pd-header-badges">
               <Badge tone={statusTone(project.status)}>{project.status}</Badge>
-              <span class="mono" style="font-size:11px;color:var(--muted);letter-spacing:0.03em">
+              <span
+                class="mono"
+                style="font-size:11px;color:var(--muted);letter-spacing:0.03em"
+              >
                 PRJ-{project.id.slice(-4).toUpperCase()}
               </span>
               {currentRole && <Badge>{currentRole}</Badge>}
@@ -138,7 +196,8 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
               </span>
             </div>
             <h1 class="pd-title">{project.name}</h1>
-            {project.description && <p class="pd-desc">{project.description}</p>}
+            {project.description && <p class="pd-desc">{project.description}
+            </p>}
           </div>
           <div class="pd-header-actions">
             {mayInviteMembers && (
@@ -147,7 +206,10 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
               </Button>
             )}
             {mayCreateTasks && (
-              <Button variant="primary" onClick={() => setTaskOpen(true)}>
+              <Button
+                variant="primary"
+                onClick={() => setTaskOpen(true)}
+              >
                 <Icon name="add_task" size={16} /> New Task
               </Button>
             )}
@@ -158,13 +220,20 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
       {/* KPI Row */}
       <div class="pd-kpi-grid">
         <div class="pd-kpi">
-          <div class="pd-kpi-icon"><Icon name="check_circle" size={18} /></div>
+          <div class="pd-kpi-icon">
+            <Icon name="check_circle" size={18} />
+          </div>
           <div class="pd-kpi-label">Completion</div>
           <div class="pd-kpi-value">{Math.round(completion)}%</div>
-          <div class="pd-kpi-sub">{counts.DONE ?? 0} of {tasks.length} tasks done</div>
+          <div class="pd-kpi-sub">
+            {counts.DONE ?? 0} of {tasks.length} tasks done
+          </div>
         </div>
         <div class="pd-kpi">
-          <div class="pd-kpi-icon" style="background:color-mix(in srgb,var(--warning),transparent 88%);color:var(--warning)">
+          <div
+            class="pd-kpi-icon"
+            style="background:color-mix(in srgb,var(--warning),transparent 88%);color:var(--warning)"
+          >
             <Icon name="pending" size={18} />
           </div>
           <div class="pd-kpi-label">Open Tasks</div>
@@ -172,31 +241,54 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
           <div class="pd-kpi-sub">{counts.REVIEW ?? 0} in review</div>
         </div>
         <div class="pd-kpi">
-          <div class="pd-kpi-icon" style="background:color-mix(in srgb,var(--info),transparent 88%);color:var(--info)">
+          <div
+            class="pd-kpi-icon"
+            style="background:color-mix(in srgb,var(--info),transparent 88%);color:var(--info)"
+          >
             <Icon name="group" size={18} />
           </div>
           <div class="pd-kpi-label">Team Members</div>
           <div class="pd-kpi-value">{members.length}</div>
           <div class="pd-kpi-sub">
-            {members.filter((m) => m.role === "PROJECT_MANAGER" || m.role === "ADMIN").length} leads
+            {members.filter((m) =>
+              m.role === "PROJECT_MANAGER" || m.role === "ADMIN"
+            ).length} leads
           </div>
         </div>
         <div class="pd-kpi">
-          <div class="pd-kpi-icon" style="background:color-mix(in srgb,var(--danger),transparent 88%);color:var(--danger)">
+          <div
+            class="pd-kpi-icon"
+            style="background:color-mix(in srgb,var(--danger),transparent 88%);color:var(--danger)"
+          >
             <Icon name="calendar_today" size={18} />
           </div>
           <div class="pd-kpi-label">Due Date</div>
-          <div class="pd-kpi-value" style={daysToDue !== null && daysToDue < 0 ? "color:var(--danger)" : ""}>
-            {daysToDue !== null ? `${daysToDue > 0 ? `${daysToDue}d` : "Overdue"}` : "—"}
+          <div
+            class="pd-kpi-value"
+            style={daysToDue !== null && daysToDue < 0
+              ? "color:var(--danger)"
+              : ""}
+          >
+            {daysToDue !== null
+              ? `${daysToDue > 0 ? `${daysToDue}d` : "Overdue"}`
+              : "—"}
           </div>
-          <div class="pd-kpi-sub">{earliestDue ? new Date(earliestDue).toLocaleDateString() : "No deadlines"}</div>
+          <div class="pd-kpi-sub">
+            {earliestDue
+              ? new Date(earliestDue).toLocaleDateString()
+              : "No deadlines"}
+          </div>
         </div>
       </div>
 
       {/* Tabs */}
       <nav class="pd-tabs">
         {tabs.map((item) => (
-          <button type="button" class={`pd-tab ${tab === item ? "active" : ""}`} onClick={() => setTab(item)}>
+          <button
+            type="button"
+            class={`pd-tab ${tab === item ? "active" : ""}`}
+            onClick={() => setTab(item)}
+          >
             {item}
           </button>
         ))}
@@ -209,9 +301,14 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
           <div style="display:grid;gap:14px">
             {/* Progress */}
             <div class="pd-card">
-              <div class="pd-card-title"><Icon name="trending_up" size={16} /> Progress</div>
+              <div class="pd-card-title">
+                <Icon name="trending_up" size={16} /> Progress
+              </div>
               <div class="pd-progress-bar">
-                <div class="pd-progress-fill" style={{ width: `${completion}%` }} />
+                <div
+                  class="pd-progress-fill"
+                  style={{ width: `${completion}%` }}
+                />
               </div>
               <div class="pd-progress-meta">
                 <span>{Math.round(completion)}% complete</span>
@@ -219,15 +316,27 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
               </div>
               <div class="pd-progress-stats">
                 <div class="pd-progress-stat">
-                  <div class="pd-progress-stat-value" style="color:var(--muted)">{counts.TODO ?? 0}</div>
+                  <div
+                    class="pd-progress-stat-value"
+                    style="color:var(--muted)"
+                  >
+                    {counts.TODO ?? 0}
+                  </div>
                   <div class="pd-progress-stat-label">To Do</div>
                 </div>
                 <div class="pd-progress-stat">
-                  <div class="pd-progress-stat-value" style="color:var(--info)">{counts.IN_PROGRESS ?? 0}</div>
+                  <div class="pd-progress-stat-value" style="color:var(--info)">
+                    {counts.IN_PROGRESS ?? 0}
+                  </div>
                   <div class="pd-progress-stat-label">In Progress</div>
                 </div>
                 <div class="pd-progress-stat">
-                  <div class="pd-progress-stat-value" style="color:var(--success)">{counts.DONE ?? 0}</div>
+                  <div
+                    class="pd-progress-stat-value"
+                    style="color:var(--success)"
+                  >
+                    {counts.DONE ?? 0}
+                  </div>
                   <div class="pd-progress-stat-label">Done</div>
                 </div>
               </div>
@@ -235,7 +344,9 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
 
             {/* Recent Task Updates */}
             <div class="pd-card">
-              <div class="pd-card-title"><Icon name="assignment" size={16} /> Recent Updates</div>
+              <div class="pd-card-title">
+                <Icon name="assignment" size={16} /> Recent Updates
+              </div>
               {recentTasks.length === 0
                 ? (
                   <div style="padding:24px 0;text-align:center;color:var(--muted);font-size:13px">
@@ -246,12 +357,18 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
                   <div class="pd-task-list">
                     {recentTasks.map((task) => (
                       <div key={task.id} class="pd-task-item">
-                        <span class="pd-task-status-dot" style={{ background: STATUS_DOT[task.status] }} />
+                        <span
+                          class="pd-task-status-dot"
+                          style={{ background: STATUS_DOT[task.status] }}
+                        />
                         <div class="pd-task-info">
                           <div class="pd-task-name">{task.title}</div>
                           <div class="pd-task-meta">
                             {task.status.replace("_", " ")} · {task.priority}
-                            {task.dueDate && ` · Due ${new Date(task.dueDate).toLocaleDateString()}`}
+                            {task.dueDate &&
+                              ` · Due ${
+                                new Date(task.dueDate).toLocaleDateString()
+                              }`}
                           </div>
                         </div>
                         {task.assignee && (
@@ -267,7 +384,9 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
 
             {/* Team */}
             <div class="pd-card">
-              <div class="pd-card-title"><Icon name="group" size={16} /> Team ({members.length})</div>
+              <div class="pd-card-title">
+                <Icon name="group" size={16} /> Team ({members.length})
+              </div>
               {members.length === 0
                 ? (
                   <div style="padding:24px 0;text-align:center;color:var(--muted);font-size:13px">
@@ -285,7 +404,9 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
                           {m.user.name.charAt(0).toUpperCase()}
                         </span>
                       ))}
-                      {members.length > 8 && <span class="pd-team-count">+{members.length - 8}</span>}
+                      {members.length > 8 && (
+                        <span class="pd-team-count">+{members.length - 8}</span>
+                      )}
                     </div>
                     <div style="display:grid;gap:4px">
                       {members.slice(0, 4).map((m) => (
@@ -293,8 +414,12 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
                           <div class="pd-member-info">
                             <Avatar user={m.user} size={28} />
                             <div>
-                              <div style="font-size:13px;font-weight:500">{m.user.name}</div>
-                              <div style="font-size:11px;color:var(--muted)">{m.user.email}</div>
+                              <div style="font-size:13px;font-weight:500">
+                                {m.user.name}
+                              </div>
+                              <div style="font-size:11px;color:var(--muted)">
+                                {m.user.email}
+                              </div>
                             </div>
                           </div>
                           <Badge>{m.role}</Badge>
@@ -310,33 +435,59 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
           <div style="display:grid;gap:14px">
             {/* Health Detail */}
             <div class="pd-card">
-              <div class="pd-card-title"><Icon name="monitor_heart" size={16} /> Project Health</div>
+              <div class="pd-card-title">
+                <Icon name="monitor_heart" size={16} /> Project Health
+              </div>
               <div class="pd-health-card">
                 <div class="pd-hc-row">
                   <span class="pd-hc-label">Status</span>
-                  <span class={`pd-health ${health.className}`} style="padding:2px 8px;font-size:11px">
+                  <span
+                    class={`pd-health ${health.className}`}
+                    style="padding:2px 8px;font-size:11px"
+                  >
                     <span class="pd-health-dot" /> {health.label}
                   </span>
                 </div>
                 <div class="pd-hc-divider" />
                 <div class="pd-hc-row">
                   <span class="pd-hc-label">Overdue tasks</span>
-                  <span class="pd-hc-value" style={tasks.filter((t) => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== "DONE").length > 0 ? "color:var(--danger)" : ""}>
-                    {tasks.filter((t) => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== "DONE").length}
+                  <span
+                    class="pd-hc-value"
+                    style={tasks.filter((t) =>
+                        t.dueDate && new Date(t.dueDate) < new Date() &&
+                        t.status !== "DONE"
+                      ).length > 0
+                      ? "color:var(--danger)"
+                      : ""}
+                  >
+                    {tasks.filter((t) =>
+                      t.dueDate && new Date(t.dueDate) < new Date() &&
+                      t.status !== "DONE"
+                    ).length}
                   </span>
                 </div>
                 <div class="pd-hc-row">
                   <span class="pd-hc-label">Completion rate</span>
-                  <span class="pd-hc-value">{tasks.length > 0 ? Math.round(((counts.DONE ?? 0) / tasks.length) * 100) : 0}%</span>
+                  <span class="pd-hc-value">
+                    {tasks.length > 0
+                      ? Math.round(((counts.DONE ?? 0) / tasks.length) * 100)
+                      : 0}%
+                  </span>
                 </div>
                 <div class="pd-hc-row">
                   <span class="pd-hc-label">Open vs closed</span>
-                  <span class="pd-hc-value">{openTasks} / {counts.DONE ?? 0}</span>
+                  <span class="pd-hc-value">
+                    {openTasks} / {counts.DONE ?? 0}
+                  </span>
                 </div>
                 <div class="pd-hc-divider" />
                 <div class="pd-hc-row">
                   <span class="pd-hc-label">Created</span>
-                  <span class="pd-hc-value">{project.createdAt ? new Date(project.createdAt).toLocaleDateString() : "—"}</span>
+                  <span class="pd-hc-value">
+                    {project.createdAt
+                      ? new Date(project.createdAt).toLocaleDateString()
+                      : "—"}
+                  </span>
                 </div>
                 <div class="pd-hc-row">
                   <span class="pd-hc-label">Last activity</span>
@@ -351,7 +502,9 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
 
             {/* Activity Timeline */}
             <div class="pd-card">
-              <div class="pd-card-title"><Icon name="history" size={16} /> Activity</div>
+              <div class="pd-card-title">
+                <Icon name="history" size={16} /> Activity
+              </div>
               {activity.length === 0
                 ? (
                   <div style="padding:24px 0;text-align:center;color:var(--muted);font-size:13px">
@@ -361,25 +514,34 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
                 : (
                   <div class="pd-timeline">
                     {activity.slice(0, 8).map((item, idx) => {
-                      const actionType = item.action.includes("create") || item.action.includes("add")
+                      const actionType = item.action.includes("create") ||
+                          item.action.includes("add")
                         ? "created"
-                        : item.action.includes("update") || item.action.includes("edit") || item.action.includes("move")
+                        : item.action.includes("update") ||
+                            item.action.includes("edit") ||
+                            item.action.includes("move")
                         ? "updated"
-                        : item.action.includes("complete") || item.action.includes("done")
+                        : item.action.includes("complete") ||
+                            item.action.includes("done")
                         ? "completed"
                         : "commented";
                       return (
                         <div class="pd-tl-item">
                           <div style="display:flex;flex-direction:column;align-items:center">
                             <span class={`pd-tl-dot ${actionType}`} />
-                            {idx < activity.slice(0, 8).length - 1 && <div class="pd-tl-line" />}
+                            {idx < activity.slice(0, 8).length - 1 && (
+                              <div class="pd-tl-line" />
+                            )}
                           </div>
                           <div class="pd-tl-content">
                             <p class="pd-tl-text">
-                              <strong>{item.actor?.name ?? "System"}</strong>{" "}
+                              <strong>{item.actor?.name ?? "System"}</strong>
+                              {" "}
                               {item.action.replaceAll("_", " ").toLowerCase()}
                             </p>
-                            <p class="pd-tl-time">{new Date(item.createdAt).toLocaleString()}</p>
+                            <p class="pd-tl-time">
+                              {new Date(item.createdAt).toLocaleString()}
+                            </p>
                           </div>
                         </div>
                       );
@@ -392,7 +554,14 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
       )}
 
       {/* Other tabs */}
-      {tab === "Board" && <KanbanBoard tasks={tasks} projects={[project]} project={project} onChanged={load} />}
+      {tab === "Board" && (
+        <KanbanBoard
+          tasks={tasks}
+          projects={[project]}
+          project={project}
+          onChanged={load}
+        />
+      )}
       {tab === "Tasks" && <TaskTable tasks={tasks} />}
       {tab === "Members" && (
         <MemberList
@@ -411,14 +580,18 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
           projects={[project]}
           projectId={project.id}
           onClose={() => setTaskOpen(false)}
-          onCreated={() => { load(); }}
+          onCreated={() => {
+            load();
+          }}
         />
       )}
       {inviteOpen && (
         <InviteMemberModal
           projectId={project.id}
           onClose={() => setInviteOpen(false)}
-          onInvited={() => { load(); }}
+          onInvited={() => {
+            load();
+          }}
         />
       )}
     </div>
@@ -429,7 +602,13 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
 
 function TaskTable({ tasks }: { tasks: Task[] }) {
   if (!tasks.length) {
-    return <EmptyState icon="assignment" title="No tasks yet" body="Create tasks to fill the project board." />;
+    return (
+      <EmptyState
+        icon="assignment"
+        title="No tasks yet"
+        body="Create tasks to fill the project board."
+      />
+    );
   }
   return (
     <div class="card" style="overflow:auto">
@@ -447,15 +626,28 @@ function TaskTable({ tasks }: { tasks: Task[] }) {
             <tr key={task.id} style="cursor:pointer">
               <td>
                 <div style="display:grid;gap:2px">
-                  <span class="mono" style="font-size:10px;color:var(--muted);font-weight:800;text-transform:uppercase">
+                  <span
+                    class="mono"
+                    style="font-size:10px;color:var(--muted);font-weight:800;text-transform:uppercase"
+                  >
                     TSK-{task.id.slice(-4).toUpperCase()}
                   </span>
                   <strong>{task.title}</strong>
                 </div>
               </td>
-              <td><Badge tone={statusTone(task.status)}>{task.status.replace("_", " ")}</Badge></td>
-              <td><Badge tone={priorityTone(task.priority)}>{task.priority}</Badge></td>
-              <td><Avatar user={task.assignee} /></td>
+              <td>
+                <Badge tone={statusTone(task.status)}>
+                  {task.status.replace("_", " ")}
+                </Badge>
+              </td>
+              <td>
+                <Badge tone={priorityTone(task.priority)}>
+                  {task.priority}
+                </Badge>
+              </td>
+              <td>
+                <Avatar user={task.assignee} />
+              </td>
             </tr>
           ))}
         </tbody>
@@ -465,7 +657,11 @@ function TaskTable({ tasks }: { tasks: Task[] }) {
 }
 
 function MemberList({
-  actorRole, currentUserId, members, projectId, onChanged,
+  actorRole,
+  currentUserId,
+  members,
+  projectId,
+  onChanged,
 }: {
   actorRole: Role | null;
   currentUserId: string | null;
@@ -473,11 +669,15 @@ function MemberList({
   projectId: string;
   onChanged: () => void;
 }) {
-  const [removingMember, setRemovingMember] = useState<ProjectMember | null>(null);
+  const [removingMember, setRemovingMember] = useState<ProjectMember | null>(
+    null,
+  );
 
   async function changeRole(member: ProjectMember, role: Role) {
     try {
-      await patch(`/projects/${projectId}/members/${member.user.id}/role`, { role });
+      await patch(`/projects/${projectId}/members/${member.user.id}/role`, {
+        role,
+      });
       toast(`${member.user.name} role changed to ${role}.`, "success");
       await onChanged();
     } catch (err) {
@@ -491,26 +691,43 @@ function MemberList({
       toast(`${member.user.name} removed from project.`, "warning");
       await onChanged();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Unable to remove member.";
+      const msg = err instanceof Error
+        ? err.message
+        : "Unable to remove member.";
       toast(msg, "danger");
     }
   }
   if (!members.length) {
-    return <EmptyState icon="group" title="No members" body="Invite teammates to collaborate." />;
+    return (
+      <EmptyState
+        icon="group"
+        title="No members"
+        body="Invite teammates to collaborate."
+      />
+    );
   }
   return (
     <>
       <div class="card" style="padding:14px;display:grid;gap:4px">
         {members.map((member) => {
           const editableRoles = getAssignableRoles(actorRole, member.role);
-          const removable = canRemoveMember(actorRole, member.role, currentUserId, member.user.id);
+          const removable = canRemoveMember(
+            actorRole,
+            member.role,
+            currentUserId,
+            member.user.id,
+          );
           return (
             <div key={member.id} class="pd-member-row">
               <div class="pd-member-info">
                 <Avatar user={member.user} size={32} />
                 <div>
-                  <div style="font-size:13px;font-weight:500">{member.user.name}</div>
-                  <div style="font-size:11px;color:var(--muted)">{member.user.email}</div>
+                  <div style="font-size:13px;font-weight:500">
+                    {member.user.name}
+                  </div>
+                  <div style="font-size:11px;color:var(--muted)">
+                    {member.user.email}
+                  </div>
                 </div>
               </div>
               <div class="pd-member-actions">
@@ -521,7 +738,8 @@ function MemberList({
                       class="select"
                       value={member.role}
                       style="width:120px"
-                      onChange={(e) => changeRole(member, e.currentTarget.value as Role)}
+                      onChange={(e) =>
+                        changeRole(member, e.currentTarget.value as Role)}
                     >
                       {editableRoles.map((role) => (
                         <option key={role} value={role}>
@@ -531,7 +749,12 @@ function MemberList({
                     </select>
                   )}
                 {removable && (
-                  <button type="button" class="btn btn-danger" style="padding:4px 8px;font-size:12px" onClick={() => setRemovingMember(member)}>
+                  <button
+                    type="button"
+                    class="btn btn-danger"
+                    style="padding:4px 8px;font-size:12px"
+                    onClick={() => setRemovingMember(member)}
+                  >
                     <Icon name="person_remove" size={14} /> Remove
                   </button>
                 )}
@@ -547,7 +770,11 @@ function MemberList({
           confirmLabel="Remove"
           variant="danger"
           onCancel={() => setRemovingMember(null)}
-          onConfirm={async () => { const m = removingMember; setRemovingMember(null); await removeMember(m); }}
+          onConfirm={async () => {
+            const m = removingMember;
+            setRemovingMember(null);
+            await removeMember(m);
+          }}
         />
       )}
     </>
@@ -556,20 +783,30 @@ function MemberList({
 
 function ActivityPanel({ activity }: { activity: Activity[] }) {
   if (!activity.length) {
-    return <EmptyState icon="history" title="No activity" body="Project actions will appear here." />;
+    return (
+      <EmptyState
+        icon="history"
+        title="No activity"
+        body="Project actions will appear here."
+      />
+    );
   }
   return (
     <div class="pd-card">
-      <div class="pd-card-title"><Icon name="history" size={16} /> Activity Log</div>
+      <div class="pd-card-title">
+        <Icon name="history" size={16} /> Activity Log
+      </div>
       <div class="pd-timeline">
         {activity.map((item, idx) => {
-          const actionType = item.action.includes("create") || item.action.includes("add")
-            ? "created"
-            : item.action.includes("update") || item.action.includes("edit") || item.action.includes("move")
-            ? "updated"
-            : item.action.includes("complete") || item.action.includes("done")
-            ? "completed"
-            : "commented";
+          const actionType =
+            item.action.includes("create") || item.action.includes("add")
+              ? "created"
+              : item.action.includes("update") ||
+                  item.action.includes("edit") || item.action.includes("move")
+              ? "updated"
+              : item.action.includes("complete") || item.action.includes("done")
+              ? "completed"
+              : "commented";
           return (
             <div class="pd-tl-item">
               <div style="display:flex;flex-direction:column;align-items:center">
@@ -581,7 +818,9 @@ function ActivityPanel({ activity }: { activity: Activity[] }) {
                   <strong>{item.actor?.name ?? "System"}</strong>{" "}
                   {item.action.replaceAll("_", " ").toLowerCase()}
                 </p>
-                <p class="pd-tl-time">{new Date(item.createdAt).toLocaleString()}</p>
+                <p class="pd-tl-time">
+                  {new Date(item.createdAt).toLocaleString()}
+                </p>
               </div>
             </div>
           );

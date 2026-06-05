@@ -1,10 +1,10 @@
 import {
-  PieChart,
-  Pie,
   Cell,
-  Tooltip,
-  ResponsiveContainer,
   Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
 } from "./_recharts.tsx";
 
 type Datum = { name: string; label: string; value: number; color: string };
@@ -39,14 +39,19 @@ export function StatusPieChart(
           {data.map((d) => <Cell key={d.name} fill={d.color} />)}
         </Pie>
         <Tooltip
-          content={(p: { active?: boolean; payload?: Array<{ payload: Datum }> }) => {
+          content={(
+            p: { active?: boolean; payload?: Array<{ payload: Datum }> },
+          ) => {
             const { active, payload } = p;
             if (!active || !payload?.length) return null;
             const item = payload[0].payload;
             return (
               <div class="chart-tooltip">
                 <div class="chart-tooltip-row">
-                  <span class="chart-tooltip-dot" style={{ background: item.color }} />
+                  <span
+                    class="chart-tooltip-dot"
+                    style={{ background: item.color }}
+                  />
                   <span class="chart-tooltip-label">{item.label}</span>
                 </div>
                 <div class="chart-tooltip-value">{item.value}</div>

@@ -30,7 +30,9 @@ export default function ProjectsClient() {
     }
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   useEffect(() => {
     const cached = getCurrentUser();
@@ -46,7 +48,9 @@ export default function ProjectsClient() {
   if (loading) {
     return (
       <div class="pc-skeleton-grid">
-        {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} height={220} />)}
+        {Array.from({ length: 8 }).map((_, i) => (
+          <Skeleton key={i} height={220} />
+        ))}
       </div>
     );
   }
@@ -54,17 +58,34 @@ export default function ProjectsClient() {
   const mayCreate = canCreateProject(currentUserRole);
 
   const activeCount = projects.filter((p) => p.status === "ACTIVE").length;
-  const completedCount = projects.filter((p) => p.status === "COMPLETED").length;
+  const completedCount =
+    projects.filter((p) => p.status === "COMPLETED").length;
 
   return (
     <div class="pc-page">
       {/* Page header */}
       <header class="pc-page-header">
         <div>
-          <p class="mono" style={{ margin: 0, color: "var(--muted)", fontSize: "11px", letterSpacing: "0.06em" }}>
+          <p
+            class="mono"
+            style={{
+              margin: 0,
+              color: "var(--muted)",
+              fontSize: "11px",
+              letterSpacing: "0.06em",
+            }}
+          >
             PROJECT PORTFOLIO
           </p>
-          <h1 class="headline" style={{ margin: "2px 0 0", fontSize: "28px", fontWeight: 700, letterSpacing: "-0.02em" }}>
+          <h1
+            class="headline"
+            style={{
+              margin: "2px 0 0",
+              fontSize: "28px",
+              fontWeight: 700,
+              letterSpacing: "-0.02em",
+            }}
+          >
             Projects
           </h1>
         </div>
@@ -72,7 +93,11 @@ export default function ProjectsClient() {
           {projects.length > 0 && (
             <div class="pc-page-counts">
               <span class="pc-count-badge">{activeCount} Active</span>
-              {completedCount > 0 && <span class="pc-count-badge pc-count-badge--done">{completedCount} Completed</span>}
+              {completedCount > 0 && (
+                <span class="pc-count-badge pc-count-badge--done">
+                  {completedCount} Completed
+                </span>
+              )}
             </div>
           )}
           {mayCreate && (
@@ -91,10 +116,15 @@ export default function ProjectsClient() {
             <EmptyState
               icon="folder_open"
               title="No projects yet"
-              body={mayCreate ? "Create your first project to organize tasks, invite members, and track progress." : "You don't have permission to create projects."}
+              body={mayCreate
+                ? "Create your first project to organize tasks, invite members, and track progress."
+                : "You don't have permission to create projects."}
             />
             {mayCreate && (
-              <Button variant="primary" onClick={() => setOpen(true)}>
+              <Button
+                variant="primary"
+                onClick={() => setOpen(true)}
+              >
                 <Icon name="add" size={18} /> Create Project
               </Button>
             )}

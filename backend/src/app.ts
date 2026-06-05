@@ -17,6 +17,7 @@ import { commentRouteEntries } from "./routes/comment.routes.ts";
 import { notificationRouteEntries } from "./routes/notification.routes.ts";
 import { systemRouteEntries } from "./routes/system.routes.ts";
 import { uploadRouteEntries } from "./routes/upload.routes.ts";
+import { attachmentRouteEntries } from "./routes/attachment.routes.ts";
 
 export const createApp = () => {
   const app = new OpenAPIHono();
@@ -65,6 +66,9 @@ export const createApp = () => {
       const mime: Record<string, string> = {
         png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg",
         webp: "image/webp", gif: "image/gif",
+        pdf: "application/pdf", doc: "application/msword",
+        docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        zip: "application/zip",
       };
       return c.newResponse(file.buffer as ArrayBuffer, 200, { "Content-Type": mime[ext] ?? "application/octet-stream" });
     } catch {
@@ -82,6 +86,7 @@ export const createApp = () => {
     ...commentRouteEntries,
     ...notificationRouteEntries,
     ...uploadRouteEntries,
+    ...attachmentRouteEntries,
   ];
 
   for (const entry of allEntries) {

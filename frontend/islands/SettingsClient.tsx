@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import { get, patch, post } from "../lib/api.ts";
-import { clearSession, getAccessToken, getCurrentUser, saveSession } from "../lib/auth.ts";
+import {
+  clearSession,
+  getAccessToken,
+  getCurrentUser,
+  saveSession,
+} from "../lib/auth.ts";
 import { API_BASE_URL, SWAGGER_URL } from "../lib/constants.ts";
 import { toast } from "../lib/toast.ts";
 import type { User } from "../lib/types.ts";
@@ -96,7 +101,9 @@ export default function SettingsClient() {
       setMessage("Profile updated.");
       toast("Profile updated.", "success");
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Unable to save profile.";
+      const msg = err instanceof Error
+        ? err.message
+        : "Unable to save profile.";
       toast(msg, "danger");
     }
   }
@@ -169,7 +176,11 @@ export default function SettingsClient() {
               : avatarUrl
               ? (
                 <div class="avatar-upload-preview">
-                  <img src={avatarUrl} alt="Avatar preview" class="avatar-upload-img" />
+                  <img
+                    src={avatarUrl}
+                    alt="Avatar preview"
+                    class="avatar-upload-img"
+                  />
                   <p class="avatar-upload-hint">Click or drag to replace</p>
                 </div>
               )
@@ -177,11 +188,17 @@ export default function SettingsClient() {
                 <div class="avatar-upload-preview">
                   <Icon name="add_photo_alternate" size={28} />
                   <p>Click or drag an image</p>
-                  <p class="avatar-upload-hint">PNG, JPEG, WebP, GIF · max 2 MB</p>
+                  <p class="avatar-upload-hint">
+                    PNG, JPEG, WebP, GIF · max 2 MB
+                  </p>
                 </div>
               )}
           </div>
-          {uploadError && <p class="badge badge-danger" style="margin-top:8px">{uploadError}</p>}
+          {uploadError && (
+            <p class="badge badge-danger" style="margin-top:8px">
+              {uploadError}
+            </p>
+          )}
         </div>
         <div
           class="panel"
@@ -219,10 +236,19 @@ export default function SettingsClient() {
         </div>
       </section>
 
-      <hr style={{ border: "none", borderTop: "1px solid var(--border)", margin: "12px 0" }} />
+      <hr
+        style={{
+          border: "none",
+          borderTop: "1px solid var(--border)",
+          margin: "12px 0",
+        }}
+      />
 
       <section>
-        <p class="mono" style={{ margin: 0, color: "var(--muted)", fontSize: "11px" }}>
+        <p
+          class="mono"
+          style={{ margin: 0, color: "var(--muted)", fontSize: "11px" }}
+        >
           DEBUG
         </p>
         <h2 class="headline" style={{ margin: "4px 0 16px", fontSize: "24px" }}>

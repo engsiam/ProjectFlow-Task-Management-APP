@@ -1,5 +1,10 @@
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "./_recharts.tsx";
-
+import {
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+} from "./_recharts.tsx";
 
 type Datum = { name: string; label: string; value: number; color: string };
 
@@ -29,12 +34,12 @@ export function DonutChartComponent(
             isAnimationActive
             animationDuration={600}
           >
-            {data.map((d) => (
-              <Cell key={d.name} fill={d.color} />
-            ))}
+            {data.map((d) => <Cell key={d.name} fill={d.color} />)}
           </Pie>
           <Tooltip
-            content={(p: { active?: boolean; payload?: Array<{ payload: Datum }> }) => {
+            content={(
+              p: { active?: boolean; payload?: Array<{ payload: Datum }> },
+            ) => {
               const { active, payload } = p;
               if (!active || !payload?.length) return null;
               const item = payload[0].payload;
@@ -42,11 +47,15 @@ export function DonutChartComponent(
               return (
                 <div class="chart-tooltip">
                   <div class="chart-tooltip-row">
-                    <span class="chart-tooltip-dot" style={{ background: item.color }} />
+                    <span
+                      class="chart-tooltip-dot"
+                      style={{ background: item.color }}
+                    />
                     <span class="chart-tooltip-label">{item.label}</span>
                   </div>
                   <div class="chart-tooltip-value">
-                    {fmt(item.value)} <span class="chart-tooltip-muted">({pct}%)</span>
+                    {fmt(item.value)}{" "}
+                    <span class="chart-tooltip-muted">({pct}%)</span>
                   </div>
                 </div>
               );

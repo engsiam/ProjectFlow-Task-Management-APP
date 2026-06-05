@@ -202,3 +202,21 @@ export type AnalyticsCharts = {
   comparison: ComparisonDatum[];
   generatedAt: string;
 };
+
+// ---------- Attachments ----------
+export type Attachment = {
+  id: ID;
+  taskId: ID;
+  fileName: string;
+  mimeType: string;
+  fileSize: number;
+  uploadedBy: {
+    id: ID;
+    name: string;
+    username: string;
+    avatar?: string | null;
+  };
+  createdAt: string;
+  updatedAt: string;
+  downloadUrl: string;
+};

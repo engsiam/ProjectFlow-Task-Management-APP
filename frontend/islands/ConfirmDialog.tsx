@@ -16,7 +16,14 @@ const variantConfig = {
 } as const;
 
 export default function ConfirmDialog(
-  { title, body, confirmLabel = "Confirm", variant = "danger", onCancel, onConfirm }: {
+  {
+    title,
+    body,
+    confirmLabel = "Confirm",
+    variant = "danger",
+    onCancel,
+    onConfirm,
+  }: {
     title: string;
     body: string;
     confirmLabel?: string;
@@ -28,9 +35,15 @@ export default function ConfirmDialog(
   const cfg = variantConfig[variant];
 
   return (
-    <div class="confirm-backdrop" onClick={(e) => e.target === e.currentTarget && onCancel()}>
+    <div
+      class="confirm-backdrop"
+      onClick={(e) => e.target === e.currentTarget && onCancel()}
+    >
       <div class="confirm-modal">
-        <div class="confirm-icon-wrap" style={{ background: cfg.bg, color: cfg.color }}>
+        <div
+          class="confirm-icon-wrap"
+          style={{ background: cfg.bg, color: cfg.color }}
+        >
           <Icon name={cfg.icon} size={28} />
         </div>
         <h2 class="confirm-title">{title}</h2>

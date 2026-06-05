@@ -11,7 +11,8 @@ export const PieChart = Recharts.PieChart as unknown as AnyComp;
 export const Pie = Recharts.Pie as unknown as AnyComp;
 export const Cell = Recharts.Cell as unknown as AnyComp;
 export const Tooltip = Recharts.Tooltip as unknown as AnyComp;
-export const ResponsiveContainer = Recharts.ResponsiveContainer as unknown as AnyComp;
+export const ResponsiveContainer = Recharts
+  .ResponsiveContainer as unknown as AnyComp;
 export const Legend = Recharts.Legend as unknown as AnyComp;
 export const LineChart = Recharts.LineChart as unknown as AnyComp;
 export const Line = Recharts.Line as unknown as AnyComp;

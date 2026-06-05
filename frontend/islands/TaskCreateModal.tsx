@@ -1,14 +1,11 @@
 import { useEffect, useState } from "preact/hooks";
+import { getAccessToken, getCurrentUser } from "../lib/auth.ts";
 import { getList, post } from "../lib/api.ts";
-import { getCurrentUser } from "../lib/auth.ts";
+import { API_BASE_URL } from "../lib/constants.ts";
 import { toast } from "../lib/toast.ts";
-import type {
-  Priority,
-  Project,
-  Task,
-  TaskStatus,
-} from "../lib/types.ts";
+import type { Priority, Project, Task, TaskStatus } from "../lib/types.ts";
 import { Button, Icon } from "../components/ui.tsx";
+import FilePicker from "../components/FilePicker.tsx";
 
 interface PublicUser {
   id: string;
@@ -44,6 +41,7 @@ export default function TaskCreateModal(
   const [userLoading, setUserLoading] = useState(false);
   const [allUsers, setAllUsers] = useState<PublicUser[]>([]);
   const [error, setError] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
 
   useEffect(() => {
     setAssigneeId("");
@@ -89,15 +87,35 @@ export default function TaskCreateModal(
     setLoading(true);
     setError("");
     try {
-      const created = await post<Task>(`/projects/${selectedProject}/tasks`, {
-        title,
-        description,
-        status,
-        priority,
-        assigneeId: assigneeId || undefined,
-        dueDate: toIsoDate(dueDate),
-        labels: labels.split(",").map((label) => label.trim()).filter(Boolean),
-      });
+      let created: Task;
+      const labelList = labels.split(",").map((label) => label.trim()).filter(
+        Boolean,
+      );
+      if (files.length === 0) {
+        created = await post<Task>(`/projects/${selectedProject}/tasks`, {
+          title,
+          description,
+          status,
+          priority,
+          assigneeId: assigneeId || undefined,
+          dueDate: toIsoDate(dueDate),
+          labels: labelList,
+        });
+      } else {
+        created = await createTaskWithAttachments(
+          selectedProject,
+          {
+            title,
+            description,
+            status,
+            priority,
+            assigneeId,
+            dueDate,
+            labels: labelList,
+          },
+          files,
+        );
+      }
       toast(`"${title}" created!`, "success");
       await onCreated(created);
       onClose();
@@ -110,6 +128,51 @@ export default function TaskCreateModal(
     } finally {
       setLoading(false);
     }
+  }
+
+  async function createTaskWithAttachments(
+    projectId: string,
+    fields: {
+      title: string;
+      description: string;
+      status: TaskStatus;
+      priority: Priority;
+      assigneeId: string;
+      dueDate: string;
+      labels: string[];
+    },
+    fileList: File[],
+  ): Promise<Task> {
+    const form = new FormData();
+    form.append("title", fields.title);
+    if (fields.description) form.append("description", fields.description);
+    form.append("status", fields.status);
+    form.append("priority", fields.priority);
+    if (fields.assigneeId) form.append("assigneeId", fields.assigneeId);
+    if (fields.dueDate) form.append("dueDate", toIsoDate(fields.dueDate) ?? "");
+    form.append("labels", JSON.stringify(fields.labels));
+    for (const f of fileList) form.append("file", f);
+
+    const headers = new Headers();
+    const token = getAccessToken();
+    if (token) headers.set("Authorization", `Bearer ${token}`);
+
+    const res = await fetch(
+      `${API_BASE_URL}/projects/${projectId}/tasks/with-attachments`,
+      {
+        method: "POST",
+        headers,
+        body: form,
+      },
+    );
+    const body = await res.json().catch(() => null);
+    if (!res.ok) {
+      const message = body && typeof body === "object" && "message" in body
+        ? String((body as { message: unknown }).message)
+        : "Upload failed";
+      throw new Error(message);
+    }
+    return (body as { data: Task }).data;
   }
 
   return (
@@ -230,6 +293,10 @@ export default function TaskCreateModal(
               value={description}
               onInput={(e) => setDescription(e.currentTarget.value)}
             />
+          </div>
+          <div style={{ gridColumn: "1 / -1" }}>
+            <label class="label">Attachments</label>
+            <FilePicker files={files} onChange={setFiles} compact />
           </div>
         </div>
         {error && <p class="badge badge-danger">{error}</p>}

@@ -1,5 +1,10 @@
 import { API_BASE_URL } from "./constants.ts";
-import { clearSession, getAccessToken, getRefreshToken, saveSession } from "./auth.ts";
+import {
+  clearSession,
+  getAccessToken,
+  getRefreshToken,
+  saveSession,
+} from "./auth.ts";
 import type { ApiResponse } from "./types.ts";
 import { recordApiCall } from "./api-metrics.ts";
 
@@ -103,10 +108,17 @@ export async function api<T>(
       status = response.status;
     } else {
       const elapsed = Math.round(performance.now() - start);
-      recordApiCall({ method, path, status: 401, duration: elapsed, timestamp: Date.now() });
+      recordApiCall({
+        method,
+        path,
+        status: 401,
+        duration: elapsed,
+        timestamp: Date.now(),
+      });
       clearSession();
       if (
-        typeof location !== "undefined" && !location.pathname.startsWith("/login")
+        typeof location !== "undefined" &&
+        !location.pathname.startsWith("/login")
       ) {
         location.href = "/login";
       }
@@ -121,7 +133,13 @@ export async function api<T>(
   }
 
   const elapsed = Math.round(performance.now() - start);
-  recordApiCall({ method, path, status, duration: elapsed, timestamp: Date.now() });
+  recordApiCall({
+    method,
+    path,
+    status,
+    duration: elapsed,
+    timestamp: Date.now(),
+  });
 
   if (!response.ok) {
     const message =
@@ -198,3 +216,56 @@ export const patch = <T>(path: string, body?: unknown) =>
     normalizeEntity,
   );
 export const del = <T>(path: string) => api<T>(path, { method: "DELETE" });
+
+/**
+ * Upload a file as multipart/form-data. Does not set Content-Type
+ * (the browser adds the boundary automatically). Records API metrics
+ * for the underlying call. Returns the parsed JSON body.
+ */
+export const uploadFile = async <T>(
+  path: string,
+  file: File,
+  fieldName = "file",
+): Promise<T> => {
+  const start = performance.now();
+  const method = "POST";
+  const form = new FormData();
+  form.append(fieldName, file);
+  const headers = new Headers();
+  const token = getAccessToken();
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method,
+    headers,
+    body: form,
+  });
+  const elapsed = Math.round(performance.now() - start);
+  recordApiCall({
+    method,
+    path,
+    status: response.status,
+    duration: elapsed,
+    timestamp: Date.now(),
+  });
+
+  let payload: ApiResponse<T> | T | null = null;
+  const contentType = response.headers.get("content-type") ?? "";
+  if (contentType.includes("application/json")) {
+    payload = await response.json();
+  }
+  if (!response.ok) {
+    const message =
+      payload && typeof payload === "object" && "message" in payload
+        ? String((payload as { message: unknown }).message)
+        : "Upload failed";
+    throw new ApiError(message, response.status, payload);
+  }
+  if (
+    payload && typeof payload === "object" && "success" in payload &&
+    "data" in payload
+  ) {
+    return normalizeEntity((payload as ApiResponse<T>).data);
+  }
+  return payload as T;
+};

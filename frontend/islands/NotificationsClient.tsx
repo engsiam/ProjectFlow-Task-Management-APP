@@ -199,22 +199,46 @@ export default function NotificationsClient() {
                       }}
                     >
                       <strong>
-                        {item.title?.length > 60 ? item.title.slice(0, 60) + "…" : item.title}
+                        {item.title?.length > 60
+                          ? item.title.slice(0, 60) + "…"
+                          : item.title}
                       </strong>
                       {!item.read && <Badge tone="warning">Unread</Badge>}
                     </div>
-                    <p style={{ margin: "4px 0 0", color: "var(--muted)", fontSize: "13px" }}>
-                      {item.message?.length > 120 ? item.message.slice(0, 120) + "…" : item.message}
+                    <p
+                      style={{
+                        margin: "4px 0 0",
+                        color: "var(--muted)",
+                        fontSize: "13px",
+                      }}
+                    >
+                      {item.message?.length > 120
+                        ? item.message.slice(0, 120) + "…"
+                        : item.message}
                     </p>
                   </div>
                 </a>
-                <div style={{ display: "flex", alignItems: "center", padding: "0 14px 0 0" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "0 14px 0 0",
+                  }}
+                >
                   <button
                     type="button"
                     class="btn btn-secondary"
-                    style={{ whiteSpace: "nowrap", fontSize: "12px", minHeight: "30px" }}
+                    style={{
+                      whiteSpace: "nowrap",
+                      fontSize: "12px",
+                      minHeight: "30px",
+                    }}
                     disabled={item.read || busyId === item.id || markingAll}
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); markRead(item.id); }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      markRead(item.id);
+                    }}
                   >
                     {item.read
                       ? "Read"

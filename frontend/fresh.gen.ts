@@ -39,6 +39,7 @@ import * as $SettingsClient from "./islands/SettingsClient.tsx";
 import * as $ShellUser from "./islands/ShellUser.tsx";
 import * as $SignupForm from "./islands/SignupForm.tsx";
 import * as $SystemStatus from "./islands/SystemStatus.tsx";
+import * as $TaskAttachments from "./islands/TaskAttachments.tsx";
 import * as $TaskCreateModal from "./islands/TaskCreateModal.tsx";
 import * as $TaskDetailModal from "./islands/TaskDetailModal.tsx";
 import * as $TaskEditModal from "./islands/TaskEditModal.tsx";
@@ -89,6 +90,7 @@ const manifest = {
     "./islands/ShellUser.tsx": $ShellUser,
     "./islands/SignupForm.tsx": $SignupForm,
     "./islands/SystemStatus.tsx": $SystemStatus,
+    "./islands/TaskAttachments.tsx": $TaskAttachments,
     "./islands/TaskCreateModal.tsx": $TaskCreateModal,
     "./islands/TaskDetailModal.tsx": $TaskDetailModal,
     "./islands/TaskEditModal.tsx": $TaskEditModal,

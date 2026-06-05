@@ -56,7 +56,9 @@ export default function SystemStatus({ compact }: { compact?: boolean }) {
           boxShadow: `0 0 0 4px color-mix(in srgb, ${color}, transparent 82%)`,
         }}
       />
-      {!compact && <span style={{ fontSize: "12px", fontWeight: 800 }}>{label}</span>}
+      {!compact && (
+        <span style={{ fontSize: "12px", fontWeight: 800 }}>{label}</span>
+      )}
     </button>
   );
 }

@@ -7,10 +7,17 @@ import type {
 } from "../lib/types.ts";
 
 export function Icon(
-  { name, size = 22, style }: { name: string; size?: number; style?: Record<string, string> },
+  { name, size = 22, style }: {
+    name: string;
+    size?: number;
+    style?: Record<string, string>;
+  },
 ) {
   return (
-    <span class="material-symbols-outlined" style={{ fontSize: `${size}px`, ...style }}>
+    <span
+      class="material-symbols-outlined"
+      style={{ fontSize: `${size}px`, ...style }}
+    >
       {name}
     </span>
   );

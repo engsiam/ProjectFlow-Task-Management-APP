@@ -167,10 +167,20 @@ export default function NotificationDropdown() {
                 key={item.id}
                 href={notificationHref(item)}
                 class="panel"
-                style={{ padding: "10px", display: "block", textDecoration: "none" }}
+                style={{
+                  padding: "10px",
+                  display: "block",
+                  textDecoration: "none",
+                }}
                 onClick={() => setOpen(false)}
               >
-                <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "10px",
+                    alignItems: "flex-start",
+                  }}
+                >
                   <span
                     style={{
                       width: "28px",
@@ -189,9 +199,17 @@ export default function NotificationDropdown() {
                     <Icon name={notificationIcon(item)} size={16} />
                   </span>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "6px",
+                        alignItems: "center",
+                      }}
+                    >
                       <strong style={{ fontSize: "13px" }}>
-                        {item.title?.length > 40 ? item.title.slice(0, 40) + "…" : item.title}
+                        {item.title?.length > 40
+                          ? item.title.slice(0, 40) + "…"
+                          : item.title}
                       </strong>
                       {!item.read && (
                         <span
@@ -212,7 +230,9 @@ export default function NotificationDropdown() {
                         fontSize: "12px",
                       }}
                     >
-                      {item.message.length > 60 ? item.message.slice(0, 60) + "…" : item.message}
+                      {item.message.length > 60
+                        ? item.message.slice(0, 60) + "…"
+                        : item.message}
                     </p>
                   </div>
                 </div>

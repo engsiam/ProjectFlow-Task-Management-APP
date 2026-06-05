@@ -19,7 +19,10 @@ function saveRecent(query: string) {
   try {
     const items = getRecent().filter((s) => s !== query);
     items.unshift(query);
-    globalThis.localStorage?.setItem(RECENT_KEY, JSON.stringify(items.slice(0, MAX_RECENT)));
+    globalThis.localStorage?.setItem(
+      RECENT_KEY,
+      JSON.stringify(items.slice(0, MAX_RECENT)),
+    );
   } catch {
     /* noop */
   }
@@ -47,7 +50,9 @@ export default function SearchCommand() {
   }
 
   function scrollIntoView(idx: number) {
-    const el = listRef.current?.querySelector<HTMLElement>(`[data-idx="${idx}"]`);
+    const el = listRef.current?.querySelector<HTMLElement>(
+      `[data-idx="${idx}"]`,
+    );
     el?.scrollIntoView({ block: "nearest" });
   }
 
@@ -62,9 +67,13 @@ export default function SearchCommand() {
     const trimmed = q.trim().toLowerCase();
 
     Promise.all([
-      getList<Project>("/projects", { search: trimmed, limit: 5 }).catch(() => []),
+      getList<Project>("/projects", { search: trimmed, limit: 5 }).catch(
+        () => [],
+      ),
       getList<Task>("/tasks", { search: trimmed, limit: 5 }).catch(() => []),
-      get<{ items: User[] }>("/users/search", { q: trimmed, limit: 5 }).catch(() => null),
+      get<{ items: User[] }>("/users/search", { q: trimmed, limit: 5 }).catch(
+        () => null,
+      ),
     ])
       .then(([projects, tasks, userRes]) => {
         if (ctrl.signal.aborted) return;
@@ -78,7 +87,9 @@ export default function SearchCommand() {
             items: projects.map((p) => ({
               id: p.id,
               title: p.name,
-              subtitle: `${p.status?.toLowerCase() ?? "active"} · ${p.taskCount ?? 0} tasks`,
+              subtitle: `${p.status?.toLowerCase() ?? "active"} · ${
+                p.taskCount ?? 0
+              } tasks`,
               icon: "folder",
               href: `/projects/${p.id}`,
               iconColor: "var(--primary)",
@@ -93,10 +104,16 @@ export default function SearchCommand() {
             items: tasks.map((t) => ({
               id: t.id,
               title: t.title,
-              subtitle: `${t.status?.replace("_", " ") ?? "todo"} · ${t.project?.name ?? "No project"}`,
-              icon: t.priority === "URGENT" || t.priority === "HIGH" ? "priority_high" : "task_alt",
+              subtitle: `${t.status?.replace("_", " ") ?? "todo"} · ${
+                t.project?.name ?? "No project"
+              }`,
+              icon: t.priority === "URGENT" || t.priority === "HIGH"
+                ? "priority_high"
+                : "task_alt",
               href: `/tasks`,
-              iconColor: t.priority === "URGENT" || t.priority === "HIGH" ? "var(--danger)" : "var(--accent)",
+              iconColor: t.priority === "URGENT" || t.priority === "HIGH"
+                ? "var(--danger)"
+                : "var(--accent)",
             })),
           });
         }
@@ -247,13 +264,22 @@ export default function SearchCommand() {
   }, [open]);
 
   // Reset index when items change
-  useEffect(() => { resetIndex(); }, [flatItems.length]);
+  useEffect(() => {
+    resetIndex();
+  }, [flatItems.length]);
 
   return (
-    <div class="search-command" role="combobox" aria-expanded={open} aria-haspopup="listbox">
+    <div
+      class="search-command"
+      role="combobox"
+      aria-expanded={open}
+      aria-haspopup="listbox"
+    >
       <div class="search-command-input-wrap">
         <span class="search-command-icon" aria-hidden="true">
-          <span class="material-symbols-outlined" style="font-size: 20px">search</span>
+          <span class="material-symbols-outlined" style="font-size: 20px">
+            search
+          </span>
         </span>
         <input
           ref={inputRef}
@@ -269,7 +295,9 @@ export default function SearchCommand() {
         />
         <kbd class="search-command-kbd">
           <span class="search-kbd-mac">
-            <span class="material-symbols-outlined" style="font-size: 14px">keyboard_command_key</span>
+            <span class="material-symbols-outlined" style="font-size: 14px">
+              keyboard_command_key
+            </span>
           </span>
           <span class="search-kbd-text">K</span>
         </kbd>
@@ -281,7 +309,9 @@ export default function SearchCommand() {
           {showRecent && recent.length > 0 && (
             <div class="search-section">
               <div class="search-section-label">
-                <span class="material-symbols-outlined" style="font-size: 14px">history</span>
+                <span class="material-symbols-outlined" style="font-size: 14px">
+                  history
+                </span>
                 Recent Searches
               </div>
               <div class="search-recent-list">
@@ -295,7 +325,12 @@ export default function SearchCommand() {
                     onClick={() => selectRecent(term)}
                   >
                     <span class="search-item-icon" style="color: var(--muted)">
-                      <span class="material-symbols-outlined" style="font-size: 18px">history</span>
+                      <span
+                        class="material-symbols-outlined"
+                        style="font-size: 18px"
+                      >
+                        history
+                      </span>
                     </span>
                     <div class="search-item-body">
                       <div class="search-item-title">{term}</div>
@@ -305,9 +340,17 @@ export default function SearchCommand() {
                       type="button"
                       class="search-item-action"
                       aria-label={`Remove ${term}`}
-                      onClick={(e) => { e.stopPropagation(); removeRecent(term); }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeRecent(term);
+                      }}
                     >
-                      <span class="material-symbols-outlined" style="font-size: 14px">close</span>
+                      <span
+                        class="material-symbols-outlined"
+                        style="font-size: 14px"
+                      >
+                        close
+                      </span>
                     </button>
                   </button>
                 ))}
@@ -336,11 +379,19 @@ export default function SearchCommand() {
           {!loading && groups.length > 0 && (
             <>
               {groups.map((group, gi) => {
-                const groupOffset = groups.slice(0, gi).reduce((sum, g) => sum + g.items.length, 0);
+                const groupOffset = groups.slice(0, gi).reduce(
+                  (sum, g) => sum + g.items.length,
+                  0,
+                );
                 return (
                   <div class="search-section" key={group.label}>
                     <div class="search-section-label">
-                      <span class="material-symbols-outlined" style="font-size: 14px">{group.icon}</span>
+                      <span
+                        class="material-symbols-outlined"
+                        style="font-size: 14px"
+                      >
+                        {group.icon}
+                      </span>
                       {group.label}
                     </div>
                     <div class="search-group-list">
@@ -349,14 +400,26 @@ export default function SearchCommand() {
                         return (
                           <button
                             type="button"
-                            class={`search-item ${idx === activeIdx ? "active" : ""}`}
+                            class={`search-item ${
+                              idx === activeIdx ? "active" : ""
+                            }`}
                             data-idx={idx}
                             role="option"
                             aria-selected={idx === activeIdx}
                             onClick={() => selectItem(item)}
                           >
-                            <span class="search-item-icon" style={{ color: item.iconColor ?? "var(--muted)" }}>
-                              <span class="material-symbols-outlined" style="font-size: 18px">{item.icon}</span>
+                            <span
+                              class="search-item-icon"
+                              style={{
+                                color: item.iconColor ?? "var(--muted)",
+                              }}
+                            >
+                              <span
+                                class="material-symbols-outlined"
+                                style="font-size: 18px"
+                              >
+                                {item.icon}
+                              </span>
                             </span>
                             <div class="search-item-body">
                               <div class="search-item-title">{item.title}</div>
@@ -373,13 +436,33 @@ export default function SearchCommand() {
               {/* Hint */}
               <div class="search-footer-hint">
                 <span>
-                  <span class="material-symbols-outlined" style="font-size: 12px">keyboard_arrow_up</span>
-                  <span class="material-symbols-outlined" style="font-size: 12px">keyboard_arrow_down</span>
-                  {" "}navigate{"  "}
-                  <span class="material-symbols-outlined" style="font-size: 12px">keyboard_return</span>
-                  {" "}select{"  "}
-                  <span class="material-symbols-outlined" style="font-size: 12px">close</span>
-                  {" "}close
+                  <span
+                    class="material-symbols-outlined"
+                    style="font-size: 12px"
+                  >
+                    keyboard_arrow_up
+                  </span>
+                  <span
+                    class="material-symbols-outlined"
+                    style="font-size: 12px"
+                  >
+                    keyboard_arrow_down
+                  </span>{" "}
+                  navigate{"  "}
+                  <span
+                    class="material-symbols-outlined"
+                    style="font-size: 12px"
+                  >
+                    keyboard_return
+                  </span>{" "}
+                  select{"  "}
+                  <span
+                    class="material-symbols-outlined"
+                    style="font-size: 12px"
+                  >
+                    close
+                  </span>{" "}
+                  close
                 </span>
               </div>
             </>
@@ -388,7 +471,12 @@ export default function SearchCommand() {
           {/* Empty state */}
           {!loading && hasSearched && groups.length === 0 && (
             <div class="search-empty">
-              <span class="material-symbols-outlined" style="font-size: 28px; color: var(--muted)">search_off</span>
+              <span
+                class="material-symbols-outlined"
+                style="font-size: 28px; color: var(--muted)"
+              >
+                search_off
+              </span>
               <p class="search-empty-title">No results found</p>
               <p class="search-empty-sub">Try another keyword</p>
             </div>
@@ -397,9 +485,16 @@ export default function SearchCommand() {
           {/* Empty focused state (no recent, no query) */}
           {!loading && !hasSearched && recent.length === 0 && !query.trim() && (
             <div class="search-empty">
-              <span class="material-symbols-outlined" style="font-size: 28px; color: var(--muted)">search</span>
+              <span
+                class="material-symbols-outlined"
+                style="font-size: 28px; color: var(--muted)"
+              >
+                search
+              </span>
               <p class="search-empty-title">Type to search</p>
-              <p class="search-empty-sub">Search across projects, tasks, and members</p>
+              <p class="search-empty-sub">
+                Search across projects, tasks, and members
+              </p>
             </div>
           )}
         </div>

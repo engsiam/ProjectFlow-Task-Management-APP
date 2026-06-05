@@ -1,12 +1,12 @@
 import {
-  BarChart,
   Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
 } from "./_recharts.tsx";
 import { Avatar } from "../ui.tsx";
 
@@ -56,10 +56,20 @@ export function ProductivityBarChart(
           width={110}
         />
         <Tooltip
-          cursor={{ fill: "color-mix(in srgb, var(--primary), transparent 92%)" }}
+          cursor={{
+            fill: "color-mix(in srgb, var(--primary), transparent 92%)",
+          }}
           content={(p: {
             active?: boolean;
-            payload?: Array<{ payload: Datum; value: number; name: string; color: string; dataKey: string }>;
+            payload?: Array<
+              {
+                payload: Datum;
+                value: number;
+                name: string;
+                color: string;
+                dataKey: string;
+              }
+            >;
           }) => {
             const { active, payload } = p;
             if (!active || !payload?.length) return null;
@@ -67,14 +77,25 @@ export function ProductivityBarChart(
             return (
               <div class="chart-tooltip">
                 <div class="chart-tooltip-user">
-                  <Avatar user={{ name: row.name, avatar: row.avatar }} size={24} />
+                  <Avatar
+                    user={{ name: row.name, avatar: row.avatar }}
+                    size={24}
+                  />
                   <span class="chart-tooltip-title">{row.name}</span>
                 </div>
                 {payload.map((it) => (
                   <div class="chart-tooltip-row" key={it.dataKey}>
-                    <span class="chart-tooltip-dot" style={{ background: it.color }} />
+                    <span
+                      class="chart-tooltip-dot"
+                      style={{ background: it.color }}
+                    />
                     <span class="chart-tooltip-label">{it.name}</span>
-                    <span class="chart-tooltip-value" style={{ marginLeft: "auto" }}>{it.value}</span>
+                    <span
+                      class="chart-tooltip-value"
+                      style={{ marginLeft: "auto" }}
+                    >
+                      {it.value}
+                    </span>
                   </div>
                 ))}
                 <div class="chart-tooltip-divider" />

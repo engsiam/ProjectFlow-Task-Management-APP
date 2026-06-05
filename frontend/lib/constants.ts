@@ -1,4 +1,5 @@
 export const API_BASE_URL = "http://localhost:8000/api";
+export const BACKEND_ORIGIN = "http://localhost:8000";
 export const HEALTH_URL = "http://localhost:8000/health";
 export const SWAGGER_URL = "http://localhost:8000/docs";
 

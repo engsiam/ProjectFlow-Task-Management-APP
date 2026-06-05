@@ -32,7 +32,9 @@ export default class ErrorBoundary extends Component<Props, State> {
         <div class="error-boundary">
           <div class="error-boundary-inner">
             <Icon name="error" size={32} style={{ color: "var(--danger)" }} />
-            <p><strong>Something went wrong</strong></p>
+            <p>
+              <strong>Something went wrong</strong>
+            </p>
             <p style={{ color: "var(--muted)", fontSize: "14px" }}>
               {this.state.error?.message ?? "An unexpected error occurred."}
             </p>

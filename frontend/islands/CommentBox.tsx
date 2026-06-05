@@ -37,7 +37,9 @@ export default function CommentBox({ taskId }: { taskId: string }) {
       setBody("");
       await load();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Unable to post comment.";
+      const msg = err instanceof Error
+        ? err.message
+        : "Unable to post comment.";
       toast(msg, "danger");
     }
   }
@@ -79,8 +81,8 @@ export default function CommentBox({ taskId }: { taskId: string }) {
               fontSize: "13px",
             }}
           >
-            You have read-only access to this project. Switch to a project member
-            role to add comments.
+            You have read-only access to this project. Switch to a project
+            member role to add comments.
           </div>
         )}
       {comments.map((comment) => (

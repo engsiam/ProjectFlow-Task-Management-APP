@@ -100,6 +100,64 @@ export const createTaskRoute = createRoute({
   },
 });
 
+export const createTaskWithAttachmentsRoute = createRoute({
+  method: "post",
+  path: "/api/projects/:projectId/tasks/with-attachments",
+  tags: tag,
+  summary: "Create a task and upload attachments in one request",
+  description:
+    "Multipart form data. Fields: title, description, status, priority, assigneeId, dueDate, labels (JSON or comma list). File fields: file (one or many). Same authorization as task creation.",
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: projectIdParam,
+    body: {
+      // Multipart: Hono's parseBody() returns File objects, not strings.
+      // Use z.any() to skip Zod's body validator — the controller does
+      // real validation via attachmentService.create → validateFile.
+      content: {
+        "multipart/form-data": {
+          schema: z.object({
+            title: z.string(),
+            description: z.string().optional(),
+            status: z.string().optional(),
+            priority: z.string().optional(),
+            assigneeId: z.string().optional(),
+            dueDate: z.string().optional(),
+            labels: z.string().optional(),
+            file: z.any().openapi({ type: "string", format: "binary" }),
+          }).openapi("CreateTaskWithAttachments"),
+        },
+      },
+      required: true,
+    },
+  },
+  responses: {
+    201: jsonCreatedResponse("Task created with attachments", taskSchema.extend({
+      attachments: z.array(z.object({
+        id: z.string(),
+        taskId: z.string(),
+        fileName: z.string(),
+        mimeType: z.string(),
+        fileSize: z.number().int(),
+        uploadedBy: z.object({
+          id: z.string(),
+          name: z.string(),
+          username: z.string(),
+          avatar: z.string().nullable().optional(),
+        }),
+        createdAt: z.string(),
+        updatedAt: z.string(),
+        downloadUrl: z.string(),
+      })),
+    })),
+    ...jsonErrorResponses([
+      { status: 400, description: "Validation error, unsupported file type, or maximum file size exceeded" },
+      { status: 403, description: "Forbidden" },
+      { status: 404, description: "Project not found" },
+    ]),
+  },
+});
+
 export const getTaskRoute = createRoute({
   method: "get",
   path: "/api/tasks/:taskId",
@@ -218,6 +276,11 @@ export const taskRouteEntries: RouteEntry[] = [
   {
     route: createTaskRoute,
     handler: taskCtrl.createTask as Handler,
+    middleware: m([auth(), requireProjectContributor()]),
+  },
+  {
+    route: createTaskWithAttachmentsRoute,
+    handler: taskCtrl.createTaskWithAttachments as Handler,
     middleware: m([auth(), requireProjectContributor()]),
   },
   { route: getTaskRoute, handler: taskCtrl.getTask as Handler, middleware: m([auth()]) },

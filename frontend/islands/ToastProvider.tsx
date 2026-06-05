@@ -7,10 +7,25 @@ type Toast = {
   tone?: "success" | "danger" | "warning";
 };
 
-const TONE_COLORS: Record<string, { bg: string; border: string; icon: string }> = {
-  success: { bg: "color-mix(in srgb, var(--success), transparent 88%)", border: "color-mix(in srgb, var(--success), transparent 60%)", icon: "check_circle" },
-  danger: { bg: "color-mix(in srgb, var(--danger), transparent 88%)", border: "color-mix(in srgb, var(--danger), transparent 60%)", icon: "error" },
-  warning: { bg: "color-mix(in srgb, var(--warning), transparent 88%)", border: "color-mix(in srgb, var(--warning), transparent 60%)", icon: "warning" },
+const TONE_COLORS: Record<
+  string,
+  { bg: string; border: string; icon: string }
+> = {
+  success: {
+    bg: "color-mix(in srgb, var(--success), transparent 88%)",
+    border: "color-mix(in srgb, var(--success), transparent 60%)",
+    icon: "check_circle",
+  },
+  danger: {
+    bg: "color-mix(in srgb, var(--danger), transparent 88%)",
+    border: "color-mix(in srgb, var(--danger), transparent 60%)",
+    icon: "error",
+  },
+  warning: {
+    bg: "color-mix(in srgb, var(--warning), transparent 88%)",
+    border: "color-mix(in srgb, var(--warning), transparent 60%)",
+    icon: "warning",
+  },
 };
 
 export default function ToastProvider() {
@@ -18,7 +33,9 @@ export default function ToastProvider() {
 
   useEffect(() => {
     function onToast(event: Event) {
-      const detail = (event as CustomEvent<{ message: string; tone?: Toast["tone"] }>).detail;
+      const detail =
+        (event as CustomEvent<{ message: string; tone?: Toast["tone"] }>)
+          .detail;
       const toast: Toast = { id: Date.now(), tone: "success", ...detail };
       setToasts((prev) => [...prev, toast]);
       setTimeout(
@@ -63,7 +80,11 @@ export default function ToastProvider() {
               borderRadius: "8px",
               background: colors.bg,
               border: `1px solid ${colors.border}`,
-              color: toast.tone === "danger" ? "var(--danger)" : toast.tone === "warning" ? "var(--warning)" : "var(--success)",
+              color: toast.tone === "danger"
+                ? "var(--danger)"
+                : toast.tone === "warning"
+                ? "var(--warning)"
+                : "var(--success)",
               fontSize: "14px",
               fontWeight: 600,
               boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
@@ -73,13 +94,19 @@ export default function ToastProvider() {
             }}
           >
             <Icon name={colors.icon} size={20} />
-            <span style={{ flex: 1, color: "var(--text)" }}>{toast.message}</span>
+            <span style={{ flex: 1, color: "var(--text)" }}>
+              {toast.message}
+            </span>
             <button
               type="button"
               onClick={() => dismiss(toast.id)}
               style={{
-                border: 0, background: "transparent", cursor: "pointer",
-                padding: 0, display: "flex", color: "var(--muted)",
+                border: 0,
+                background: "transparent",
+                cursor: "pointer",
+                padding: 0,
+                display: "flex",
+                color: "var(--muted)",
               }}
             >
               <Icon name="close" size={16} />

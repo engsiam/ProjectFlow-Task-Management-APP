@@ -6,16 +6,24 @@ import type { Project } from "../lib/types.ts";
 import { Avatar, Icon } from "./ui.tsx";
 import ConfirmDialog from "../islands/ConfirmDialog.tsx";
 
-function projectHealth(project: Project): { label: string; tone: "success" | "warning" | "danger" | "neutral" } {
-  if (project.status === "COMPLETED") return { label: "Completed", tone: "success" };
-  if (project.status === "ARCHIVED") return { label: "Archived", tone: "neutral" };
+function projectHealth(
+  project: Project,
+): { label: string; tone: "success" | "warning" | "danger" | "neutral" } {
+  if (project.status === "COMPLETED") {
+    return { label: "Completed", tone: "success" };
+  }
+  if (project.status === "ARCHIVED") {
+    return { label: "Archived", tone: "neutral" };
+  }
   const pct = project.progress ?? 0;
   if (pct >= 80) return { label: "On Track", tone: "success" };
   if (pct >= 30) return { label: "At Risk", tone: "warning" };
   return { label: "Delayed", tone: "danger" };
 }
 
-function SegmentedProgress({ taskStats }: { taskStats?: Project["taskStats"] }) {
+function SegmentedProgress(
+  { taskStats }: { taskStats?: Project["taskStats"] },
+) {
   if (!taskStats || taskStats.total === 0) return null;
   const { total, todo, inProgress, review, done } = taskStats;
   const segments = [
@@ -54,7 +62,10 @@ function ContextMenu({ actions }: { actions: CardAction[] }) {
       <button
         type="button"
         class="pc-ctx-trigger"
-        onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen((v) => !v);
+        }}
         aria-label="Project actions"
       >
         <Icon name="more_horiz" size={18} />
@@ -67,9 +78,15 @@ function ContextMenu({ actions }: { actions: CardAction[] }) {
               <button
                 key={action.label}
                 type="button"
-                class={`pc-ctx-item ${action.danger ? "pc-ctx-item--danger" : ""}`}
+                class={`pc-ctx-item ${
+                  action.danger ? "pc-ctx-item--danger" : ""
+                }`}
                 role="menuitem"
-                onClick={(e) => { e.stopPropagation(); setOpen(false); action.onClick(); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpen(false);
+                  action.onClick();
+                }}
               >
                 <Icon name={action.icon} size={16} />
                 {action.label}
@@ -99,7 +116,9 @@ export default function ProjectCard(
     : 0;
   const completedTasks = project.taskStats?.done ?? 0;
 
-  const [confirmAction, setConfirmAction] = useState<"archive" | "delete" | null>(null);
+  const [confirmAction, setConfirmAction] = useState<
+    "archive" | "delete" | null
+  >(null);
 
   async function archive() {
     try {
@@ -107,7 +126,10 @@ export default function ProjectCard(
       toast(`"${project.name}" archived.`, "success");
       onChanged();
     } catch (err) {
-      toast(err instanceof Error ? err.message : "Unable to archive.", "danger");
+      toast(
+        err instanceof Error ? err.message : "Unable to archive.",
+        "danger",
+      );
     }
   }
 
@@ -122,12 +144,27 @@ export default function ProjectCard(
   }
 
   const actions: CardAction[] = [
-    { label: "Open", icon: "arrow_outward", onClick: () => { location.href = `/projects/${project.id}`; } },
+    {
+      label: "Open",
+      icon: "arrow_outward",
+      onClick: () => {
+        location.href = `/projects/${project.id}`;
+      },
+    },
   ];
   if (projectRole === "ADMIN") {
     actions.push(
-      { label: "Archive", icon: "archive", onClick: () => setConfirmAction("archive") },
-      { label: "Delete", icon: "delete", danger: true, onClick: () => setConfirmAction("delete") },
+      {
+        label: "Archive",
+        icon: "archive",
+        onClick: () => setConfirmAction("archive"),
+      },
+      {
+        label: "Delete",
+        icon: "delete",
+        danger: true,
+        onClick: () => setConfirmAction("delete"),
+      },
     );
   }
 
@@ -146,15 +183,15 @@ export default function ProjectCard(
           </a>
         </div>
         <div class="pc-header-right">
-          <span class={`pc-badge pc-badge--${health.tone}`}>{health.label}</span>
+          <span class={`pc-badge pc-badge--${health.tone}`}>
+            {health.label}
+          </span>
           <ContextMenu actions={actions} />
         </div>
       </div>
 
       {/* Description */}
-      {project.description && (
-        <p class="pc-desc">{project.description}</p>
-      )}
+      {project.description && <p class="pc-desc">{project.description}</p>}
 
       {/* Meta row */}
       <div class="pc-meta">
@@ -186,7 +223,9 @@ export default function ProjectCard(
         <SegmentedProgress taskStats={project.taskStats} />
         <div class="pc-progress-stats">
           <span class="pc-pct">{Math.round(progress)}%</span>
-          <span class="pc-task-count">{openTasks} open · {completedTasks} closed</span>
+          <span class="pc-task-count">
+            {openTasks} open · {completedTasks} closed
+          </span>
         </div>
       </div>
       {confirmAction === "archive" && (
@@ -196,7 +235,10 @@ export default function ProjectCard(
           confirmLabel="Archive"
           variant="primary"
           onCancel={() => setConfirmAction(null)}
-          onConfirm={async () => { setConfirmAction(null); await archive(); }}
+          onConfirm={async () => {
+            setConfirmAction(null);
+            await archive();
+          }}
         />
       )}
       {confirmAction === "delete" && (
@@ -206,7 +248,10 @@ export default function ProjectCard(
           confirmLabel="Delete"
           variant="danger"
           onCancel={() => setConfirmAction(null)}
-          onConfirm={async () => { setConfirmAction(null); await remove(); }}
+          onConfirm={async () => {
+            setConfirmAction(null);
+            await remove();
+          }}
         />
       )}
     </article>
@@ -222,5 +267,6 @@ function fmtRelative(date: string): string {
   if (hrs < 24) return `${hrs}h ago`;
   const days = Math.floor(hrs / 24);
   if (days < 7) return `${days}d ago`;
-  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(new Date(date));
+  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric" })
+    .format(new Date(date));
 }

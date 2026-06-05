@@ -44,15 +44,21 @@ export default function KanbanBoard(
   const [mobileColumn, setMobileColumn] = useState(0);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  useEffect(() => { setCurrentUserId(getCurrentUser()?.id ?? null); }, []);
-  useEffect(() => { setLocal(tasks); }, [tasks]);
+  useEffect(() => {
+    setCurrentUserId(getCurrentUser()?.id ?? null);
+  }, []);
+  useEffect(() => {
+    setLocal(tasks);
+  }, [tasks]);
 
   const projectCtx = project ?? (projects ? projects[0] : undefined);
   const currentRole = getProjectRole(projectCtx, currentUserId);
   const mayEditTask = canEditTask(currentRole);
   const mayCreateTasks = canCreateTasks(currentRole);
 
-  function sync(next: Task[]) { setLocal(next); }
+  function sync(next: Task[]) {
+    setLocal(next);
+  }
 
   async function move(task: Task, status: TaskStatus) {
     if (!mayEditTask) return;
@@ -62,20 +68,31 @@ export default function KanbanBoard(
       await post(`/tasks/${task.id}/move`, { status });
       toast(`Moved to ${status.replace("_", " ")}`, "success");
       onChanged();
-    } catch { sync(previous); toast("Could not move task.", "danger"); }
+    } catch {
+      sync(previous);
+      toast("Could not move task.", "danger");
+    }
   }
 
   async function quickPatch(task: Task, status: TaskStatus) {
     if (!mayEditTask) return;
     const previous = local;
     sync(local.map((item) => item.id === task.id ? { ...item, status } : item));
-    try { await patch(`/tasks/${task.id}`, { status }); toast(`Status updated to ${status.replace("_", " ")}`, "success"); onChanged(); }
-    catch { sync(previous); toast("Could not update status.", "danger"); }
+    try {
+      await patch(`/tasks/${task.id}`, { status });
+      toast(`Status updated to ${status.replace("_", " ")}`, "success");
+      onChanged();
+    } catch {
+      sync(previous);
+      toast("Could not update status.", "danger");
+    }
   }
 
   const columns = STATUS_COLUMNS.map((column) => ({
     ...column,
-    tasks: local.filter((t) => t.status === column.key).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
+    tasks: local.filter((t) => t.status === column.key).sort((a, b) =>
+      (a.order ?? 0) - (b.order ?? 0)
+    ),
   }));
 
   function openCreate(status: TaskStatus) {
@@ -120,7 +137,9 @@ export default function KanbanBoard(
             <div class="kanban-column-header">
               <div class="kanban-column-header-left">
                 <Icon name={column.icon} size={18} />
-                <span style={{ fontSize: "15px", fontWeight: 600 }}>{column.label}</span>
+                <span style={{ fontSize: "15px", fontWeight: 600 }}>
+                  {column.label}
+                </span>
                 <span class="kanban-count">{column.tasks.length}</span>
               </div>
               {mayCreateTasks && (
@@ -134,11 +153,16 @@ export default function KanbanBoard(
                 </button>
               )}
             </div>
-            <div class="kanban-cards" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            <div
+              class="kanban-cards"
+              style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+            >
               {column.tasks.map((task) => (
                 <div
                   key={task.id}
-                  class={`task-card ${column.key === "DONE" ? "task-done" : ""}`}
+                  class={`task-card ${
+                    column.key === "DONE" ? "task-done" : ""
+                  }`}
                   draggable={mayEditTask && column.key !== "DONE"}
                   onDragStart={(e) => {
                     if (!mayEditTask) return;
@@ -155,14 +179,25 @@ export default function KanbanBoard(
                         {priorityLabel[task.priority] || task.priority}
                       </Badge>
                       {mayEditTask && column.key !== "DONE" && (
-                        <span class="drag-handle" onMouseDown={(e) => e.stopPropagation()}>
+                        <span
+                          class="drag-handle"
+                          onMouseDown={(e) => e.stopPropagation()}
+                        >
                           <Icon name="drag_indicator" size={18} />
                         </span>
                       )}
                     </div>
-                    <p style={{ margin: 0, fontSize: "14px", fontWeight: 500 }}>{task.title}</p>
+                    <p style={{ margin: 0, fontSize: "14px", fontWeight: 500 }}>
+                      {task.title}
+                    </p>
                     {task.labels && task.labels.length > 0 && (
-                      <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "4px",
+                          flexWrap: "wrap",
+                        }}
+                      >
                         {task.labels.slice(0, 3).map((label) => (
                           <span key={label} class="task-label">{label}</span>
                         ))}
@@ -173,16 +208,25 @@ export default function KanbanBoard(
                         <Avatar user={task.assignee} size={24} />
                         {task.dueDate && (
                           <span
-                            class={new Date(task.dueDate) < new Date() && task.status !== "DONE" ? "overdue" : ""}
+                            class={new Date(task.dueDate) < new Date() &&
+                                task.status !== "DONE"
+                              ? "overdue"
+                              : ""}
                             style={{ fontSize: "12px" }}
                           >
-                            {new Date(task.dueDate) < new Date() && task.status !== "DONE" ? "Overdue" : fmtDate(task.dueDate)}
+                            {new Date(task.dueDate) < new Date() &&
+                                task.status !== "DONE"
+                              ? "Overdue"
+                              : fmtDate(task.dueDate)}
                           </span>
                         )}
                       </div>
                       <div class="task-comment-count">
                         {(task.commentCount ?? 0) > 0 && (
-                          <><Icon name="chat_bubble" size={14} /><span>{task.commentCount}</span></>
+                          <>
+                            <Icon name="chat_bubble" size={14} />
+                            <span>{task.commentCount}</span>
+                          </>
                         )}
                       </div>
                     </div>
@@ -210,7 +254,10 @@ export default function KanbanBoard(
           task={selected}
           projects={projects ?? []}
           onClose={() => setSelected(null)}
-          onSaved={() => { setSelected(null); onChanged(); }}
+          onSaved={() => {
+            setSelected(null);
+            onChanged();
+          }}
         />
       )}
       {showCreate && projectCtx && (
@@ -219,7 +266,10 @@ export default function KanbanBoard(
           projectId={projectCtx?.id}
           initialStatus={createColumn}
           onClose={() => setShowCreate(false)}
-          onCreated={() => { setShowCreate(false); onChanged(); }}
+          onCreated={() => {
+            setShowCreate(false);
+            onChanged();
+          }}
         />
       )}
     </div>

@@ -22,7 +22,9 @@ export default function ProjectCreateModal(
       onCreated();
       onClose();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Project could not be created.";
+      const msg = err instanceof Error
+        ? err.message
+        : "Project could not be created.";
       setError(msg);
       toast(msg, "danger");
     } finally {

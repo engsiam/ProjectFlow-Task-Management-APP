@@ -15,5 +15,7 @@ export function prefetchRoute(href: string) {
 }
 
 export function prefetchOnHover(element: HTMLElement, href: string) {
-  element.addEventListener("mouseenter", () => prefetchRoute(href), { once: true });
+  element.addEventListener("mouseenter", () => prefetchRoute(href), {
+    once: true,
+  });
 }

@@ -139,9 +139,7 @@ export function KpiCard({
             <p class="kpi-card-label">{label}</p>
             <strong class="kpi-card-value">{value}</strong>
             {hint && <p class="kpi-card-hint">{hint}</p>}
-            {trend?.label && (
-              <p class="kpi-card-trend-label">{trend.label}</p>
-            )}
+            {trend?.label && <p class="kpi-card-trend-label">{trend.label}</p>}
           </>
         )}
     </div>

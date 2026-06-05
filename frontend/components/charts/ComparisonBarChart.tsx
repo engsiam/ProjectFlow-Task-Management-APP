@@ -1,16 +1,21 @@
 import {
-  BarChart,
   Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-  Cell,
 } from "./_recharts.tsx";
 
-type Datum = { label: string; completed: number; overdue: number; pending: number };
+type Datum = {
+  label: string;
+  completed: number;
+  overdue: number;
+  pending: number;
+};
 
 export function ComparisonBarChart(
   { data, height = 320 }: {
@@ -45,10 +50,14 @@ export function ComparisonBarChart(
           allowDecimals={false}
         />
         <Tooltip
-          cursor={{ fill: "color-mix(in srgb, var(--primary), transparent 92%)" }}
+          cursor={{
+            fill: "color-mix(in srgb, var(--primary), transparent 92%)",
+          }}
           content={(p: {
             active?: boolean;
-            payload?: Array<{ name: string; value: number; dataKey: string; color: string }>;
+            payload?: Array<
+              { name: string; value: number; dataKey: string; color: string }
+            >;
             label?: string;
           }) => {
             const { active, payload, label } = p;
@@ -58,9 +67,17 @@ export function ComparisonBarChart(
                 <p class="chart-tooltip-title">{label}</p>
                 {payload.map((it) => (
                   <div class="chart-tooltip-row" key={it.dataKey}>
-                    <span class="chart-tooltip-dot" style={{ background: it.color }} />
+                    <span
+                      class="chart-tooltip-dot"
+                      style={{ background: it.color }}
+                    />
                     <span class="chart-tooltip-label">{it.name}</span>
-                    <span class="chart-tooltip-value" style={{ marginLeft: "auto" }}>{it.value}</span>
+                    <span
+                      class="chart-tooltip-value"
+                      style={{ marginLeft: "auto" }}
+                    >
+                      {it.value}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -73,13 +90,31 @@ export function ComparisonBarChart(
           height={28}
           wrapperStyle={{ fontSize: "12px", color: "var(--muted)" }}
         />
-        <Bar dataKey="completed" name="Completed" fill="var(--success)" radius={[6, 6, 0, 0]} maxBarSize={40}>
+        <Bar
+          dataKey="completed"
+          name="Completed"
+          fill="var(--success)"
+          radius={[6, 6, 0, 0]}
+          maxBarSize={40}
+        >
           {data.map((_, i) => <Cell key={`c-${i}`} />)}
         </Bar>
-        <Bar dataKey="pending" name="Pending" fill="var(--primary)" radius={[6, 6, 0, 0]} maxBarSize={40}>
+        <Bar
+          dataKey="pending"
+          name="Pending"
+          fill="var(--primary)"
+          radius={[6, 6, 0, 0]}
+          maxBarSize={40}
+        >
           {data.map((_, i) => <Cell key={`p-${i}`} />)}
         </Bar>
-        <Bar dataKey="overdue" name="Overdue" fill="var(--danger)" radius={[6, 6, 0, 0]} maxBarSize={40}>
+        <Bar
+          dataKey="overdue"
+          name="Overdue"
+          fill="var(--danger)"
+          radius={[6, 6, 0, 0]}
+          maxBarSize={40}
+        >
           {data.map((_, i) => <Cell key={`o-${i}`} />)}
         </Bar>
       </BarChart>

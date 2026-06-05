@@ -30,7 +30,9 @@ export default function AnalyticsClient(
   const [loading, setLoading] = useState<boolean>(!initial);
   const [error, setError] = useState<string | null>(null);
   const [range, setRange] = useState<Range>("30");
-  const [activeProjectId, setActiveProjectId] = useState<string | undefined>(projectId);
+  const [activeProjectId, setActiveProjectId] = useState<string | undefined>(
+    projectId,
+  );
 
   const endpoint = activeProjectId
     ? `/analytics/project/${activeProjectId}`
@@ -101,7 +103,9 @@ export default function AnalyticsClient(
                   type="button"
                   role="tab"
                   aria-selected={range === r}
-                  class={`analytics-range-btn ${range === r ? "is-active" : ""}`}
+                  class={`analytics-range-btn ${
+                    range === r ? "is-active" : ""
+                  }`}
                   onClick={() => setRange(r)}
                 >
                   {r}d
@@ -154,7 +158,9 @@ export default function AnalyticsClient(
           value={kpi?.overdueTasks ?? 0}
           icon="schedule"
           accent="var(--danger)"
-          hint={(kpi?.overdueTasks ?? 0) > 0 ? "Needs attention" : "All on track"}
+          hint={(kpi?.overdueTasks ?? 0) > 0
+            ? "Needs attention"
+            : "All on track"}
           isLoading={loading}
         />
         <KpiCard
@@ -260,15 +266,22 @@ export default function AnalyticsClient(
             <div class="chart-card-foot-row">
               <div class="chart-foot-stat">
                 <span class="chart-foot-label">Done</span>
-                <strong class="chart-foot-value">{kpi?.completedTasks ?? 0}</strong>
+                <strong class="chart-foot-value">
+                  {kpi?.completedTasks ?? 0}
+                </strong>
               </div>
               <div class="chart-foot-stat">
                 <span class="chart-foot-label">Pending</span>
-                <strong class="chart-foot-value">{kpi?.pendingTasks ?? 0}</strong>
+                <strong class="chart-foot-value">
+                  {kpi?.pendingTasks ?? 0}
+                </strong>
               </div>
               <div class="chart-foot-stat">
                 <span class="chart-foot-label">Overdue</span>
-                <strong class="chart-foot-value" style={{ color: "var(--danger)" }}>
+                <strong
+                  class="chart-foot-value"
+                  style={{ color: "var(--danger)" }}
+                >
                   {kpi?.overdueTasks ?? 0}
                 </strong>
               </div>
@@ -277,9 +290,24 @@ export default function AnalyticsClient(
         >
           <DonutChartComponent
             data={[
-              { name: "COMPLETED", label: "Completed", value: kpi?.completedTasks ?? 0, color: "var(--success)" },
-              { name: "PENDING", label: "Pending", value: (kpi?.pendingTasks ?? 0) - (kpi?.overdueTasks ?? 0), color: "var(--primary)" },
-              { name: "OVERDUE", label: "Overdue", value: kpi?.overdueTasks ?? 0, color: "var(--danger)" },
+              {
+                name: "COMPLETED",
+                label: "Completed",
+                value: kpi?.completedTasks ?? 0,
+                color: "var(--success)",
+              },
+              {
+                name: "PENDING",
+                label: "Pending",
+                value: (kpi?.pendingTasks ?? 0) - (kpi?.overdueTasks ?? 0),
+                color: "var(--primary)",
+              },
+              {
+                name: "OVERDUE",
+                label: "Overdue",
+                value: kpi?.overdueTasks ?? 0,
+                color: "var(--danger)",
+              },
             ]}
             height={280}
           />

@@ -77,6 +77,8 @@ export const ActivityAction = {
   COMMENT_ADDED: "COMMENT_ADDED",
   COMMENT_UPDATED: "COMMENT_UPDATED",
   COMMENT_DELETED: "COMMENT_DELETED",
+  ATTACHMENT_UPLOADED: "ATTACHMENT_UPLOADED",
+  ATTACHMENT_DELETED: "ATTACHMENT_DELETED",
 } as const;
 export type ActivityActionType = typeof ActivityAction[keyof typeof ActivityAction];
 

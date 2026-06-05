@@ -20,7 +20,9 @@ export function notificationIcon(n: Notification): string {
   if (type === "COMMENT") return "comment";
   if (type.includes("INVITATION")) return "mail";
   if (type.includes("ROLE")) return "badge";
-  if (type.includes("REMOVED") || type.includes("REJECTED")) return "person_remove";
+  if (type.includes("REMOVED") || type.includes("REJECTED")) {
+    return "person_remove";
+  }
   if (type.includes("ACCEPTED")) return "check";
   if (type === "TASK_STATUS") return "task_alt";
   return "notifications";

@@ -50,7 +50,9 @@ export default function MembersClient() {
       let cmp = 0;
       if (sortKey === "name") cmp = a.user.name.localeCompare(b.user.name);
       else if (sortKey === "role") cmp = a.role.localeCompare(b.role);
-      else if (sortKey === "project") cmp = (a.projectName ?? "").localeCompare(b.projectName ?? "");
+      else if (sortKey === "project") {
+        cmp = (a.projectName ?? "").localeCompare(b.projectName ?? "");
+      }
       return sortAsc ? cmp : -cmp;
     });
     return list;
@@ -66,12 +68,20 @@ export default function MembersClient() {
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) setSortAsc(!sortAsc);
-    else { setSortKey(key); setSortAsc(true); }
+    else {
+      setSortKey(key);
+      setSortAsc(true);
+    }
   }
 
   function SortIcon({ col }: { col: SortKey }) {
     if (sortKey !== col) return <Icon name="unfold_more" size={14} />;
-    return <Icon name={sortAsc ? "arrow_upward" : "arrow_downward"} size={14} />;
+    return (
+      <Icon
+        name={sortAsc ? "arrow_upward" : "arrow_downward"}
+        size={14}
+      />
+    );
   }
 
   if (loading) {
@@ -106,7 +116,9 @@ export default function MembersClient() {
   if (error) {
     return (
       <div class="card" style="padding:32px;text-align:center">
-        <div style="font-size:40px;margin-bottom:12px;color:var(--danger)">!</div>
+        <div style="font-size:40px;margin-bottom:12px;color:var(--danger)">
+          !
+        </div>
         <h3 class="headline" style="margin:0 0 6px">Failed to load members</h3>
         <p style="margin:0 0 16px;color:var(--muted);font-size:14px">
           We could not retrieve your team. The backend may be offline.
@@ -134,26 +146,36 @@ export default function MembersClient() {
           </div>
         </div>
         <div class="card" style="padding:14px 16px">
-          <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em">Admins</div>
+          <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em">
+            Admins
+          </div>
           <div style="font-family:'Hanken Grotesk',Inter,sans-serif;font-size:28px;font-weight:700;margin-top:4px;color:var(--warning)">
             {roleCounts.OWNER ?? 0}
           </div>
-          <div style="font-size:12px;color:var(--muted);margin-top:2px">Project owners</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">
+            Project owners
+          </div>
         </div>
         <div class="card" style="padding:14px 16px">
-          <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em">Managers</div>
+          <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em">
+            Managers
+          </div>
           <div style="font-family:'Hanken Grotesk',Inter,sans-serif;font-size:28px;font-weight:700;margin-top:4px;color:var(--info)">
             {roleCounts.MANAGER ?? 0}
           </div>
-          <div style="font-size:12px;color:var(--muted);margin-top:2px">Can manage projects</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">
+            Can manage projects
+          </div>
         </div>
         <div class="card" style="padding:14px 16px">
-          <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em">Members</div>
+          <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em">
+            Members
+          </div>
           <div style="font-family:'Hanken Grotesk',Inter,sans-serif;font-size:28px;font-weight:700;margin-top:4px">
             {(roleCounts.MEMBER ?? 0) + (roleCounts.VIEWER ?? 0)}
           </div>
           <div style="font-size:12px;color:var(--muted);margin-top:2px">
-            {(roleCounts.VIEWER ?? 0)} viewers
+            {roleCounts.VIEWER ?? 0} viewers
           </div>
         </div>
       </div>
@@ -201,7 +223,9 @@ export default function MembersClient() {
                 <Icon name="group_off" size={40} />
               </div>
               <h3 class="headline" style="margin:0 0 6px;font-size:16px">
-                {members.length === 0 ? "No team members yet" : "No results found"}
+                {members.length === 0
+                  ? "No team members yet"
+                  : "No results found"}
               </h3>
               <p style="margin:0;color:var(--muted);font-size:13px">
                 {members.length === 0
@@ -224,7 +248,10 @@ export default function MembersClient() {
                       Role <SortIcon col="role" />
                     </span>
                   </th>
-                  <th style="cursor:pointer" onClick={() => toggleSort("project")}>
+                  <th
+                    style="cursor:pointer"
+                    onClick={() => toggleSort("project")}
+                  >
                     <span style="display:inline-flex;align-items:center;gap:4px">
                       Project <SortIcon col="project" />
                     </span>
@@ -237,15 +264,17 @@ export default function MembersClient() {
                   <tr key={m.id}>
                     <td>
                       <div style="display:flex;align-items:center;gap:10px">
-                        <div
-                          style="width:34px;height:34px;border-radius:999px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;flex-shrink:0;text-transform:uppercase"
-                        >
+                        <div style="width:34px;height:34px;border-radius:999px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;flex-shrink:0;text-transform:uppercase">
                           {m.user.name.charAt(0)}
                           {m.user.name.split(" ")[1]?.charAt(0) ?? ""}
                         </div>
                         <div>
-                          <div style="font-size:13px;font-weight:600">{m.user.name}</div>
-                          <div style="font-size:11px;color:var(--muted)">{m.user.email}</div>
+                          <div style="font-size:13px;font-weight:600">
+                            {m.user.name}
+                          </div>
+                          <div style="font-size:11px;color:var(--muted)">
+                            {m.user.email}
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -261,11 +290,21 @@ export default function MembersClient() {
                             : "background:color-mix(in srgb,var(--success),transparent 85%);color:var(--success)"
                         }`}
                       >
-                        <span style={`width:5px;height:5px;border-radius:999px;background:currentColor`} />
-                        {m.role === "ADMIN" ? "Admin" : m.role === "PROJECT_MANAGER" ? "Project Manager" : m.role === "VIEWER" ? "Viewer" : "Team Member"}
+                        <span
+                          style={`width:5px;height:5px;border-radius:999px;background:currentColor`}
+                        />
+                        {m.role === "ADMIN"
+                          ? "Admin"
+                          : m.role === "PROJECT_MANAGER"
+                          ? "Project Manager"
+                          : m.role === "VIEWER"
+                          ? "Viewer"
+                          : "Team Member"}
                       </span>
                     </td>
-                    <td style="font-size:13px;color:var(--muted)">{m.projectName || "—"}</td>
+                    <td style="font-size:13px;color:var(--muted)">
+                      {m.projectName || "—"}
+                    </td>
                     <td>
                       <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--success)">
                         <span style="width:6px;height:6px;border-radius:999px;background:var(--success);box-shadow:0 0 0 3px color-mix(in srgb,var(--success),transparent 78%)" />

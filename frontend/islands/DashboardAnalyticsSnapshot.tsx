@@ -15,10 +15,16 @@ export default function DashboardAnalyticsSnapshot() {
   useEffect(() => {
     let alive = true;
     get<AnalyticsCharts>("/analytics/dashboard")
-      .then((d) => { if (alive) setData(d); })
+      .then((d) => {
+        if (alive) setData(d);
+      })
       .catch(() => null)
-      .finally(() => { if (alive) setLoading(false); });
-    return () => { alive = false; };
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
   }, []);
 
   const kpi = data?.kpi;
@@ -31,7 +37,9 @@ export default function DashboardAnalyticsSnapshot() {
           <h2 class="dash-analytics-title">
             <Icon name="monitoring" size={20} /> Analytics Snapshot
           </h2>
-          <p class="dash-analytics-sub">Key metrics and trends across your workspace.</p>
+          <p class="dash-analytics-sub">
+            Key metrics and trends across your workspace.
+          </p>
         </div>
         <a href="/analytics" class="dash-analytics-link">
           Open full analytics

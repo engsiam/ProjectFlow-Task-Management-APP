@@ -1,14 +1,14 @@
 import {
-  LineChart,
+  Area,
+  CartesianGrid,
+  ComposedChart,
+  Legend,
   Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-  Area,
-  ComposedChart,
 } from "./_recharts.tsx";
 
 type Datum = {
@@ -65,7 +65,9 @@ export function TrendLineChart(
           cursor={{ stroke: "var(--primary)", strokeDasharray: "3 3" }}
           content={(p: {
             active?: boolean;
-            payload?: Array<{ name: string; value: number; color: string; dataKey: string }>;
+            payload?: Array<
+              { name: string; value: number; color: string; dataKey: string }
+            >;
             label?: string;
           }) => {
             const { active, payload, label } = p;
@@ -75,9 +77,17 @@ export function TrendLineChart(
                 <p class="chart-tooltip-title">{label}</p>
                 {payload.map((it) => (
                   <div class="chart-tooltip-row" key={it.dataKey}>
-                    <span class="chart-tooltip-dot" style={{ background: it.color }} />
+                    <span
+                      class="chart-tooltip-dot"
+                      style={{ background: it.color }}
+                    />
                     <span class="chart-tooltip-label">{it.name}</span>
-                    <span class="chart-tooltip-value" style={{ marginLeft: "auto" }}>{it.value}</span>
+                    <span
+                      class="chart-tooltip-value"
+                      style={{ marginLeft: "auto" }}
+                    >
+                      {it.value}
+                    </span>
                   </div>
                 ))}
               </div>

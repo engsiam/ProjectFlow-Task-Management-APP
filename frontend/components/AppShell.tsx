@@ -63,7 +63,11 @@ const mobileNavIcons: Record<string, string> = {
 };
 
 export function AppShell(
-  { active, title, children }: { active: string; title: string; children: ComponentChildren },
+  { active, title, children }: {
+    active: string;
+    title: string;
+    children: ComponentChildren;
+  },
 ) {
   const collapsed = sidebarCollapsed.value;
   const user = typeof localStorage !== "undefined" ? getCurrentUser() : null;
@@ -90,14 +94,19 @@ export function AppShell(
               onClick={() => sidebarCollapsed.value = !collapsed}
               aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
-              <Icon name={collapsed ? "chevron_right" : "chevron_left"} size={16} />
+              <Icon
+                name={collapsed ? "chevron_right" : "chevron_left"}
+                size={16}
+              />
             </button>
           </div>
 
           <nav class="sb-nav">
             {sections.map((section) => (
               <div class="sb-section" key={section.label}>
-                {!collapsed && <div class="sb-section-label">{section.label}</div>}
+                {!collapsed && (
+                  <div class="sb-section-label">{section.label}</div>
+                )}
                 {section.items.map((item) => (
                   <a
                     key={item.label}
@@ -109,7 +118,9 @@ export function AppShell(
                     <span class="sb-link-icon">
                       <Icon name={item.icon} size={18} />
                     </span>
-                    {!collapsed && <span class="sb-link-text">{item.label}</span>}
+                    {!collapsed && (
+                      <span class="sb-link-text">{item.label}</span>
+                    )}
                   </a>
                 ))}
               </div>
@@ -124,7 +135,10 @@ export function AppShell(
                     <SystemStatus />
                   </div>
                   {canCreate && (
-                    <button class="sb-cta" onClick={() => location.href = "/projects"}>
+                    <button
+                      class="sb-cta"
+                      onClick={() => location.href = "/projects"}
+                    >
                       <Icon name="add" size={16} />
                       <span>New Project</span>
                     </button>
@@ -137,7 +151,10 @@ export function AppShell(
                     <SystemStatus compact />
                   </div>
                   {canCreate && (
-                    <button class="sb-fab" onClick={() => location.href = "/projects"}>
+                    <button
+                      class="sb-fab"
+                      onClick={() => location.href = "/projects"}
+                    >
                       <Icon name="add" size={20} />
                     </button>
                   )}
@@ -160,7 +177,9 @@ export function AppShell(
             <ShellUser />
           </div>
         </header>
-        <main class="content"><ErrorBoundary>{children}</ErrorBoundary></main>
+        <main class="content">
+          <ErrorBoundary>{children}</ErrorBoundary>
+        </main>
       </div>
 
       <ToastProvider />

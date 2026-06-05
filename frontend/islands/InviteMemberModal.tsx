@@ -27,7 +27,9 @@ export default function InviteMemberModal(
       onInvited();
       onClose();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Invite could not be sent.";
+      const msg = err instanceof Error
+        ? err.message
+        : "Invite could not be sent.";
       setError(msg);
       toast(msg, "danger");
     } finally {

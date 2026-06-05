@@ -9,7 +9,9 @@ import { ComparisonBarChart } from "../components/charts/ComparisonBarChart.tsx"
 import { Icon } from "../components/ui.tsx";
 import type { AnalyticsCharts } from "../lib/types.ts";
 
-export default function ProjectAnalyticsTab({ projectId }: { projectId: string }) {
+export default function ProjectAnalyticsTab(
+  { projectId }: { projectId: string },
+) {
   const [data, setData] = useState<AnalyticsCharts | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -17,10 +19,16 @@ export default function ProjectAnalyticsTab({ projectId }: { projectId: string }
     let alive = true;
     setLoading(true);
     get<AnalyticsCharts>(`/analytics/project/${projectId}`)
-      .then((d) => { if (alive) setData(d); })
+      .then((d) => {
+        if (alive) setData(d);
+      })
       .catch(() => null)
-      .finally(() => { if (alive) setLoading(false); });
-    return () => { alive = false; };
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
   }, [projectId]);
 
   const kpi = data?.kpi;

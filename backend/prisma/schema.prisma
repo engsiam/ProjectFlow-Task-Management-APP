@@ -42,6 +42,7 @@ model User {
   notifications       Notification[]
   refreshTokens       RefreshToken[]
   activityLogs        ActivityLog[]    @relation("ActivityActor")
+  attachments         Attachment[]     @relation("AttachmentUploader")
 }
 
 model RefreshToken {
@@ -138,6 +139,7 @@ model Task {
   labels      String[]
   order       Int        @default(0)
   comments    Comment[]
+  attachments Attachment[]
   activities  ActivityLog[]
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
@@ -151,6 +153,23 @@ model Task {
   @@index([projectId, assigneeId])
   @@index([assigneeId])
   @@index([dueDate])
+}
+
+model Attachment {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  taskId       String   @db.ObjectId
+  task         Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  uploadedById String   @db.ObjectId
+  uploadedBy   User     @relation("AttachmentUploader", fields: [uploadedById], references: [id])
+  fileName     String   // original filename
+  storedName   String   // disk filename (UUID + ext)
+  mimeType     String
+  fileSize     Int      // bytes
+  storagePath  String   // uploads/attachments/...
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([taskId, createdAt])
 }
 
 // ============================================================
