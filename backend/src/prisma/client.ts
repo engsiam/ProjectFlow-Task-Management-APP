@@ -3,6 +3,10 @@
 // The generated Prisma client is emitted as CommonJS. Loading it through
 // createRequire keeps runtime resolution on our project-local generated path
 // instead of Deno's internal npm package cache.
+//
+// Deno Deploy support: `node:module.createRequire` is available in the Deploy
+// runtime. The generated client must be committed to the repo (run
+// `deno task prisma:generate` locally) so the import resolves at boot.
 
 import { createRequire } from "node:module";
 import type { PrismaClient as PrismaClientType } from "npm:@prisma/client@5.22.0";
@@ -14,9 +18,19 @@ declare global {
 }
 
 const require = createRequire(import.meta.url);
-const { PrismaClient: PrismaClientCtor } = require("../generated/prisma/index.js") as {
-  PrismaClient: new (options?: object) => PrismaClientType;
-};
+let PrismaClientCtor: new (options?: object) => PrismaClientType;
+try {
+  // deno-lint-ignore no-explicit-any
+  ({ PrismaClient: PrismaClientCtor } = require("../generated/prisma/index.js") as any);
+} catch (err) {
+  console.error(
+    "[Prisma] Failed to load generated client at src/generated/prisma/index.js.",
+  );
+  console.error(
+    "[Prisma] Run `deno task prisma:generate` and commit the generated files.",
+  );
+  throw err;
+}
 
 const prisma: PrismaClientType = globalThis.__prisma ??
   new PrismaClientCtor({ log: isProd ? ["error"] : ["warn", "error"] });

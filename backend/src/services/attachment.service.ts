@@ -1,8 +1,22 @@
 // Attachment service: file metadata CRUD plus on-disk storage helpers.
+//
+// Storage is platform-aware:
+//   - Local (`STORAGE_BACKEND=local`): writes to UPLOAD_DIR/attachments on
+//     the local filesystem; reads via Deno.readFile.
+//   - Deno Deploy (`STORAGE_BACKEND=disabled`): the create/remove/read
+//     paths return ServiceUnavailableError. The Prisma metadata is still
+//     persisted so an admin can later migrate to object storage without
+//     losing the record trail.
 
 import { prisma } from "../prisma/client.ts";
+import { env, storageDisabled } from "../config/env.ts";
 import { ActivityAction, type RoleType } from "../types/domain.ts";
-import { BadRequestError, ForbiddenError, NotFoundError } from "../utils/errors.ts";
+import {
+  BadRequestError,
+  ForbiddenError,
+  NotFoundError,
+  ServiceUnavailableError,
+} from "../utils/errors.ts";
 import { isValidObjectId } from "../utils/id.ts";
 
 export const ALLOWED_MIME_TYPES: ReadonlyArray<{ mime: string; ext: string }> = [
@@ -20,7 +34,7 @@ export const ALLOWED_MIME_SET = new Set(ALLOWED_MIME_TYPES.map((t) => t.mime));
 
 export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
-export const STORAGE_DIR = "uploads/attachments";
+export const STORAGE_DIR = `${env.UPLOAD_DIR}/attachments`;
 
 export const ALLOWED_EXTENSIONS = [".pdf", ".doc", ".docx", ".png", ".jpg", ".jpeg", ".zip"];
 
@@ -38,6 +52,14 @@ const sanitize = (s: string) => s.replace(/[^\w.\-]+/g, "_").slice(0, 200);
 
 const ensureDir = async (dir: string) => {
   await Deno.mkdir(dir, { recursive: true });
+};
+
+const assertStorage = () => {
+  if (storageDisabled) {
+    throw new ServiceUnavailableError(
+      "Attachment storage is disabled on this deployment. Configure STORAGE_BACKEND with an object-storage provider (R2/S3) to enable uploads.",
+    );
+  }
 };
 
 const userSelect = {
@@ -190,6 +212,7 @@ export const create = async (
   taskId: string,
   file: File,
 ): Promise<AttachmentRecord> => {
+  assertStorage();
   await ensureTaskAccess(userId, userRole, taskId, true);
   const ext = validateFile(file);
 
@@ -224,7 +247,10 @@ export const create = async (
         entityType: "attachment",
         entityId: row.id,
         taskId,
-        projectId: row.taskId ? (await prisma.task.findUnique({ where: { id: taskId }, select: { projectId: true } }))?.projectId : undefined,
+        projectId: row.taskId
+          ? (await prisma.task.findUnique({ where: { id: taskId }, select: { projectId: true } }))
+            ?.projectId
+          : undefined,
         metadata: { fileName: safeOriginal, fileSize: file.size, mimeType },
       },
     });
@@ -251,7 +277,10 @@ export const remove = async (
 
   // Allow only the uploader, project owner, project manager/admin, or global admin.
   const project = await prisma.project.findUnique({
-    where: { id: (await prisma.task.findUnique({ where: { id: taskId }, select: { projectId: true } }))?.projectId ?? "" },
+    where: {
+      id: (await prisma.task.findUnique({ where: { id: taskId }, select: { projectId: true } }))
+        ?.projectId ?? "",
+    },
     select: { id: true, ownerId: true },
   });
   const isOwner = project?.ownerId === userId;
@@ -270,10 +299,13 @@ export const remove = async (
   if (!allowed) throw new ForbiddenError("You cannot delete this attachment");
 
   // Remove the file from disk; ignore errors if it's already gone.
-  try {
-    await Deno.remove(row.storagePath);
-  } catch (_err) {
-    // ignore
+  // On Deploy this is a no-op (the directory is read-only / ephemeral).
+  if (!storageDisabled) {
+    try {
+      await Deno.remove(row.storagePath);
+    } catch (_err) {
+      // ignore
+    }
   }
   await prisma.attachment.delete({ where: { id: attachmentId } });
 
@@ -306,6 +338,7 @@ export const getFileForDownload = async (
   await ensureTaskAccess(userId, userRole, taskId, false);
   const row = await prisma.attachment.findUnique({ where: { id: attachmentId } });
   if (!row || row.taskId !== taskId) throw new NotFoundError("Attachment not found");
+  assertStorage();
   let bytes: Uint8Array;
   try {
     bytes = await Deno.readFile(row.storagePath);

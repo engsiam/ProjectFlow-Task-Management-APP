@@ -1,5 +1,6 @@
 // Environment configuration loaded from process.env / Deno.env
-// Provides strongly-typed access with safe defaults.
+// Provides strongly-typed access with safe defaults and a Deploy-aware
+// `isDeploy` flag for platform-specific branches.
 
 const required = (key: string, fallback?: string): string => {
   const v = Deno.env.get(key) ?? fallback;
@@ -13,11 +14,26 @@ const optional = (key: string, fallback: string): string => {
   return Deno.env.get(key) ?? fallback;
 };
 
-try {
-  // Best-effort load of .env in development (Deno does not auto-load .env).
-  // We try to read .env from the project root and parse simple KEY=VALUE lines.
-  const envText = await Deno.readTextFile(".env").catch(() => "");
-  if (envText) {
+// Detect Deno Deploy. The runtime sets DENO_DEPLOYMENT_ID on every request
+// and on boot. We also fall back to Deno.env Deno-specific signals.
+const isDeployRuntime = Boolean(
+  Deno.env.get("DENO_DEPLOYMENT_ID") ??
+    Deno.env.get("DENO_REGION"),
+);
+
+// Auto-default NODE_ENV to "production" on Deploy when not set, since
+// Deploy always runs in production mode.
+if (isDeployRuntime && !Deno.env.get("NODE_ENV")) {
+  Deno.env.set("NODE_ENV", "production");
+}
+
+// Best-effort .env loader — only runs on local FS, never on Deploy.
+// Wrapped in a single try/catch to make this a no-op on Deploy.
+const loadLocalDotEnv = async () => {
+  if (isDeployRuntime) return;
+  try {
+    const envText = await Deno.readTextFile(".env").catch(() => "");
+    if (!envText) return;
     for (const line of envText.split(/\r?\n/)) {
       const trimmed = line.trim();
       if (!trimmed || trimmed.startsWith("#")) continue;
@@ -31,14 +47,14 @@ try {
       ) {
         val = val.slice(1, -1);
       }
-      if (!Deno.env.get(key)) {
-        Deno.env.set(key, val);
-      }
+      if (!Deno.env.get(key)) Deno.env.set(key, val);
     }
+  } catch {
+    // ignore
   }
-} catch {
-  // ignore - env may already be set
-}
+};
+
+await loadLocalDotEnv();
 
 export const env = {
   DATABASE_URL: required("DATABASE_URL"),
@@ -60,8 +76,19 @@ export const env = {
   FRONTEND_URL: optional("FRONTEND_URL", "http://localhost:8001"),
   PORT: optional("PORT", "8000"),
   NODE_ENV: optional("NODE_ENV", "development"),
+  // When set, uploaded files are stored on the local FS under this dir.
+  // On Deploy, leave empty so the upload service returns 503 with a clear
+  // message pointing at object storage (R2/S3) for production storage.
+  UPLOAD_DIR: optional("UPLOAD_DIR", "uploads"),
+  // When true, force local FS uploads to be disabled (Deploy-safe default).
+  STORAGE_BACKEND: optional("STORAGE_BACKEND", isDeployRuntime ? "disabled" : "local"),
   API_VERSION: "1.0.0",
 };
 
 export const isProd = env.NODE_ENV === "production";
 export const isDev = env.NODE_ENV === "development";
+export const isDeploy = isDeployRuntime;
+
+// Storage backend flags for the upload + attachment services.
+export const storageDisabled = env.STORAGE_BACKEND === "disabled" ||
+  isDeployRuntime;

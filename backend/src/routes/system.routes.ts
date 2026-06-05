@@ -37,6 +37,25 @@ export const healthRoute = createRoute({
   },
 });
 
+export const readyzRoute = createRoute({
+  method: "get",
+  path: "/readyz",
+  tags: tag,
+  summary: "Readiness probe (DB-checked)",
+  description:
+    "Deno Deploy uses this to know when the isolate is ready to receive traffic. Returns 200 only after the database is reachable.",
+  responses: {
+    200: {
+      description: "Service is ready",
+      content: { "application/json": { schema: healthResponseData } },
+    },
+    503: {
+      description: "Service is not ready (db unreachable)",
+      content: { "application/json": { schema: healthResponseData } },
+    },
+  },
+});
+
 export const dashboardRoute = createRoute({
   method: "get",
   path: "/api/dashboard",
@@ -144,6 +163,7 @@ const m = (mw: MiddlewareHandler[]) => mw;
 
 export const systemRouteEntries: RouteEntry[] = [
   { route: healthRoute, handler: sysCtrl.health as Handler, middleware: m([]) },
+  { route: readyzRoute, handler: sysCtrl.readyz as Handler, middleware: m([]) },
   { route: dashboardRoute, handler: sysCtrl.dashboard as Handler, middleware: m([auth()]) },
   {
     route: projectAnalyticsRoute,

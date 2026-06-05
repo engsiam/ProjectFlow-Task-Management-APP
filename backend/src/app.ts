@@ -1,9 +1,14 @@
 // Hono application factory. Builds the OpenAPIHono app, applies middleware,
 // and mounts all routes. Used by server.ts and by tests.
+//
+// Platform-agnostic:
+//   - No local-FS file serving (Deno Deploy has no read-write project FS).
+//   - OpenAPI `servers` list reflects the actual request origin.
+//   - `/readyz` exposes a 200/503 readiness signal for Deno Deploy warmup.
 
 import { OpenAPIHono } from "@hono/zod-openapi";
 import type { Context } from "hono";
-import { env } from "./config/env.ts";
+import { env, isDeploy } from "./config/env.ts";
 import { applyCors } from "./config/cors.ts";
 import { onErrorHandler } from "./middleware/error.ts";
 import { requestId } from "./middleware/request-id.ts";
@@ -52,29 +57,20 @@ export const createApp = () => {
       data: {
         name: "ProjectFlow API",
         version: env.API_VERSION,
+        runtime: isDeploy ? "deno-deploy" : "deno-local",
         docs: "/docs",
         openapi: "/openapi.json",
         health: "/health",
+        readyz: "/readyz",
       },
     }));
 
-  // Serve uploaded files
-  app.get("/uploads/*", async (c: Context) => {
-    try {
-      const file = await Deno.readFile(`.${c.req.path}`);
-      const ext = c.req.path.split(".").pop() ?? "";
-      const mime: Record<string, string> = {
-        png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg",
-        webp: "image/webp", gif: "image/gif",
-        pdf: "application/pdf", doc: "application/msword",
-        docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        zip: "application/zip",
-      };
-      return c.newResponse(file.buffer as ArrayBuffer, 200, { "Content-Type": mime[ext] ?? "application/octet-stream" });
-    } catch {
-      return c.json({ success: false, message: "File not found", error: { code: "NOT_FOUND" } }, 404);
-    }
-  });
+  // NOTE: A previous version served uploaded files via `Deno.readFile` from
+  // the project filesystem. Deno Deploy's project FS is read-only, so that
+  // route always 404'd in production. Local users now get files through the
+  // upload/attachment controllers' signed URLs (or the API). On Deploy,
+  // upload endpoints return 503 via `storageDisabled` and users should
+  // configure R2/S3 — see `src/config/env.ts` `STORAGE_BACKEND`.
 
   // Register all routes
   const allEntries = [
@@ -104,7 +100,8 @@ export const createApp = () => {
     app.openapi(route, entry.handler);
   }
 
-  // OpenAPI JSON
+  // OpenAPI JSON — build a servers list that reflects the request origin so
+  // the generated client URLs match the deployment host.
   app.doc("/openapi.json", {
     openapi: "3.0.0",
     info: {
@@ -113,7 +110,14 @@ export const createApp = () => {
       description:
         "Backend for the Smart Project & Task Collaboration System. All endpoints are testable via Swagger UI at /docs.",
     },
-    servers: [{ url: `http://localhost:${env.PORT}`, description: "Local" }],
+    servers: [
+      isDeploy
+        ? {
+          url: "https://{project}.deno.dev",
+          variables: { project: { default: "projectflow-api" } },
+        }
+        : { url: `http://localhost:${env.PORT}`, description: "Local" },
+    ],
   });
 
   // Swagger UI

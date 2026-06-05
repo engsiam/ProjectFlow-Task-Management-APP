@@ -7,7 +7,7 @@ import * as exportService from "../services/export.service.ts";
 import * as healthService from "../services/health.service.ts";
 import { respondOk } from "../utils/response.ts";
 import { getUser } from "./_helpers.ts";
-import { cacheGet, cacheSet, cacheKey } from "../utils/cache.ts";
+import { cacheGet, cacheKey, cacheSet } from "../utils/cache.ts";
 
 const DASHBOARD_CACHE_TTL = 10_000; // 10s
 
@@ -50,7 +50,11 @@ export const projectAnalytics = async (c: Context) => {
   const user = getUser(c);
   const projectId = c.req.param("projectId");
   try {
-    const result = await analyticsService.getProjectAnalytics(user.id, user.role as never, projectId);
+    const result = await analyticsService.getProjectAnalytics(
+      user.id,
+      user.role as never,
+      projectId,
+    );
     return respondOk(c, result, "Project analytics");
   } catch (err) {
     if (err instanceof Error) {
@@ -75,6 +79,18 @@ export const exportCSV = async (c: Context) => {
 };
 
 export const health = async (c: Context) => {
+  const result = await healthService.getHealth();
+  const status = result.status === "ok" ? 200 : 503;
+  return c.json(
+    { success: result.status === "ok", message: "Service is " + result.status, data: result },
+    status as 200,
+  );
+};
+
+// /readyz — readiness probe. Returns 200 only when the database is
+// reachable; Deno Deploy uses this on cold start to know when the
+// isolate is ready to receive traffic.
+export const readyz = async (c: Context) => {
   const result = await healthService.getHealth();
   const status = result.status === "ok" ? 200 : 503;
   return c.json(

@@ -1,154 +1,80 @@
 // Server entry point. Bootstraps the app and starts the HTTP listener.
+//
+// Production-ready for both local development and Deno Deploy:
+//   - No `Deno.Command` (netstat) usage.
+//   - No `Deno.addSignalListener` (Deploy doesn't support signal handlers).
+//   - No explicit `Deno.exit` (Deploy lifecycle is managed by the runtime).
+//   - No port-conflict probing (Deploy allocates its own port).
+//   - The `Deno.serve` port is omitted on Deploy, where `Deno.env.get("PORT")`
+//     is also ignored — Deploy routes traffic to the listener automatically.
+//
+// The `isDeploy` flag gates any platform-specific behavior that only makes
+// sense when running on a long-lived host (e.g. port logging, local FS).
 
-import { env } from "./config/env.ts";
+import { env, isDeploy, isProd } from "./config/env.ts";
 import { createApp } from "./app.ts";
-import { connectDB, disconnectDB, pingDB } from "./prisma/client.ts";
+import { connectDB, pingDB } from "./prisma/client.ts";
 
-const isAddrInUse = (error: unknown) =>
-  error instanceof Deno.errors.AddrInUse ||
-  (error instanceof Error && "code" in error && error.code === "EADDRINUSE");
+const log = (msg: string) => console.log(`[server] ${msg}`);
 
-const isProjectFlowRunning = async (port: number) => {
-  try {
-    const response = await fetch(`http://127.0.0.1:${port}/health`);
-    if (!response.ok) return false;
-    const payload = await response.json().catch(() => null);
-    return payload?.success === true && payload?.data?.api === "running";
-  } catch {
-    return false;
-  }
-};
+const boot = async () => {
+  log(`ProjectFlow API booting…`);
+  log(`runtime=Deno ${Deno.version.deno}`);
+  log(`env=${env.NODE_ENV} deploy=${isDeploy} prod=${isProd}`);
 
-const findListeningPid = async (port: number) => {
-  if (Deno.build.os !== "windows") return null;
-
-  try {
-    const output = await new Deno.Command("netstat", {
-      args: ["-ano", "-p", "tcp"],
-      stdout: "piped",
-      stderr: "null",
-    }).output();
-
-    if (output.code !== 0) return null;
-
-    const text = new TextDecoder().decode(output.stdout);
-    for (const line of text.split(/\r?\n/)) {
-      const trimmed = line.trim();
-      if (!trimmed.includes("LISTENING") || !trimmed.includes(`:${port}`)) {
-        continue;
-      }
-
-      const parts = trimmed.split(/\s+/);
-      const localAddress = parts[1] ?? "";
-      const state = parts[3] ?? "";
-      const pid = Number.parseInt(parts[4] ?? "", 10);
-
-      if (
-        localAddress.endsWith(`:${port}`) &&
-        state === "LISTENING" &&
-        !Number.isNaN(pid)
-      ) {
-        return pid;
-      }
+  // Connect to MongoDB. On Deploy the connection is reused across requests;
+  // failure is non-fatal so /health can still report "degraded".
+  if (!isDeploy) {
+    log("connecting to MongoDB…");
+    const ok = await connectDB();
+    if (!ok) {
+      console.error(
+        "[server] MongoDB connect failed; continuing — /health will report degraded.",
+      );
+    } else {
+      const ping = await pingDB();
+      log(`MongoDB ${ping ? "reachable" : "connected but ping failed"}`);
     }
-  } catch {
-    // Ignore lookup failures and fall back to a generic message.
-  }
-
-  return null;
-};
-
-const inspectPort = async (port: number) => {
-  try {
-    const listener = Deno.listen({
-      hostname: "0.0.0.0",
-      port,
-      transport: "tcp",
-    });
-    listener.close();
-    return { available: true as const, projectFlowRunning: false, pid: null };
-  } catch (error) {
-    if (!isAddrInUse(error)) throw error;
-  }
-
-  const [projectFlowRunning, pid] = await Promise.all([
-    isProjectFlowRunning(port),
-    findListeningPid(port),
-  ]);
-
-  return { available: false as const, projectFlowRunning, pid };
-};
-
-const start = async () => {
-  console.log("==============================================");
-  console.log("  ProjectFlow Backend");
-  console.log("==============================================");
-
-  console.log(`Environment: ${env.NODE_ENV}`);
-  const port = Number.parseInt(env.PORT, 10) || 8000;
-  const portStatus = await inspectPort(port);
-
-  if (!portStatus.available) {
-    const pidText = portStatus.pid ? ` by PID ${portStatus.pid}` : "";
-
-    if (portStatus.projectFlowRunning) {
-      console.log(`Port ${port}${pidText} is already serving ProjectFlow.`);
-      console.log(`Reuse the running backend at http://localhost:${port}/health`);
-      console.log("Stop the existing watcher before starting another one.");
-      return;
-    }
-
-    console.error(`Port ${port}${pidText} is already in use.`);
-    console.error("Stop the process using that port or choose another one.");
-    console.error(`PowerShell example: $env:PORT=${port + 1}; deno task dev`);
-    Deno.exit(1);
-  }
-
-  console.log("Connecting to MongoDB...");
-  const ok = await connectDB();
-  if (!ok) {
-    console.error(
-      "\x1b[31m%s\x1b[0m",
-      "Failed to connect to MongoDB. Continuing anyway; /health will report degraded.",
-    );
   } else {
-    const ping = await pingDB();
-    console.log(
-      `MongoDB: ${ping ? "connected & reachable" : "connected but ping failed"}`,
-    );
+    // On Deploy, connect lazily — the runtime may have multiple replicas
+    // and we don't want a long boot. pingDB() during /readyz handles the
+    // readiness check.
+    log("Deploy runtime: skipping eager DB connect; /readyz will validate.");
   }
 
   const app = createApp();
-  try {
-    Deno.serve({ port, hostname: "0.0.0.0" }, app.fetch);
-  } catch (error) {
-    if (isAddrInUse(error)) {
-      console.error(`Port ${port} became busy while starting the server.`);
-      console.error("Please rerun the command once the existing listener stops.");
-      await disconnectDB();
-      Deno.exit(1);
-    }
-    throw error;
+
+  if (isDeploy) {
+    // Deploy: no port/host needed — the runtime binds for us.
+    Deno.serve(app.fetch);
+    log("listening (Deno Deploy)");
+    return;
   }
 
-  console.log("");
-  console.log(`API server running on \x1b[32mhttp://localhost:${port}\x1b[0m`);
-  console.log(`Swagger UI:  \x1b[32mhttp://localhost:${port}/docs\x1b[0m`);
-  console.log(`OpenAPI:     \x1b[32mhttp://localhost:${port}/openapi.json\x1b[0m`);
-  console.log(`Health:      \x1b[32mhttp://localhost:${port}/health\x1b[0m`);
-  console.log("");
-
-  // Graceful shutdown
-  const shutdown = async (signal: string) => {
-    console.log(`\nReceived ${signal}. Shutting down...`);
-    await disconnectDB();
-    Deno.exit(0);
-  };
-  Deno.addSignalListener("SIGINT", () => void shutdown("SIGINT"));
-  Deno.addSignalListener("SIGTERM", () => void shutdown("SIGTERM"));
+  // Local: bind explicitly. Deno.serve throws AddrInUse on collision which
+  // the user can resolve by changing PORT.
+  const port = Number.parseInt(env.PORT, 10) || 8000;
+  try {
+    Deno.serve({ port, hostname: "0.0.0.0" }, app.fetch);
+  } catch (err) {
+    console.error(`[server] Port ${port} unavailable. Set PORT=<n> and retry.`);
+    throw err;
+  }
+  log(`local:    http://localhost:${port}`);
+  log(`swagger:  http://localhost:${port}/docs`);
+  log(`openapi:  http://localhost:${port}/openapi.json`);
+  log(`health:   http://localhost:${port}/health`);
+  log(`readyz:   http://localhost:${port}/readyz`);
 };
 
-start().catch((err) => {
-  console.error("Fatal startup error:", err);
-  Deno.exit(1);
+// Deno Deploy never receives SIGINT/SIGTERM, and the runtime owns the
+// process lifecycle. We deliberately do NOT install signal listeners or
+// call Deno.exit — both throw on Deploy. In local dev, the user can
+// Ctrl-C and Deno will flush handles and exit cleanly.
+boot().catch((err) => {
+  console.error("[server] Fatal startup error:", err);
+  // Re-throw rather than Deno.exit so Deno Deploy surfaces the error
+  // through its logs; locally, an uncaught rejection still terminates
+  // the process.
+  throw err;
 });
