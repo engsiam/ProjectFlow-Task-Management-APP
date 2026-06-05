@@ -5,7 +5,11 @@ import type { Context } from "hono";
 import * as userService from "../services/user.service.ts";
 import { respondOk } from "../utils/response.ts";
 import { getUser } from "./_helpers.ts";
-import type { SearchUsersQuery, UpdateMeInput } from "../validators/user.validator.ts";
+import type {
+  SearchUsersQuery,
+  UpdateMeInput,
+  UpdateUserRoleInput,
+} from "../validators/user.validator.ts";
 
 export const updateMe = async (c: Context) => {
   const user = getUser(c);
@@ -27,4 +31,18 @@ export const getById = async (c: Context) => {
   const id = c.req.param("userId");
   const result = await userService.getById(id);
   return respondOk(c, result, "User");
+};
+
+export const updateRole = async (c: Context) => {
+  const user = getUser(c);
+  const targetId = c.req.param("userId");
+  // deno-lint-ignore no-explicit-any
+  const body = (c.req as any).valid("json") as UpdateUserRoleInput;
+  const result = await userService.updateUserRole(
+    user.id,
+    user.role,
+    targetId,
+    body,
+  );
+  return respondOk(c, result, "Role updated");
 };

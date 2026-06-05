@@ -85,7 +85,16 @@ export const listMine = async (
         owner: { select: { id: true, name: true, username: true, avatar: true } },
         members: {
           include: {
-            user: { select: { id: true, name: true, username: true, email: true, avatar: true } },
+            user: {
+              select: {
+                id: true,
+                name: true,
+                username: true,
+                email: true,
+                avatar: true,
+                role: true,
+              },
+            },
           },
           orderBy: { joinedAt: "asc" },
         },
@@ -339,7 +348,14 @@ export const listMembers = async (
           role: true,
           joinedAt: true,
           user: {
-            select: { id: true, name: true, username: true, email: true, avatar: true },
+            select: {
+              id: true,
+              name: true,
+              username: true,
+              email: true,
+              avatar: true,
+              role: true,
+            },
           },
         },
         orderBy: { joinedAt: "asc" },

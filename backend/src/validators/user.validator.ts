@@ -24,5 +24,12 @@ export const userIdParamSchema = z.object({
   userId: z.string().regex(/^[a-fA-F0-9]{24}$/, "Invalid user id"),
 });
 
+// Admin can promote/demote a user to any role except ADMIN (which would
+// require a separate elevated flow). Self-demotion is also blocked.
+export const updateUserRoleSchema = z.object({
+  role: z.enum(["PROJECT_MANAGER", "TEAM_MEMBER", "VIEWER"]),
+});
+
 export type UpdateMeInput = z.infer<typeof updateMeSchema>;
 export type SearchUsersQuery = z.infer<typeof searchUsersQuerySchema>;
+export type UpdateUserRoleInput = z.infer<typeof updateUserRoleSchema>;

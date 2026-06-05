@@ -4,6 +4,7 @@ import { createRoute } from "@hono/zod-openapi";
 import type { Handler, MiddlewareHandler } from "hono";
 import * as userCtrl from "../controllers/user.controller.ts";
 import { auth } from "../middleware/auth.ts";
+import { requireGlobalRole } from "../middleware/rbac.ts";
 import {
   bearerAuth,
   ErrorResponseSchema,
@@ -12,6 +13,7 @@ import {
   PublicUserSchema,
   searchUsersResponse,
   updateMeBody,
+  updateUserRoleBody,
 } from "../docs/openapi.ts";
 import { z } from "@hono/zod-openapi";
 
@@ -81,6 +83,34 @@ export const getUserByIdRoute = createRoute({
   },
 });
 
+export const updateUserRoleRoute = createRoute({
+  method: "patch",
+  path: "/api/users/:userId/role",
+  tags: tag,
+  summary: "Change a user's account role (admin only)",
+  description:
+    "Promote or demote a user to PROJECT_MANAGER, TEAM_MEMBER, or VIEWER. Only admins can call this. Admins cannot demote themselves or other admins through this endpoint.",
+  security,
+  request: {
+    params: z.object({
+      userId: z.string().regex(/^[a-fA-F0-9]{24}$/),
+    }),
+    body: {
+      content: { "application/json": { schema: updateUserRoleBody } },
+      required: true,
+    },
+  },
+  responses: {
+    200: jsonOkResponse("Role updated", PublicUserSchema),
+    ...jsonErrorResponses([
+      { status: 400, description: "Validation error" },
+      { status: 401, description: "Unauthorized" },
+      { status: 403, description: "Forbidden (non-admin or self/other-admin target)" },
+      { status: 404, description: "User not found" },
+    ]),
+  },
+});
+
 export type RouteEntry = {
   route: ReturnType<typeof createRoute>;
   handler: Handler;
@@ -91,4 +121,9 @@ export const userRouteEntries: RouteEntry[] = [
   { route: updateMeRoute, handler: userCtrl.updateMe as Handler, middleware: [auth()] },
   { route: searchUsersRoute, handler: userCtrl.searchUsers as Handler, middleware: [auth()] },
   { route: getUserByIdRoute, handler: userCtrl.getById as Handler, middleware: [auth()] },
+  {
+    route: updateUserRoleRoute,
+    handler: userCtrl.updateRole as Handler,
+    middleware: [auth(), requireGlobalRole("ADMIN")],
+  },
 ];

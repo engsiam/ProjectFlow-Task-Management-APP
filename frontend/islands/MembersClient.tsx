@@ -1,10 +1,18 @@
 import { useEffect, useMemo, useState } from "preact/hooks";
-import { getList } from "../lib/api.ts";
+import { getList, patch } from "../lib/api.ts";
+import { getCurrentUser } from "../lib/auth.ts";
 import { Icon } from "../components/ui.tsx";
-import type { Project, ProjectMember } from "../lib/types.ts";
+import { toast } from "../lib/toast.ts";
+import type { Project, ProjectMember, Role } from "../lib/types.ts";
 
 type MemberRow = ProjectMember & { projectName?: string };
 type SortKey = "name" | "role" | "project" | "status";
+
+const GLOBAL_ROLE_OPTIONS: { value: Role; label: string }[] = [
+  { value: "PROJECT_MANAGER", label: "Project Manager" },
+  { value: "TEAM_MEMBER", label: "Team Member" },
+  { value: "VIEWER", label: "Viewer" },
+];
 
 export default function MembersClient() {
   const [members, setMembers] = useState<MemberRow[]>([]);
@@ -14,6 +22,13 @@ export default function MembersClient() {
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortAsc, setSortAsc] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(
+    getCurrentUser()?.id ?? null,
+  );
+  const [isAdmin, setIsAdmin] = useState(
+    getCurrentUser()?.role === "ADMIN",
+  );
+  const [savingRoleFor, setSavingRoleFor] = useState<string | null>(null);
 
   useEffect(() => {
     getList<Project>("/projects").then((projects) => {
@@ -33,6 +48,35 @@ export default function MembersClient() {
       setError(msg);
     }).finally(() => setLoading(false));
   }, []);
+
+  async function changeAccountRole(userId: string, role: Role) {
+    setSavingRoleFor(userId);
+    const prev = members;
+    setMembers((rows) =>
+      rows.map((m) =>
+        m.user.id === userId ? { ...m, user: { ...m.user, role } } : m
+      )
+    );
+    try {
+      await patch<{ id: string; role: Role }>(
+        `/users/${userId}/role`,
+        { role },
+        {
+          loaderMessage: "Updating role…",
+        },
+      );
+      toast(
+        `Role updated to ${role.replace("_", " ").toLowerCase()}.`,
+        "success",
+      );
+    } catch (err) {
+      setMembers(prev);
+      const msg = err instanceof Error ? err.message : "Could not update role.";
+      toast(msg, "danger");
+    } finally {
+      setSavingRoleFor(null);
+    }
+  }
 
   const filtered = useMemo(() => {
     let list = [...members];
@@ -245,9 +289,10 @@ export default function MembersClient() {
                   </th>
                   <th style="cursor:pointer" onClick={() => toggleSort("role")}>
                     <span style="display:inline-flex;align-items:center;gap:4px">
-                      Role <SortIcon col="role" />
+                      Project Role <SortIcon col="role" />
                     </span>
                   </th>
+                  <th>Account Role</th>
                   <th
                     style="cursor:pointer"
                     onClick={() => toggleSort("project")}
@@ -256,7 +301,6 @@ export default function MembersClient() {
                       Project <SortIcon col="project" />
                     </span>
                   </th>
-                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -302,14 +346,51 @@ export default function MembersClient() {
                           : "Team Member"}
                       </span>
                     </td>
+                    <td>
+                      {isAdmin && m.user.id !== currentUserId &&
+                          m.user.role !== "ADMIN"
+                        ? (
+                          <select
+                            class="select"
+                            style="padding:4px 8px;font-size:12px;min-width:150px"
+                            value={m.user.role ?? "TEAM_MEMBER"}
+                            disabled={savingRoleFor === m.user.id}
+                            onChange={(e) =>
+                              changeAccountRole(
+                                m.user.id,
+                                e.currentTarget.value as Role,
+                              )}
+                          >
+                            {GLOBAL_ROLE_OPTIONS.map((opt) => (
+                              <option value={opt.value}>{opt.label}</option>
+                            ))}
+                          </select>
+                        )
+                        : (
+                          <span
+                            style={`display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;${
+                              m.user.role === "ADMIN"
+                                ? "background:color-mix(in srgb,var(--warning),transparent 85%);color:var(--warning)"
+                                : m.user.role === "PROJECT_MANAGER"
+                                ? "background:color-mix(in srgb,var(--info),transparent 85%);color:var(--info)"
+                                : m.user.role === "VIEWER"
+                                ? "background:color-mix(in srgb,var(--muted),transparent 85%);color:var(--muted)"
+                                : "background:color-mix(in srgb,var(--success),transparent 85%);color:var(--success)"
+                            }`}
+                          >
+                            <span style="width:5px;height:5px;border-radius:999px;background:currentColor" />
+                            {m.user.role === "ADMIN"
+                              ? "Admin (locked)"
+                              : m.user.role === "PROJECT_MANAGER"
+                              ? "Project Manager"
+                              : m.user.role === "VIEWER"
+                              ? "Viewer"
+                              : "Team Member"}
+                          </span>
+                        )}
+                    </td>
                     <td style="font-size:13px;color:var(--muted)">
                       {m.projectName || "—"}
-                    </td>
-                    <td>
-                      <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--success)">
-                        <span style="width:6px;height:6px;border-radius:999px;background:var(--success);box-shadow:0 0 0 3px color-mix(in srgb,var(--success),transparent 78%)" />
-                        Active
-                      </span>
                     </td>
                   </tr>
                 ))}

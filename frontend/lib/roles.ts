@@ -99,11 +99,13 @@ export const canCreateTasks = (
 ) => {
   if (isAdmin(role)) return true;
   if (isManager(role)) return true;
+  // Team members can create tasks in projects they own, or in projects where
+  // they are explicitly listed as a TEAM_MEMBER collaborator.
   if (
     isMember(role) &&
     (isProjectOwner(project, userId) || project?.currentRole === "TEAM_MEMBER")
   ) {
-    return false;
+    return true;
   }
   return false;
 };

@@ -391,6 +391,10 @@ export const updateMeBody = z.object({
   bio: z.string().nullable().optional(),
 });
 
+export const updateUserRoleBody = z.object({
+  role: z.enum(["PROJECT_MANAGER", "TEAM_MEMBER", "VIEWER"]),
+});
+
 export const searchUsersResponse = z.object({
   items: z.array(PublicUserSchema),
   total: z.number().int(),
