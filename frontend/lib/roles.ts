@@ -20,6 +20,13 @@ export const roleLabel = (role?: Role | null) =>
 export const isRoleAtLeast = (role: Role | null | undefined, minimum: Role) =>
   Boolean(role) && ROLE_RANK[role as Role] >= ROLE_RANK[minimum];
 
+export const isAdmin = (role?: Role | null) => role === "ADMIN";
+export const isManager = (role?: Role | null) =>
+  role === "PROJECT_MANAGER" || role === "ADMIN";
+export const isMember = (role?: Role | null) =>
+  role === "TEAM_MEMBER" || role === "PROJECT_MANAGER" || role === "ADMIN";
+export const isViewer = (role?: Role | null) => role === "VIEWER";
+
 export const getProjectRole = (
   project?: Partial<Project> | null,
   userId?: string | null,
@@ -33,21 +40,139 @@ export const getProjectRole = (
     null;
 };
 
+export const isProjectOwner = (
+  project?: Partial<Project> | null,
+  userId?: string | null,
+) =>
+  Boolean(
+    project && userId &&
+      (project.ownerId === userId || project.owner?.id === userId),
+  );
+
+export const isAssignee = (task: Task, userId?: string | null) =>
+  Boolean(
+    userId &&
+      (task.assignee?.id === userId),
+  );
+
 export const canCreateProject = (role?: Role | null) =>
-  isRoleAtLeast(role, "PROJECT_MANAGER");
+  isManager(role);
 
-export const canInviteMembers = (role?: Role | null) =>
-  isRoleAtLeast(role, "PROJECT_MANAGER");
+export const canEditProject = (
+  role?: Role | null,
+  project?: Partial<Project> | null,
+  userId?: string | null,
+) => {
+  if (isAdmin(role)) return true;
+  if (isProjectOwner(project, userId)) return true;
+  return false;
+};
 
-export const canCreateTasks = (role?: Role | null) =>
-  isRoleAtLeast(role, "TEAM_MEMBER");
+export const canArchiveProject = (
+  role?: Role | null,
+  project?: Partial<Project> | null,
+  userId?: string | null,
+) => {
+  if (isAdmin(role)) return true;
+  if (isProjectOwner(project, userId) && isManager(role)) return true;
+  return false;
+};
 
-export const canComment = (role?: Role | null) =>
-  isRoleAtLeast(role, "TEAM_MEMBER");
+export const canDeleteProject = (
+  role?: Role | null,
+  project?: Partial<Project> | null,
+  userId?: string | null,
+) => {
+  if (isAdmin(role)) return true;
+  if (isProjectOwner(project, userId) && isManager(role)) return true;
+  return false;
+};
 
-export const canArchiveProject = (role?: Role | null) => role === "ADMIN";
+export const canInviteMembers = (
+  role?: Role | null,
+  project?: Partial<Project> | null,
+  userId?: string | null,
+) => {
+  if (isAdmin(role)) return true;
+  if (isManager(role) && isProjectOwner(project, userId)) return true;
+  if (isManager(role) && project?.currentRole === "PROJECT_MANAGER") return true;
+  return false;
+};
 
-export const canDeleteProject = (role?: Role | null) => role === "ADMIN";
+export const canCreateTasks = (
+  role?: Role | null,
+  project?: Partial<Project> | null,
+  userId?: string | null,
+) => {
+  if (isAdmin(role)) return true;
+  if (isManager(role)) return true;
+  if (
+    isMember(role) &&
+    (isProjectOwner(project, userId) || project?.currentRole === "TEAM_MEMBER")
+  ) {
+    return false;
+  }
+  return false;
+};
+
+export const canAssignTasks = (
+  role?: Role | null,
+  project?: Partial<Project> | null,
+  userId?: string | null,
+) => {
+  if (isAdmin(role)) return true;
+  if (isManager(role)) return true;
+  return false;
+};
+
+export const canComment = (
+  role?: Role | null,
+  _project?: Partial<Project> | null,
+  _userId?: string | null,
+) => isMember(role);
+
+export const canEditTask = (
+  role?: Role | null,
+  task?: Task | null,
+  userId?: string | null,
+) => {
+  if (!task) return isMember(role);
+  if (isAdmin(role)) return true;
+  if (isManager(role)) return true;
+  if (isMember(role) && isAssignee(task, userId)) return true;
+  return false;
+};
+
+export const canChangeTaskStatus = (
+  role?: Role | null,
+  task?: Task | null,
+  userId?: string | null,
+) => canEditTask(role, task, userId);
+
+export const canDeleteTask = (
+  role: Role | null | undefined,
+  task: Task,
+  userId?: string | null,
+) => {
+  if (isAdmin(role)) return true;
+  if (isManager(role)) return true;
+  if (Boolean(userId) && task.creatorId === userId) return true;
+  return false;
+};
+
+export const canManageRoles = (role?: Role | null) => isAdmin(role);
+
+export const canViewAnalytics = (role?: Role | null) => isMember(role);
+
+export const canManageMembers = (
+  role?: Role | null,
+  project?: Partial<Project> | null,
+  userId?: string | null,
+) => {
+  if (isAdmin(role)) return true;
+  if (isManager(role)) return true;
+  return false;
+};
 
 export const getAssignableRoles = (
   actorRole?: Role | null,
@@ -80,14 +205,3 @@ export const canRemoveMember = (
   }
   return false;
 };
-
-export const canEditTask = (role?: Role | null) =>
-  isRoleAtLeast(role, "TEAM_MEMBER");
-
-export const canDeleteTask = (
-  role: Role | null | undefined,
-  task: Task,
-  userId?: string | null,
-) =>
-  isRoleAtLeast(role, "PROJECT_MANAGER") ||
-  (Boolean(userId) && task.creatorId === userId);

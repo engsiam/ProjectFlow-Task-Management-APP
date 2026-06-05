@@ -199,7 +199,11 @@ export default function DashboardClient() {
   const urgentCount = Number(priorityCounts.URGENT || 0);
   const actProjects = projects.filter((p) => p.status === "ACTIVE");
   const creatableProjects = projects.filter((p) =>
-    canCreateTasks(getProjectRole(p, currentUser?.id ?? null))
+    canCreateTasks(
+      getProjectRole(p, currentUser?.id ?? null),
+      p,
+      currentUser?.id ?? null,
+    )
   );
   const recentActivity = data?.recentActivity ?? [];
   const workloadMax = Math.max(

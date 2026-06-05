@@ -1,7 +1,13 @@
 import { useEffect, useState } from "preact/hooks";
 import { patch, post } from "../lib/api.ts";
 import { getCurrentUser } from "../lib/auth.ts";
-import { canCreateTasks, canEditTask, getProjectRole } from "../lib/roles.ts";
+import {
+  canChangeTaskStatus,
+  canCreateTasks,
+  canEditTask,
+  getProjectRole,
+  isAssignee,
+} from "../lib/roles.ts";
 import { toast } from "../lib/toast.ts";
 import { STATUS_COLUMNS } from "../lib/constants.ts";
 import type { Project, Task, TaskStatus } from "../lib/types.ts";
@@ -53,15 +59,21 @@ export default function KanbanBoard(
 
   const projectCtx = project ?? (projects ? projects[0] : undefined);
   const currentRole = getProjectRole(projectCtx, currentUserId);
-  const mayEditTask = canEditTask(currentRole);
-  const mayCreateTasks = canCreateTasks(currentRole);
+  const mayCreateTasks = canCreateTasks(currentRole, projectCtx, currentUserId);
+
+  function canEditThisTask(task: Task) {
+    return canChangeTaskStatus(currentRole, task, currentUserId);
+  }
 
   function sync(next: Task[]) {
     setLocal(next);
   }
 
   async function move(task: Task, status: TaskStatus) {
-    if (!mayEditTask) return;
+    if (!canEditThisTask(task)) {
+      toast("You can only move tasks assigned to you.", "warning");
+      return;
+    }
     const previous = local;
     sync(local.map((item) => item.id === task.id ? { ...item, status } : item));
     try {
@@ -75,7 +87,10 @@ export default function KanbanBoard(
   }
 
   async function quickPatch(task: Task, status: TaskStatus) {
-    if (!mayEditTask) return;
+    if (!canEditThisTask(task)) {
+      toast("You can only update tasks assigned to you.", "warning");
+      return;
+    }
     const previous = local;
     sync(local.map((item) => item.id === task.id ? { ...item, status } : item));
     try {
@@ -128,7 +143,6 @@ export default function KanbanBoard(
             }}
             onDrop={(e) => {
               e.currentTarget.classList.remove("drag-over");
-              if (!mayEditTask) return;
               const id = e.dataTransfer?.getData("text/task-id");
               const task = local.find((item) => item.id === id);
               if (task && task.status !== column.key) move(task, column.key);
@@ -157,15 +171,21 @@ export default function KanbanBoard(
               class="kanban-cards"
               style={{ display: "flex", flexDirection: "column", gap: "10px" }}
             >
-              {column.tasks.map((task) => (
+              {column.tasks.map((task) => {
+                const mayEditThis = canEditThisTask(task);
+                const isAssignedToMe = isAssignee(task, currentUserId);
+                return (
                 <div
                   key={task.id}
                   class={`task-card ${
                     column.key === "DONE" ? "task-done" : ""
-                  }`}
-                  draggable={mayEditTask && column.key !== "DONE"}
+                  } ${isAssignedToMe ? "task-assigned-to-me" : ""}`}
+                  draggable={mayEditThis && column.key !== "DONE"}
                   onDragStart={(e) => {
-                    if (!mayEditTask) return;
+                    if (!mayEditThis) {
+                      e.preventDefault();
+                      return;
+                    }
                     const dt = e.dataTransfer;
                     if (!dt) return;
                     dt.setData("text/task-id", task.id);
@@ -178,7 +198,7 @@ export default function KanbanBoard(
                       <Badge tone={priorityTone(task.priority)}>
                         {priorityLabel[task.priority] || task.priority}
                       </Badge>
-                      {mayEditTask && column.key !== "DONE" && (
+                      {mayEditThis && column.key !== "DONE" && (
                         <span
                           class="drag-handle"
                           onMouseDown={(e) => e.stopPropagation()}
@@ -232,7 +252,8 @@ export default function KanbanBoard(
                     </div>
                   </div>
                 </div>
-              ))}
+                );
+              })}
               {mayCreateTasks && (
                 <button
                   type="button"

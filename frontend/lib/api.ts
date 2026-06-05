@@ -7,12 +7,21 @@ import {
 } from "./auth.ts";
 import type { ApiResponse } from "./types.ts";
 import { recordApiCall } from "./api-metrics.ts";
+import { startLoader, stopLoader, type LoaderTone } from "./loader.ts";
 
 type Query = Record<string, string | number | boolean | undefined | null>;
 type Paginated<T> = {
   items: T[];
   pagination?: unknown;
   total?: number;
+};
+
+export type ApiOptions = RequestInit & {
+  query?: Query;
+  silent?: boolean;
+  loaderMessage?: string;
+  loaderTone?: LoaderTone;
+  skipLoader?: boolean;
 };
 
 export class ApiError extends Error {
@@ -74,89 +83,144 @@ async function tryRefresh(): Promise<boolean> {
   return false;
 }
 
+function defaultLoaderMessage(method: string, path: string): string {
+  const m = method.toUpperCase();
+  const trimmed = path.split("?")[0] ?? path;
+  const segments = trimmed.split("/").filter(Boolean);
+  const resource = segments[segments.length - 1] ?? "data";
+  if (m === "GET") return "Loading…";
+  if (m === "POST") {
+    if (resource === "login" || resource === "refresh") return "Signing you in…";
+    if (resource === "signup" || resource === "register") {
+      return "Creating your account…";
+    }
+    if (resource === "tasks") return "Creating task…";
+    if (resource === "projects") return "Creating project…";
+    if (resource === "comments") return "Posting comment…";
+    if (resource === "members" || resource === "invitations") {
+      return "Sending invitation…";
+    }
+    return "Saving…";
+  }
+  if (m === "PATCH" || m === "PUT") {
+    if (resource === "tasks" || trimmed.includes("/tasks/")) {
+      return "Saving task changes…";
+    }
+    if (resource === "projects" || trimmed.includes("/projects/")) {
+      return "Saving project changes…";
+    }
+    if (resource === "profile" || resource === "me") {
+      return "Updating profile…";
+    }
+    return "Saving changes…";
+  }
+  if (m === "DELETE") {
+    if (trimmed.includes("/tasks/")) return "Deleting task…";
+    if (trimmed.includes("/projects/")) return "Deleting project…";
+    if (trimmed.includes("/comments/")) return "Deleting comment…";
+    return "Deleting…";
+  }
+  return "Working…";
+}
+
+function defaultLoaderTone(method: string): LoaderTone {
+  return method.toUpperCase() === "GET" ? "load" : "save";
+}
+
 export async function api<T>(
   path: string,
-  options: RequestInit & { query?: Query } = {},
+  options: ApiOptions = {},
 ): Promise<T> {
   const method = (options.method ?? "GET").toUpperCase();
   const start = performance.now();
+  const useLoader = !options.silent && !options.skipLoader;
+  if (useLoader) {
+    startLoader(
+      options.loaderMessage ?? defaultLoaderMessage(method, path),
+      options.loaderTone ?? defaultLoaderTone(method),
+    );
+  }
 
-  const makeRequest = (token: string | null) => {
-    const headers = new Headers(options.headers);
-    if (!headers.has("Content-Type") && options.body) {
-      headers.set("Content-Type", "application/json");
-    }
-    if (token) headers.set("Authorization", `Bearer ${token}`);
-    return fetch(`${API_BASE_URL}${withQuery(path, options.query)}`, {
-      ...options,
-      headers,
-    });
-  };
-
-  let response = await makeRequest(getAccessToken());
-  let status = response.status;
-
-  // Transparent token refresh on 401
-  if (response.status === 401) {
-    if (!refreshPromise) {
-      refreshPromise = tryRefresh();
-    }
-    const refreshed = await refreshPromise;
-    refreshPromise = null;
-    if (refreshed) {
-      response = await makeRequest(getAccessToken());
-      status = response.status;
-    } else {
-      const elapsed = Math.round(performance.now() - start);
-      recordApiCall({
-        method,
-        path,
-        status: 401,
-        duration: elapsed,
-        timestamp: Date.now(),
-      });
-      clearSession();
-      if (
-        typeof location !== "undefined" &&
-        !location.pathname.startsWith("/login")
-      ) {
-        location.href = "/login";
+  try {
+    const makeRequest = (token: string | null) => {
+      const headers = new Headers(options.headers);
+      if (!headers.has("Content-Type") && options.body) {
+        headers.set("Content-Type", "application/json");
       }
-      throw new ApiError("Session expired", 401, null);
+      if (token) headers.set("Authorization", `Bearer ${token}`);
+      return fetch(`${API_BASE_URL}${withQuery(path, options.query)}`, {
+        ...options,
+        headers,
+      });
+    };
+
+    let response = await makeRequest(getAccessToken());
+    let status = response.status;
+
+    // Transparent token refresh on 401
+    if (response.status === 401) {
+      if (!refreshPromise) {
+        refreshPromise = tryRefresh();
+      }
+      const refreshed = await refreshPromise;
+      refreshPromise = null;
+      if (refreshed) {
+        response = await makeRequest(getAccessToken());
+        status = response.status;
+      } else {
+        const elapsed = Math.round(performance.now() - start);
+        recordApiCall({
+          method,
+          path,
+          status: 401,
+          duration: elapsed,
+          timestamp: Date.now(),
+        });
+        clearSession();
+        if (
+          typeof location !== "undefined" &&
+          !location.pathname.startsWith("/login")
+        ) {
+          location.href = "/login";
+        }
+        throw new ApiError("Session expired", 401, null);
+      }
     }
+
+    let payload: ApiResponse<T> | T | null = null;
+    const contentType = response.headers.get("content-type") ?? "";
+    if (contentType.includes("application/json")) {
+      payload = await response.json();
+    }
+
+    const elapsed = Math.round(performance.now() - start);
+    recordApiCall({
+      method,
+      path,
+      status,
+      duration: elapsed,
+      timestamp: Date.now(),
+    });
+
+    if (!response.ok) {
+      const message =
+        payload && typeof payload === "object" && "message" in payload
+          ? String((payload as { message: unknown }).message)
+          : "Request failed";
+      throw new ApiError(message, response.status, payload);
+    }
+
+    if (
+      payload && typeof payload === "object" && "success" in payload &&
+      "data" in payload
+    ) {
+      return (payload as ApiResponse<T>).data;
+    }
+
+    return payload as T;
+  } finally {
+    if (useLoader) stopLoader();
   }
-
-  let payload: ApiResponse<T> | T | null = null;
-  const contentType = response.headers.get("content-type") ?? "";
-  if (contentType.includes("application/json")) {
-    payload = await response.json();
-  }
-
-  const elapsed = Math.round(performance.now() - start);
-  recordApiCall({
-    method,
-    path,
-    status,
-    duration: elapsed,
-    timestamp: Date.now(),
-  });
-
-  if (!response.ok) {
-    const message =
-      payload && typeof payload === "object" && "message" in payload
-        ? String((payload as { message: unknown }).message)
-        : "Request failed";
-    throw new ApiError(message, response.status, payload);
-  }
-
-  if (
-    payload && typeof payload === "object" && "success" in payload &&
-    "data" in payload
-  ) {
-    return (payload as ApiResponse<T>).data;
-  }
-
-  return payload as T;
 }
 
 export function normalizeEntity<T>(value: T): T {
@@ -190,10 +254,17 @@ export function normalizeEntity<T>(value: T): T {
   return next as T;
 }
 
-export const get = <T>(path: string, query?: Query) =>
-  api<T>(path, { query }).then(normalizeEntity);
-export const getList = async <T>(path: string, query?: Query): Promise<T[]> => {
-  const data = await api<T[] | Paginated<T>>(path, { query });
+export const get = <T>(
+  path: string,
+  query?: Query,
+  options?: Omit<ApiOptions, "method" | "query" | "body">,
+) => api<T>(path, { ...options, query }).then(normalizeEntity);
+export const getList = async <T>(
+  path: string,
+  query?: Query,
+  options?: Omit<ApiOptions, "method" | "query" | "body">,
+): Promise<T[]> => {
+  const data = await api<T[] | Paginated<T>>(path, { ...options, query });
   const items = Array.isArray(data)
     ? data
     : Array.isArray(data?.items)
@@ -201,21 +272,34 @@ export const getList = async <T>(path: string, query?: Query): Promise<T[]> => {
     : [];
   return normalizeEntity(items);
 };
-export const post = <T>(path: string, body?: unknown) =>
+export const post = <T>(
+  path: string,
+  body?: unknown,
+  options?: Omit<ApiOptions, "method" | "body">,
+) =>
   api<T>(path, {
+    ...options,
     method: "POST",
     body: body ? JSON.stringify(body) : undefined,
   }).then(
     normalizeEntity,
   );
-export const patch = <T>(path: string, body?: unknown) =>
+export const patch = <T>(
+  path: string,
+  body?: unknown,
+  options?: Omit<ApiOptions, "method" | "body">,
+) =>
   api<T>(path, {
+    ...options,
     method: "PATCH",
     body: body ? JSON.stringify(body) : undefined,
   }).then(
     normalizeEntity,
   );
-export const del = <T>(path: string) => api<T>(path, { method: "DELETE" });
+export const del = <T>(
+  path: string,
+  options?: Omit<ApiOptions, "method">,
+) => api<T>(path, { ...options, method: "DELETE" });
 
 /**
  * Upload a file as multipart/form-data. Does not set Content-Type

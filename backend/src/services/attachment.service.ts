@@ -60,8 +60,10 @@ const resolveTaskProject = async (taskId: string) => {
 };
 
 /**
- * Verify the user can access the task's project. VIEWERs may read; members
- * with TEAM_MEMBER or higher may write.
+ * Verify the user can access the task's project. Global ADMIN and VIEWER
+ * have workspace-wide read; project members with TEAM_MEMBER or higher may
+ * write. Global ADMIN may also write to any task (delete is later re-checked
+ * by the service's RBAC rules for the specific attachment).
  */
 export const ensureTaskAccess = async (
   userId: string,
@@ -77,11 +79,13 @@ export const ensureTaskAccess = async (
   if (!project) throw new NotFoundError("Project not found");
 
   const isOwner = project.ownerId === userId;
+  const isGlobalAdmin = userRole === "ADMIN";
+  const isGlobalViewer = userRole === "VIEWER";
 
   if (write) {
     // Global VIEWER can never write.
-    if (userRole === "VIEWER") throw new ForbiddenError("Viewers cannot modify attachments");
-    if (isOwner) return task;
+    if (isGlobalViewer) throw new ForbiddenError("Viewers cannot modify attachments");
+    if (isOwner || isGlobalAdmin) return task;
     const member = await prisma.projectMember.findUnique({
       where: { projectId_userId: { projectId: project.id, userId } },
       select: { role: true },
@@ -95,7 +99,7 @@ export const ensureTaskAccess = async (
 
   // Read access
   if (isOwner) return task;
-  if (userRole === "VIEWER") return task; // global viewer
+  if (isGlobalAdmin || isGlobalViewer) return task;
   const member = await prisma.projectMember.findUnique({
     where: { projectId_userId: { projectId: project.id, userId } },
     select: { role: true },

@@ -139,7 +139,11 @@ export default function TasksClient() {
   }, [query]);
 
   const creatableProjects = projects.filter((project) =>
-    canCreateTasks(getProjectRole(project, currentUserId))
+    canCreateTasks(
+      getProjectRole(project, currentUserId),
+      project,
+      currentUserId,
+    )
   );
 
   const filtered = useMemo(() => {

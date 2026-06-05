@@ -142,8 +142,8 @@ export default function ProjectDetailClient(
   ).slice(0, 6);
 
   const currentRole = getProjectRole(project, currentUserId);
-  const mayInviteMembers = canInviteMembers(currentRole);
-  const mayCreateTasks = canCreateTasks(currentRole);
+  const mayInviteMembers = canInviteMembers(currentRole, project, currentUserId);
+  const mayCreateTasks = canCreateTasks(currentRole, project, currentUserId);
 
   if (loading) {
     return (

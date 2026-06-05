@@ -46,8 +46,13 @@ export const create = async (userId: string, input: CreateProjectInput) => {
 };
 
 export const listMine = async (userId: string, userRole: RoleType | undefined, query: ListProjectsQuery) => {
-  // Global VIEWER accounts can audit every project in the workspace.
-  const where: Record<string, unknown> = userRole === "VIEWER"
+  // Global ADMIN/PROJECT_MANAGER can manage the whole workspace, and VIEWER
+  // accounts audit every project. Everyone else only sees projects they
+  // own or are a member of.
+  const isGlobalRole = userRole && isRoleAtLeast(userRole, "PROJECT_MANAGER");
+  const isGlobalViewer = userRole === "VIEWER";
+  const isGlobalManager = isGlobalRole;
+  const where: Record<string, unknown> = isGlobalRole || isGlobalViewer
     ? {}
     : {
       OR: [
@@ -120,9 +125,12 @@ export const listMine = async (userId: string, userRole: RoleType | undefined, q
       ...p,
       progress: grp.total ? Math.round((grp.done / grp.total) * 100) : 0,
       taskCount: grp.total,
-      // Global VIEWERs are not project members but still have read access;
-      // surface a VIEWER role so the UI can hide write affordances.
-      currentRole: membershipRole ?? (userRole === "VIEWER" ? "VIEWER" : null),
+      // Non-member global roles still need a currentRole for the UI:
+      // ADMIN/PROJECT_MANAGER keep their global role (workspace manager),
+      // VIEWER shows as VIEWER (workspace read-only). Other roles only
+      // see projects they own/are a member of, so currentRole is set.
+      currentRole: membershipRole ??
+        (isGlobalManager ? (userRole as RoleType) : isGlobalViewer ? "VIEWER" : null),
     };
   });
 
@@ -161,7 +169,8 @@ export const getById = async (
   const isMember = project.ownerId === userId ||
     project.members.some((m) => m.userId === userId);
   const isGlobalViewer = userRole === "VIEWER";
-  if (!isMember && !isGlobalViewer) {
+  const isGlobalManager = userRole && isRoleAtLeast(userRole, "PROJECT_MANAGER");
+  if (!isMember && !isGlobalViewer && !isGlobalManager) {
     throw new ForbiddenError("You are not a member of this project");
   }
 
@@ -176,7 +185,10 @@ export const getById = async (
   const memberRole = project.ownerId === userId
     ? "ADMIN"
     : project.members.find((member) => member.userId === userId)?.role ?? null;
-  const currentRole = memberRole ?? (isGlobalViewer ? "VIEWER" : null);
+  // Non-member global roles still need a currentRole for the UI:
+  // ADMIN/PROJECT_MANAGER keep their global role; VIEWER shows as VIEWER.
+  const currentRole = memberRole ??
+    (isGlobalManager ? userRole! : isGlobalViewer ? "VIEWER" : null);
 
   return {
     ...project,

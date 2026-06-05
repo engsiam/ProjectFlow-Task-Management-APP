@@ -97,8 +97,13 @@ export const listForUser = async (
   userRole: RoleType | undefined,
   query: ListTasksQuery,
 ) => {
-  // Global VIEWER accounts see tasks from every project.
-  const projectWhere = userRole === "VIEWER"
+  // Global ADMIN/PROJECT_MANAGER see tasks from every project (workspace
+  // managers). Global VIEWER accounts see tasks from every project too
+  // (workspace-wide read). Everyone else only sees tasks in projects they
+  // own or are a member of.
+  const isGlobalManager = userRole && isRoleAtLeast(userRole, "PROJECT_MANAGER");
+  const isGlobalViewer = userRole === "VIEWER";
+  const projectWhere = isGlobalManager || isGlobalViewer
     ? { status: { in: ["ACTIVE", "COMPLETED"] } }
     : {
       OR: [

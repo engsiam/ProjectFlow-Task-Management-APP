@@ -22,11 +22,13 @@ import * as $CommentBox from "./islands/CommentBox.tsx";
 import * as $ConfirmDialog from "./islands/ConfirmDialog.tsx";
 import * as $DashboardAnalyticsSnapshot from "./islands/DashboardAnalyticsSnapshot.tsx";
 import * as $DashboardClient from "./islands/DashboardClient.tsx";
+import * as $FullLoader from "./islands/FullLoader.tsx";
 import * as $GlobalErrorHandler from "./islands/GlobalErrorHandler.tsx";
 import * as $InviteMemberModal from "./islands/InviteMemberModal.tsx";
 import * as $KanbanBoard from "./islands/KanbanBoard.tsx";
 import * as $LoginForm from "./islands/LoginForm.tsx";
 import * as $MembersClient from "./islands/MembersClient.tsx";
+import * as $NavigationGuard from "./islands/NavigationGuard.tsx";
 import * as $NotificationDropdown from "./islands/NotificationDropdown.tsx";
 import * as $NotificationsClient from "./islands/NotificationsClient.tsx";
 import * as $OAuthCallbackHandler from "./islands/OAuthCallbackHandler.tsx";
@@ -73,11 +75,13 @@ const manifest = {
     "./islands/ConfirmDialog.tsx": $ConfirmDialog,
     "./islands/DashboardAnalyticsSnapshot.tsx": $DashboardAnalyticsSnapshot,
     "./islands/DashboardClient.tsx": $DashboardClient,
+    "./islands/FullLoader.tsx": $FullLoader,
     "./islands/GlobalErrorHandler.tsx": $GlobalErrorHandler,
     "./islands/InviteMemberModal.tsx": $InviteMemberModal,
     "./islands/KanbanBoard.tsx": $KanbanBoard,
     "./islands/LoginForm.tsx": $LoginForm,
     "./islands/MembersClient.tsx": $MembersClient,
+    "./islands/NavigationGuard.tsx": $NavigationGuard,
     "./islands/NotificationDropdown.tsx": $NotificationDropdown,
     "./islands/NotificationsClient.tsx": $NotificationsClient,
     "./islands/OAuthCallbackHandler.tsx": $OAuthCallbackHandler,

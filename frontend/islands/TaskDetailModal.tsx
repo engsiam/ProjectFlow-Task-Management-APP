@@ -62,7 +62,7 @@ export default function TaskDetailModal(
     const projectContext = fullProject ?? task.project ?? null;
     return getProjectRole(projectContext, currentUserId);
   }, [currentUserId, projects, task.project, task.projectId]);
-  const mayEditTask = canEditTask(projectRole);
+  const mayEditTask = canEditTask(projectRole, task, currentUserId);
   const mayDeleteTask = canDeleteTask(projectRole, task, currentUserId);
 
   const [confirmAction, setConfirmAction] = useState<"delete" | null>(null);

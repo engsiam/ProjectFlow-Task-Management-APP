@@ -19,8 +19,12 @@ export default function NotificationDropdown() {
   async function load() {
     try {
       const [data, unreadData] = await Promise.all([
-        getList<Notification>("/notifications", { limit: 6 }),
-        get<{ count: number }>("/notifications/unread-count"),
+        getList<Notification>("/notifications", { limit: 6 }, { silent: true }),
+        get<{ count: number }>(
+          "/notifications/unread-count",
+          undefined,
+          { silent: true },
+        ),
       ]);
       setItems(data.slice(0, 6));
       setUnread(unreadData.count ?? 0);
@@ -84,7 +88,7 @@ export default function NotificationDropdown() {
     emitNotificationUpdate({ type: "read-all" });
 
     try {
-      await patch("/notifications/read-all");
+      await patch("/notifications/read-all", undefined, { silent: true });
       toast("All marked as read.", "success");
     } catch {
       await load();

@@ -8,6 +8,8 @@ import SearchCommand from "../islands/SearchCommand.tsx";
 import ToastProvider from "../islands/ToastProvider.tsx";
 import ShellUser from "../islands/ShellUser.tsx";
 import GlobalErrorHandler from "../islands/GlobalErrorHandler.tsx";
+import FullLoader from "../islands/FullLoader.tsx";
+import NavigationGuard from "../islands/NavigationGuard.tsx";
 import { getCurrentUser } from "../lib/auth.ts";
 import { canCreateProject } from "../lib/roles.ts";
 import { prefetchOnHover } from "../lib/prefetch.ts";
@@ -184,6 +186,8 @@ export function AppShell(
 
       <ToastProvider />
       <GlobalErrorHandler />
+      <FullLoader />
+      <NavigationGuard />
 
       <nav class="mobile-nav" aria-label="Mobile navigation">
         {flatNav.map((item) => (
