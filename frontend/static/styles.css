@@ -739,6 +739,26 @@ a {
   line-height: 1.4;
 }
 
+/* ── Role notice (informational) ── */
+
+.auth-role-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  background: color-mix(in srgb, var(--info), transparent 90%);
+  border: 1px solid color-mix(in srgb, var(--info), transparent 75%);
+  border-radius: 10px;
+  color: var(--info);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.auth-role-notice strong {
+  font-weight: 700;
+  color: var(--info);
+}
+
 /* ── Submit Button ── */
 
 .auth-submit {

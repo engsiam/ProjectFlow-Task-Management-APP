@@ -74,12 +74,18 @@ export const signup = async (
   const password = await hashPassword(input.password);
   const username = input.username || (await genUsername(input.name, input.email));
 
+  // New self-service signups (email + password from the register form) start
+  // as VIEWER. This matches the OAuth signup behavior and keeps the principle
+  // of least privilege: an admin must explicitly promote the account to
+  // TEAM_MEMBER, PROJECT_MANAGER, or ADMIN via the members page.
   const user = await prisma.user.create({
     data: {
       email: input.email,
       password,
       name: input.name,
       username,
+      role: "VIEWER",
+      status: "ACTIVE",
     },
   });
 
@@ -266,7 +272,9 @@ async function exchangeGithubCode(code: string): Promise<{
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
     });
     if (emailsRes.ok) {
-      const emails = await emailsRes.json() as Array<{ email: string; primary: boolean; verified: boolean }>;
+      const emails = await emailsRes.json() as Array<
+        { email: string; primary: boolean; verified: boolean }
+      >;
       const primary = emails.find((e: { primary: boolean }) => e.primary);
       email = primary?.email ?? emails[0]?.email ?? `${profile.login}@github.com`;
     } else {
@@ -301,12 +309,15 @@ export const loginWithOAuth = async (provider: OAuthProvider, code: string) => {
     const updateData: Record<string, unknown> = {};
     if (!user.password) updateData.name = profile.name;
     if (!user.avatar && profile.avatar) updateData.avatar = profile.avatar;
-    if (!user[idField as keyof typeof user]) updateData[idField] = profile[provider === "google" ? "googleId" : "githubId"];
+    if (!user[idField as keyof typeof user]) {
+      updateData[idField] = profile[provider === "google" ? "googleId" : "githubId"];
+    }
     if (Object.keys(updateData).length > 0) {
       user = await prisma.user.update({ where: { id: user.id }, data: updateData });
     }
   } else {
-    const base = slugifyUsername(profile.name) || slugifyUsername(profile.email.split("@")[0]) || "user";
+    const base = slugifyUsername(profile.name) || slugifyUsername(profile.email.split("@")[0]) ||
+      "user";
     let username = base;
     let i = 0;
     while (await prisma.user.findUnique({ where: { username } })) {

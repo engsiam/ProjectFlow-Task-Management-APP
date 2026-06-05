@@ -106,6 +106,15 @@ export default function SignupForm() {
 
       {error && <div class="auth-error" role="alert">{error}</div>}
 
+      <div class="auth-role-notice" role="note">
+        <Icon name="info" size={14} />
+        <span>
+          New accounts start as <strong>Viewer</strong>{" "}
+          for safety. An admin can promote you to Team Member or Project Manager
+          anytime from the members page.
+        </span>
+      </div>
+
       <Button
         variant="primary"
         type="submit"

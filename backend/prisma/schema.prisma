@@ -26,7 +26,12 @@ model User {
   bio       String?
   googleId  String?
   githubId  String?
-  role      String   @default("TEAM_MEMBER") // ADMIN, PROJECT_MANAGER, TEAM_MEMBER, VIEWER
+  // New self-service signups (email/password AND OAuth) default to VIEWER.
+  // An admin must promote the account to TEAM_MEMBER, PROJECT_MANAGER, or
+  // ADMIN. This applies the principle of least privilege for new accounts.
+  // Per-project roles (ProjectMember.role) default to TEAM_MEMBER separately
+  // — those are scoped to a single project and unchanged here.
+  role      String   @default("VIEWER") // ADMIN, PROJECT_MANAGER, TEAM_MEMBER, VIEWER
   status    String   @default("ACTIVE") // ACTIVE, DISABLED
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
