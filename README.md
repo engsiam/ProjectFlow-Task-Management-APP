@@ -10,6 +10,8 @@ ProjectFlow is a full-stack, production-ready task management and project collab
 
 <br />
 
+[![Live](https://img.shields.io/badge/🌐_Live_App-projectflow--frontend.engsiam.deno.net-00DC82?logo=deno)](https://projectflow-frontend.engsiam.deno.net)
+[![API](https://img.shields.io/badge/⚡_API-projectflow--backend.engsiam.deno.net-000000?logo=deno)](https://projectflow-backend.engsiam.deno.net/docs)
 [![Backend](https://img.shields.io/badge/Backend-Deno_2.x-black?logo=deno)](backend/)
 [![Frontend](https://img.shields.io/badge/Frontend-Fresh_1.7-00DC82?logo=fresh)](frontend/)
 [![Database](https://img.shields.io/badge/Database-MongoDB_Atlas-47A248?logo=mongodb)](https://www.mongodb.com/atlas)
@@ -21,14 +23,53 @@ ProjectFlow is a full-stack, production-ready task management and project collab
 
 <br />
 
-[**✨ Live Demo**](#) · [**📖 Documentation**](#-documentation) · [**🐛 Report Bug**](../../issues) · [**💡 Request Feature**](../../issues)
+[**✨ Live Demo**](https://projectflow-frontend.engsiam.deno.net) · [**⚡ API Docs**](https://projectflow-backend.engsiam.deno.net/docs) · [**🐛 Report Bug**](../../issues) · [**💡 Request Feature**](../../issues)
+
+<br />
+
+<img src="https://i.ibb.co.com/jPcXWPXW/home.jpg" alt="ProjectFlow — Home" width="100%" />
+
+<br />
 
 </div>
 
 ---
 
+## 📸 Screenshots
+
+| | |
+|---|---|
+| <img src="https://i.ibb.co.com/jPcXWPXW/home.jpg" alt="Home" width="100%" /> | <img src="https://i.ibb.co.com/Df4FprLt/Screenshot-1.jpg" alt="Login" width="100%" /> |
+| **🏠 Home / Landing** | **🔐 Sign in** |
+| <img src="https://i.ibb.co.com/CpjpHp7X/project.jpg" alt="Projects" width="100%" /> | <img src="https://i.ibb.co.com/N2VmtsSL/pro-details.jpg" alt="Project Detail" width="100%" /> |
+| **📁 Projects** | **📋 Project Detail** |
+| <img src="https://i.ibb.co.com/jP8bLhbC/task.jpg" alt="Task / Kanban" width="100%" /> | <img src="https://i.ibb.co.com/d4kf5XW5/tashboard.jpg" alt="Dashboard" width="100%" /> |
+| **✅ Tasks (Kanban)** | **📊 Dashboard** |
+| <img src="https://i.ibb.co.com/HDc9xQ7r/analytics.jpg" alt="Analytics" width="100%" /> | <img src="https://i.ibb.co.com/FL1CG90R/members.jpg" alt="Members" width="100%" /> |
+| **📈 Analytics** | **👥 Members** |
+| <img src="https://i.ibb.co.com/C5xM9wTr/settings.jpg" alt="Settings" width="100%" /> | |
+
+---
+
+## 🌐 Live Deployment
+
+| Service | URL | Purpose |
+|---|---|---|
+| **Frontend** | https://projectflow-frontend.engsiam.deno.net | The user-facing app (Fresh + Preact) |
+| **Backend API** | https://projectflow-backend.engsiam.deno.net | The Hono + Prisma API |
+| **Swagger UI** | https://projectflow-backend.engsiam.deno.net/docs | Interactive API explorer |
+| **OpenAPI JSON** | https://projectflow-backend.engsiam.deno.net/openapi.json | Machine-readable spec |
+| **Health** | https://projectflow-backend.engsiam.deno.net/health | Liveness probe |
+| **Readiness** | https://projectflow-backend.engsiam.deno.net/readyz | DB-backed readiness probe |
+
+> **Demo accounts** (all use the password from the seed): `admin@projectflow.dev` · `olivia@projectflow.dev` · `liam@projectflow.dev` · `noah@projectflow.dev`. See [Demo accounts](#-demo-accounts-after-seeding) below.
+
+---
+
 ## 📑 Table of Contents
 
+- [📸 Screenshots](#-screenshots)
+- [🌐 Live Deployment](#-live-deployment)
 - [🌟 Why ProjectFlow?](#-why-projectflow)
 - [✨ Features](#-features)
 - [🏗️ Architecture](#-architecture)
@@ -59,12 +100,23 @@ ProjectFlow is a full-stack, production-ready task management and project collab
 
 ## ✨ Features
 
+### 🏠 Home / Landing
+
+![Home Page](https://i.ibb.co.com/jPcXWPXW/home.jpg)
+
+### 🔐 Sign-in & Sign-up
+
+![Login](https://i.ibb.co.com/Df4FprLt/Screenshot-1.jpg)
+
 ### 🗂️ Project Management
 - ✅ Create, edit, archive, restore, and delete projects
 - 📅 Required start & deadline dates with overdue highlighting
 - 🎨 Per-project color, member avatars, owner badges
 - 📊 Live project health indicators (On Track / At Risk / Delayed)
 - 🗂️ Status workflow: `Active` → `On Hold` → `Completed` (with `Archived` for soft-delete)
+
+![Projects list](https://i.ibb.co.com/CpjpHp7X/project.jpg)
+![Project Detail](https://i.ibb.co.com/N2VmtsSL/pro-details.jpg)
 
 ### ✅ Task Management
 - 🎯 Three-column Kanban: **To Do → In Progress → Completed**
@@ -74,16 +126,37 @@ ProjectFlow is a full-stack, production-ready task management and project collab
 - 🔁 Bulk actions: set status / set priority / delete (admin-gated)
 - 📄 CSV export of project tasks
 
+![Task Board](https://i.ibb.co.com/jP8bLhbC/task.jpg)
+
 ### 👥 Collaboration
 - 📨 Email + password auth, plus **Google** & **GitHub OAuth 2.0**
 - 🔔 Real-time in-app notifications
 - 🔍 Global command palette (⌘K / Ctrl+K) — search projects, tasks, and members
 - 👤 Member directory with admin role management
 
+![Members](https://i.ibb.co.com/FL1CG90R/members.jpg)
+
 ### 📊 Analytics & Insights
 - 📈 Workspace dashboard: project count, task status mix, priority mix, 30-day trend
 - 🏆 Per-project analytics: member workload, productivity, overdue comparison
 - 🩺 Public `/health` and Deploy-friendly `/readyz` endpoints
+
+![Dashboard](https://i.ibb.co.com/d4kf5XW5/tashboard.jpg)
+![Analytics](https://i.ibb.co.com/HDc9xQ7r/analytics.jpg)
+
+### ⚙️ Settings
+- 👤 Update profile, avatar, bio
+- 🔑 Change password
+- 🌗 Theme toggle (dark / light)
+- 🔌 Connect / disconnect OAuth providers
+
+![Settings](https://i.ibb.co.com/C5xM9wTr/settings.jpg)
+
+### 📱 Mobile-first
+
+- Fully responsive layouts for kanban, dashboard, project detail, and task detail
+- Touch-friendly drag handles, swipe gestures, and bottom-tab navigation
+- Installable as a PWA on iOS and Android
 
 ### 🛡️ Security & Permissions
 - 🔐 JWT access tokens + rotating refresh tokens (15min / 7d)

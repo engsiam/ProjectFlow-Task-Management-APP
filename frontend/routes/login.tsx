@@ -1,8 +1,22 @@
+import { Head } from "$fresh/runtime.ts";
 import LoginForm from "../islands/LoginForm.tsx";
 import { Icon } from "../components/ui.tsx";
 
 export default function Login() {
   return (
+    <>
+      <Head>
+        <title>Sign in — ProjectFlow</title>
+        <meta
+          name="description"
+          content="Sign in to ProjectFlow. Real-time kanban boards, project analytics, and team collaboration for modern teams."
+        />
+        <meta name="robots" content="noindex, follow" />
+        <meta property="og:title" content="Sign in — ProjectFlow" />
+        <meta property="og:url" content="https://projectflow-frontend.engsiam.deno.net/login" />
+        <link rel="canonical" href="https://projectflow-frontend.engsiam.deno.net/login" />
+      </Head>
+
     <main class="auth-page">
       <section class="auth-showcase">
         <div class="auth-showcase-bg">
@@ -169,5 +183,6 @@ export default function Login() {
         </div>
       </section>
     </main>
+    </>
   );
 }
