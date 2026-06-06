@@ -2,18 +2,16 @@
   "nodeModulesDir": "auto",
   "lock": false,
   "tasks": {
-    "dev": "deno run --unstable-detect-cjs -A --watch src/server.ts",
-    "start": "deno run --unstable-detect-cjs -A src/server.ts",
-    "prisma:ensure": "deno run -A scripts/ensure-prisma.ts",
+    "dev": "deno run -A --unstable-detect-cjs --watch src/server.ts",
+    "start": "deno run -A --unstable-detect-cjs src/server.ts",
     "prisma:generate": "deno run -A npm:prisma@5.22.0 generate",
     "prisma:push": "deno run -A npm:prisma@5.22.0 db push",
     "prisma:studio": "deno run -A npm:prisma@5.22.0 studio",
-    "seed": "deno task prisma:ensure && deno run --unstable-detect-cjs -A prisma/seed.ts",
+    "seed": "deno run -A --unstable-detect-cjs prisma/seed.ts",
     "typecheck": "deno check src/**/*.ts prisma/seed.ts",
     "build:deploy": "deno task prisma:generate"
   },
   "imports": {
-    "@prisma/client": "npm:@prisma/client@5.22.0",
     "hono": "npm:hono@4.6.10",
     "hono/": "npm:hono@4.6.10/",
     "zod": "npm:zod@3.23.8",

@@ -4,20 +4,17 @@
 // Idempotent: re-runs upsert by email.
 // Run with: deno task seed  (after `deno task prisma:push`)
 
-import { createRequire } from "node:module";
-import type { PrismaClient as PrismaClientType } from "npm:@prisma/client@5.22.0";
+import * as prismaModule from "../src/generated/prisma/index.js";
 import bcrypt from "npm:bcryptjs@2.4.3";
 
-const require = createRequire(import.meta.url);
-const { PrismaClient: PrismaClientCtor } = require("../src/generated/prisma/index.js") as {
-  PrismaClient: new () => PrismaClientType;
-};
-const prisma: PrismaClientType = new PrismaClientCtor();
+const { PrismaClient } = prismaModule;
+const prisma = new PrismaClient();
 
 const PASSWORD = "Password123!";
 const STORAGE_DIR = "uploads/attachments";
 
-const b64ToBytes = (b64: string) => Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+const b64ToBytes = (b64: string) =>
+  Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
 
 // Minimal but valid sample files so the demo attachments open in viewers.
 const DEMO_PNG = b64ToBytes(
@@ -180,7 +177,8 @@ const projectsSeed = [
   {
     key: "launch",
     name: "Q4 Product Launch",
-    description: "Cross-functional launch plan for our biggest release of the year.",
+    description:
+      "Cross-functional launch plan for our biggest release of the year.",
     color: "#10b981",
     members: [
       { username: "olivia", role: "ADMIN" },
@@ -193,7 +191,8 @@ const projectsSeed = [
   {
     key: "redesign",
     name: "Marketing Website Redesign",
-    description: "Modernize the public-facing site. Brand refresh and CMS migration.",
+    description:
+      "Modernize the public-facing site. Brand refresh and CMS migration.",
     color: "#6366f1",
     members: [
       { username: "maya", role: "ADMIN" },
@@ -204,7 +203,8 @@ const projectsSeed = [
   {
     key: "platform",
     name: "Platform Reliability",
-    description: "Backend reliability, observability, and performance initiatives.",
+    description:
+      "Backend reliability, observability, and performance initiatives.",
     color: "#f59e0b",
     members: [
       { username: "alex", role: "ADMIN" },
@@ -260,7 +260,9 @@ async function main() {
 
   // ---- Projects + members
   for (const p of projectsSeed) {
-    const ownerId = userByUsername.get(p.members.find((m) => m.role === "ADMIN")!.username)!;
+    const ownerId = userByUsername.get(
+      p.members.find((m) => m.role === "ADMIN")!.username,
+    )!;
     const existing = await prisma.project.findFirst({
       where: { name: p.name },
       select: { id: true },
@@ -298,7 +300,9 @@ async function main() {
 
   // ---- Tasks across all Kanban columns
   // Delete and recreate tasks to make seeding deterministic
-  const projectLaunch = await prisma.project.findFirst({ where: { name: "Q4 Product Launch" } });
+  const projectLaunch = await prisma.project.findFirst({
+    where: { name: "Q4 Product Launch" },
+  });
   const projectRedesign = await prisma.project.findFirst({
     where: { name: "Marketing Website Redesign" },
   });
@@ -311,7 +315,11 @@ async function main() {
   }
 
   await prisma.task.deleteMany({
-    where: { projectId: { in: [projectLaunch.id, projectRedesign.id, projectPlatform.id] } },
+    where: {
+      projectId: {
+        in: [projectLaunch.id, projectRedesign.id, projectPlatform.id],
+      },
+    },
   });
 
   const miloId = userByUsername.get("milo")!;
@@ -513,7 +521,8 @@ async function main() {
     {
       projectId: projectLaunch.id,
       title: "Admin: Approve launch readiness checklist",
-      description: "Final go/no-go decision sign-off before the public release.",
+      description:
+        "Final go/no-go decision sign-off before the public release.",
       status: "TODO",
       priority: "HIGH",
       assignee: oliviaId,
@@ -525,7 +534,8 @@ async function main() {
     {
       projectId: projectLaunch.id,
       title: "Admin: Coordinate cross-team launch sync",
-      description: "Bring together marketing, support, and engineering for the final sync.",
+      description:
+        "Bring together marketing, support, and engineering for the final sync.",
       status: "IN_PROGRESS",
       priority: "HIGH",
       assignee: mayaId,
@@ -549,7 +559,8 @@ async function main() {
     {
       projectId: projectRedesign.id,
       title: "Admin: Reassign blog migration to backend track",
-      description: "Move the MDX blog migration to the platform team for tooling support.",
+      description:
+        "Move the MDX blog migration to the platform team for tooling support.",
       status: "IN_PROGRESS",
       priority: "MEDIUM",
       assignee: alexId,
@@ -572,8 +583,12 @@ async function main() {
     },
   ];
 
-  const createdTasks: { id: string; title: string; projectId: string; assignee: string | null }[] =
-    [];
+  const createdTasks: {
+    id: string;
+    title: string;
+    projectId: string;
+    assignee: string | null;
+  }[] = [];
   for (const t of taskSeeds) {
     const due = t.dueInDays >= 0
       ? new Date(Date.now() + t.dueInDays * 86400_000)
@@ -590,7 +605,9 @@ async function main() {
         dueDate: due,
         labels: t.labels,
         order: t.order,
-        completedAt: t.status === "DONE" ? new Date(Date.now() - 86400_000) : null,
+        completedAt: t.status === "DONE"
+          ? new Date(Date.now() - 86400_000)
+          : null,
       },
     });
     createdTasks.push({
@@ -644,9 +661,13 @@ async function main() {
       taskIdx: 0,
       fileName: "landing-copy.docx",
       ext: ".docx",
-      mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      mime:
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       uploader: oliviaId,
-      bytes: DEMO_DOCX_BLOB("Landing Page Copy", "Hero, features, pricing, FAQ."),
+      bytes: DEMO_DOCX_BLOB(
+        "Landing Page Copy",
+        "Hero, features, pricing, FAQ.",
+      ),
     },
     // Q4 launch â€” press kit
     {
@@ -746,7 +767,9 @@ async function main() {
   console.log(`  attachments: ${attachmentsCreated}`);
 
   // ---- Comments with mentions
-  await prisma.comment.deleteMany({ where: { taskId: { in: createdTasks.map((t) => t.id) } } });
+  await prisma.comment.deleteMany({
+    where: { taskId: { in: createdTasks.map((t) => t.id) } },
+  });
   const commentSeeds = [
     {
       taskIdx: 0,
@@ -754,24 +777,37 @@ async function main() {
       content:
         "Hey @milo, can you push a draft of the hero by EOD? @olivia needs to review tonight.",
     },
-    { taskIdx: 0, author: miloId, content: "On it. I'll have something by 5pm. cc @maya" },
+    {
+      taskIdx: 0,
+      author: miloId,
+      content: "On it. I'll have something by 5pm. cc @maya",
+    },
     {
       taskIdx: 2,
       author: mayaId,
-      content: "Draft is up. Please review and leave comments directly in the doc.",
+      content:
+        "Draft is up. Please review and leave comments directly in the doc.",
     },
     {
       taskIdx: 4,
       author: miloId,
       content: "This is overdue. @maya can we sync on copy tomorrow morning?",
     },
-    { taskIdx: 6, author: alexId, content: "Initial 2x load test passed. Pushing to 5x tonight." },
+    {
+      taskIdx: 6,
+      author: alexId,
+      content: "Initial 2x load test passed. Pushing to 5x tonight.",
+    },
     {
       taskIdx: 8,
       author: mayaId,
       content: "Figma file is ready. @milo can you audit the spacing tokens?",
     },
-    { taskIdx: 10, author: miloId, content: "Loving the new layout. Filter UX needs a tweak." },
+    {
+      taskIdx: 10,
+      author: miloId,
+      content: "Loving the new layout. Filter UX needs a tweak.",
+    },
   ];
   for (const c of commentSeeds) {
     const t = createdTasks[c.taskIdx];
@@ -784,7 +820,11 @@ async function main() {
 
   // ---- Activity log entries
   await prisma.activityLog.deleteMany({
-    where: { projectId: { in: [projectLaunch.id, projectRedesign.id, projectPlatform.id] } },
+    where: {
+      projectId: {
+        in: [projectLaunch.id, projectRedesign.id, projectPlatform.id],
+      },
+    },
   });
   const activitySeeds = [
     {
@@ -929,7 +969,11 @@ async function main() {
         entityId: att.id,
         taskId: att.taskId,
         projectId: task.projectId,
-        metadata: { fileName: att.fileName, fileSize: att.fileSize, mimeType: att.mimeType },
+        metadata: {
+          fileName: att.fileName,
+          fileSize: att.fileSize,
+          mimeType: att.mimeType,
+        },
       },
     });
   }
@@ -970,7 +1014,8 @@ async function main() {
       userId: oliviaId,
       type: "TASK_ASSIGNED",
       title: "You were assigned a task",
-      message: 'You have been assigned to "Write launch announcement blog post"',
+      message:
+        'You have been assigned to "Write launch announcement blog post"',
       data: { taskId: createdTasks[2].id, projectId: projectLaunch.id },
     },
     {

@@ -1,0 +1,20 @@
+# Fresh build output
+_fresh/
+
+# Local environment files (do not commit secrets or per-machine config)
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Deno cache
+.deno/

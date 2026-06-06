@@ -1,49 +1,21 @@
-// Singleton Prisma client. Reused across hot reloads in Deno --watch.
-//
-// The generated Prisma client is emitted as CommonJS. Loading it through
-// createRequire keeps runtime resolution on our project-local generated path
-// instead of Deno's internal npm package cache.
-//
-// Deno Deploy support: `node:module.createRequire` is available in the Deploy
-// runtime. The Prisma engine binary inside `src/generated/prisma/` is
-// PLATFORM-SPECIFIC (a Windows DLL locally, a Linux .so.node on Deploy), so
-// the generated folder must be regenerated on the target. We do this via the
-// Deploy "Build Command" which runs `deno task prisma:generate` before
-// the entry point boots.
-
-import { createRequire } from "node:module";
-import type { PrismaClient as PrismaClientType } from "npm:@prisma/client@5.22.0";
+import * as prismaModule from "../generated/prisma/index.js";
 import { isProd } from "../config/env.ts";
+
+const { PrismaClient } = prismaModule;
 
 declare global {
   // deno-lint-ignore no-var
-  var __prisma: PrismaClientType | undefined;
+  var __prisma: InstanceType<typeof PrismaClient> | undefined;
 }
 
-const require = createRequire(import.meta.url);
-let PrismaClientCtor: new (options?: object) => PrismaClientType;
-try {
-  // deno-lint-ignore no-explicit-any
-  ({ PrismaClient: PrismaClientCtor } = require("../generated/prisma/index.js") as any);
-} catch (err) {
-  console.error(
-    "[Prisma] Failed to load generated client at src/generated/prisma/index.js.",
-  );
-  console.error(
-    "[Prisma] Run `deno task prisma:generate` locally, AND on Deno Deploy set the Build Command to `deno task prisma:generate` so the platform-correct engine binary is generated for the target runtime.",
-  );
-  throw err;
-}
-
-const prisma: PrismaClientType = globalThis.__prisma ??
-  new PrismaClientCtor({ log: isProd ? ["error"] : ["warn", "error"] });
+export const prisma = globalThis.__prisma ??
+  new PrismaClient({
+    log: isProd ? ["error"] : ["warn", "error"],
+  });
 
 if (!isProd) {
   globalThis.__prisma = prisma;
 }
-
-export { prisma };
-export type { PrismaClientType };
 
 export const connectDB = async (): Promise<boolean> => {
   try {
