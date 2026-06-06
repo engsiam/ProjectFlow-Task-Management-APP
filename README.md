@@ -239,8 +239,6 @@ ProjectFlow-Task-Management-APP/
 │   └── 📄 README.md           # Frontend-specific docs
 │
 ├── 📁 design/                 # Mockups, brand assets
-├── 📄 backend.md              # Backend stack summary
-├── 📄 front.md                # Frontend stack summary
 └── 📄 README.md               # ⬅ You are here
 ```
 
