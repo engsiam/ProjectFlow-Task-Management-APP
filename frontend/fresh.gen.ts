@@ -37,6 +37,7 @@ import * as $ProjectCreateModal from "./islands/ProjectCreateModal.tsx";
 import * as $ProjectDetailClient from "./islands/ProjectDetailClient.tsx";
 import * as $ProjectEditModal from "./islands/ProjectEditModal.tsx";
 import * as $ProjectsClient from "./islands/ProjectsClient.tsx";
+import * as $RootRedirect from "./islands/RootRedirect.tsx";
 import * as $SearchCommand from "./islands/SearchCommand.tsx";
 import * as $SettingsClient from "./islands/SettingsClient.tsx";
 import * as $ShellUser from "./islands/ShellUser.tsx";
@@ -91,6 +92,7 @@ const manifest = {
     "./islands/ProjectDetailClient.tsx": $ProjectDetailClient,
     "./islands/ProjectEditModal.tsx": $ProjectEditModal,
     "./islands/ProjectsClient.tsx": $ProjectsClient,
+    "./islands/RootRedirect.tsx": $RootRedirect,
     "./islands/SearchCommand.tsx": $SearchCommand,
     "./islands/SettingsClient.tsx": $SettingsClient,
     "./islands/ShellUser.tsx": $ShellUser,
