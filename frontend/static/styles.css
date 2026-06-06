@@ -33,6 +33,22 @@
   --card-padding: 20px;
   --content-max: 1440px;
   --content-pad: 40px;
+
+  /* Health & Intelligence variables */
+  --health-primary: #6366f1;
+  --health-success: #10b981;
+  --health-warning: #f59e0b;
+  --health-danger: #ef4444;
+  --health-info: #3b82f6;
+  --phi-surface: rgba(15, 23, 42, 0.55);
+  --phi-surface-2: rgba(30, 41, 59, 0.6);
+  --phi-border: rgba(148, 163, 184, 0.16);
+  --phi-text: #e2e8f0;
+  --phi-text-dim: #94a3b8;
+  --phi-text-strong: #f1f5f9;
+  --phi-radius: 18px;
+  --phi-radius-sm: 10px;
+  --phi-shadow: 0 18px 48px -24px rgba(2, 6, 23, 0.7);
 }
 
 .dark {
@@ -6616,23 +6632,6 @@ body.has-full-loader {
    Premium enterprise analytics card + workspace overview
    ============================================================ */
 
-:root {
-  --health-primary: #6366f1;
-  --health-success: #10b981;
-  --health-warning: #f59e0b;
-  --health-danger: #ef4444;
-  --health-info: #3b82f6;
-  --phi-surface: rgba(15, 23, 42, 0.55);
-  --phi-surface-2: rgba(30, 41, 59, 0.6);
-  --phi-border: rgba(148, 163, 184, 0.16);
-  --phi-text: #e2e8f0;
-  --phi-text-dim: #94a3b8;
-  --phi-text-strong: #f1f5f9;
-  --phi-radius: 18px;
-  --phi-radius-sm: 10px;
-  --phi-shadow: 0 18px 48px -24px rgba(2, 6, 23, 0.7);
-}
-
 /* ----------------------------------------------------------
    ProjectHealthCard (enterprise intelligence widget — v2)
    ---------------------------------------------------------- */
@@ -7435,8 +7434,8 @@ body.has-full-loader {
     rgba(15, 23, 42, 0.55) 45%,
     rgba(15, 23, 42, 0.75) 100%
   );
-  border: 1px solid var(--phi-border);
-  color: var(--phi-text);
+  border: 1px solid var(--phi-border, rgba(148, 163, 184, 0.16));
+  color: var(--phi-text, #e2e8f0);
   box-sizing: border-box;
 }
 

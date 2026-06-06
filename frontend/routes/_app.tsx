@@ -117,7 +117,7 @@ export default function App({ Component }: AppProps) {
         />
 
         {/* Stylesheet */}
-        <link rel="stylesheet" href="/styles.css" />
+        <link rel="stylesheet" href="/styles.css?v=20260606" />
 
         {/* Service worker registration — non-blocking */}
         <script

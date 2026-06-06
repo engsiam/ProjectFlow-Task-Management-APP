@@ -17,12 +17,14 @@ import * as $settings from "./routes/settings.tsx";
 import * as $signup from "./routes/signup.tsx";
 import * as $tasks from "./routes/tasks.tsx";
 import * as $AnalyticsClient from "./islands/AnalyticsClient.tsx";
+import * as $AnalyticsTrendsCharts from "./islands/AnalyticsTrendsCharts.tsx";
 import * as $ApiMetricsTable from "./islands/ApiMetricsTable.tsx";
 import * as $AtRiskWidget from "./islands/AtRiskWidget.tsx";
 import * as $CommentBox from "./islands/CommentBox.tsx";
 import * as $ConfirmDialog from "./islands/ConfirmDialog.tsx";
 import * as $DashboardAnalyticsSnapshot from "./islands/DashboardAnalyticsSnapshot.tsx";
 import * as $DashboardClient from "./islands/DashboardClient.tsx";
+import * as $ExecutiveDashboard from "./islands/ExecutiveDashboard.tsx";
 import * as $FullLoader from "./islands/FullLoader.tsx";
 import * as $GlobalErrorHandler from "./islands/GlobalErrorHandler.tsx";
 import * as $InviteMemberModal from "./islands/InviteMemberModal.tsx";
@@ -74,12 +76,14 @@ const manifest = {
   },
   islands: {
     "./islands/AnalyticsClient.tsx": $AnalyticsClient,
+    "./islands/AnalyticsTrendsCharts.tsx": $AnalyticsTrendsCharts,
     "./islands/ApiMetricsTable.tsx": $ApiMetricsTable,
     "./islands/AtRiskWidget.tsx": $AtRiskWidget,
     "./islands/CommentBox.tsx": $CommentBox,
     "./islands/ConfirmDialog.tsx": $ConfirmDialog,
     "./islands/DashboardAnalyticsSnapshot.tsx": $DashboardAnalyticsSnapshot,
     "./islands/DashboardClient.tsx": $DashboardClient,
+    "./islands/ExecutiveDashboard.tsx": $ExecutiveDashboard,
     "./islands/FullLoader.tsx": $FullLoader,
     "./islands/GlobalErrorHandler.tsx": $GlobalErrorHandler,
     "./islands/InviteMemberModal.tsx": $InviteMemberModal,
