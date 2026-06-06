@@ -352,10 +352,13 @@ ProjectFlow is **production-verified** for [Deno Deploy](https://deno.com/deploy
    | **Framework Preset** | *No Preset* |
    | **Runtime** | Deno Deploy (Deno 2.x) |
    | **Install Command** | *(leave empty — Deno Deploy runs `deno install` automatically)* |
-   | **Build Command** | `deno task build:deploy` — runs `prisma generate` so the platform-correct Prisma engine binary is produced for the Linux Deploy runtime (Deno Deploy auto-runs `deno install`) |
+   | **Build Command** | `deno task build:deploy` — runs `prisma generate` + the post-generate patch (see below) |
+   | **Start Command** | *(leave empty — Deploy's default `deno run -A src/server.ts` works)* |
    | **Health Check Path** | `/readyz` |
 
    > ⚠️ **Why the Build Command is required:** the Prisma generated client at `backend/src/generated/prisma/` contains a *platform-specific* engine binary (`.dll.node` on Windows, `.so.node` on Linux). It's gitignored on purpose. Without a Build Command, Deploy clones the repo without the engine and the app crashes on boot with `MODULE_NOT_FOUND`.
+
+   > 🔧 **Why the post-generate patch is required:** Prisma's generated client is CommonJS (`Object.defineProperty(exports, "__esModule", ...)` at line 2). Deno Deploy boots with `deno run -A src/server.ts` and does **not** read the `unstable: ["detect-cjs"]` field from `deno.json` — only `tasks`, `imports`, `compilerOptions`, and `nodeModulesDir`. The `scripts/patch-prisma-package-json.ts` post-generate step patches the generated `package.json` to add `"type": "commonjs"`, which makes Deno treat the `.js` files as CJS natively — no flag, no settings change, no CLI flag, works on every Deno runtime.
 
 4. Add environment variables in **Settings → Environment Variables** (see [Backend env](#-environment-variables) above). At minimum:
    - `DATABASE_URL` — MongoDB Atlas connection string
