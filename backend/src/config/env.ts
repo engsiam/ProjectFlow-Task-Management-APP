@@ -56,6 +56,20 @@ const loadLocalDotEnv = async () => {
 
 await loadLocalDotEnv();
 
+// Production-safe defaults. Local dev should override these via `.env`.
+// On Deno Deploy, env vars must be set in the project settings; if missing,
+// the fallbacks below point at the deployed production URLs.
+const PRODUCTION_BACKEND_URL = "https://projectflow-backend.engsiam.deno.net";
+const PRODUCTION_FRONTEND_URL = "https://projectflow-frontend.engsiam.deno.net";
+
+// On local dev, fall back to localhost URLs so a fresh clone boots
+// without requiring the operator to edit `.env` first.
+const LOCAL_BACKEND_URL = "http://localhost:8000";
+const LOCAL_FRONTEND_URL = "http://localhost:8001";
+
+const defaultBackendUrl = isDeployRuntime ? PRODUCTION_BACKEND_URL : LOCAL_BACKEND_URL;
+const defaultFrontendUrl = isDeployRuntime ? PRODUCTION_FRONTEND_URL : LOCAL_FRONTEND_URL;
+
 export const env = {
   DATABASE_URL: required("DATABASE_URL"),
   JWT_ACCESS_SECRET: required(
@@ -72,8 +86,18 @@ export const env = {
   GOOGLE_CLIENT_SECRET: optional("GOOGLE_CLIENT_SECRET", ""),
   GITHUB_CLIENT_ID: optional("GITHUB_CLIENT_ID", ""),
   GITHUB_CLIENT_SECRET: optional("GITHUB_CLIENT_SECRET", ""),
-  OAUTH_REDIRECT_URL: optional("OAUTH_REDIRECT_URL", "http://localhost:8000/api/auth"),
-  FRONTEND_URL: optional("FRONTEND_URL", "http://localhost:8001"),
+  // Public URL of THIS backend (no trailing slash). Used for OpenAPI
+  // server entries, absolute file URLs, and anywhere we need to tell
+  // clients where to reach us.
+  API_PUBLIC_URL: optional("API_PUBLIC_URL", defaultBackendUrl),
+  // OAuth redirect URL (where Google/GitHub call us back). Should be
+  // `${API_PUBLIC_URL}/api/auth` in production.
+  OAUTH_REDIRECT_URL: optional(
+    "OAUTH_REDIRECT_URL",
+    `${defaultBackendUrl}/api/auth`,
+  ),
+  // Public URL of the frontend (used for post-OAuth redirects and CORS).
+  FRONTEND_URL: optional("FRONTEND_URL", defaultFrontendUrl),
   PORT: optional("PORT", "8000"),
   NODE_ENV: optional("NODE_ENV", "development"),
   // When set, uploaded files are stored on the local FS under this dir.

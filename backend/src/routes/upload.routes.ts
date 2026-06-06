@@ -5,14 +5,19 @@ import type { Handler, MiddlewareHandler } from "hono";
 import * as uploadCtrl from "../controllers/upload.controller.ts";
 import { auth } from "../middleware/auth.ts";
 import { bearerAuth, jsonOkResponse, jsonErrorResponses } from "../docs/openapi.ts";
+import { env, isDeploy } from "../config/env.ts";
 
 import { z } from "@hono/zod-openapi";
 
 const tag = ["Uploads"];
 const security = [{ bearerAuth: [] }];
 
+const exampleAvatarUrl = isDeploy
+  ? `${env.API_PUBLIC_URL}/uploads/avatars/uuid.jpg`
+  : `http://localhost:${env.PORT}/uploads/avatars/uuid.jpg`;
+
 const uploadAvatarResponse = z.object({
-  url: z.string().openapi({ example: "http://localhost:8000/uploads/avatars/uuid.jpg" }),
+  url: z.string().openapi({ example: exampleAvatarUrl }),
 });
 
 export const uploadAvatarRoute = createRoute({

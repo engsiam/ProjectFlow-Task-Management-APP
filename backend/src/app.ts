@@ -112,10 +112,7 @@ export const createApp = () => {
     },
     servers: [
       isDeploy
-        ? {
-          url: "https://{project}.deno.dev",
-          variables: { project: { default: "projectflow-api" } },
-        }
+        ? { url: env.API_PUBLIC_URL, description: "Production" }
         : { url: `http://localhost:${env.PORT}`, description: "Local" },
     ],
   });

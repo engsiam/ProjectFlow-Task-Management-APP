@@ -8,8 +8,8 @@ Framework frontend for a Smart Project & Task Collaboration System.
 - Language: TypeScript
 - Styling: Tailwind CSS or clean CSS with design tokens
 - Architecture: Fresh routes + islands
-- Backend API: `http://localhost:8000/api`
-- API docs: `http://localhost:8000/docs`
+- Backend API: `https://projectflow-backend.engsiam.deno.net/api`
+- API docs: `https://projectflow-backend.engsiam.deno.net/docs`
 
 ## Product Goal
 
@@ -334,7 +334,7 @@ Use Fresh islands for interactive parts:
 
 - Add a developer-friendly link to backend Swagger docs in settings or sidebar
   footer.
-- Link: `http://localhost:8000/docs`
+- Link: `https://projectflow-backend.engsiam.deno.net/docs`
 
 ## Folder Structure
 

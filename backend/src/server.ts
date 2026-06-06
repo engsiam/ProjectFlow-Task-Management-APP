@@ -60,11 +60,16 @@ const boot = async () => {
     console.error(`[server] Port ${port} unavailable. Set PORT=<n> and retry.`);
     throw err;
   }
-  log(`local:    http://localhost:${port}`);
-  log(`swagger:  http://localhost:${port}/docs`);
-  log(`openapi:  http://localhost:${port}/openapi.json`);
-  log(`health:   http://localhost:${port}/health`);
-  log(`readyz:   http://localhost:${port}/readyz`);
+  // On Deno Deploy, show the public production URL. In local dev, show
+  // the localhost URL so the operator can click straight to the docs.
+  const publicHost = isDeploy
+    ? env.API_PUBLIC_URL.replace(/\/$/, "")
+    : `http://localhost:${port}`;
+  log(`public:   ${publicHost}`);
+  log(`swagger:  ${publicHost}/docs`);
+  log(`openapi:  ${publicHost}/openapi.json`);
+  log(`health:   ${publicHost}/health`);
+  log(`readyz:   ${publicHost}/readyz`);
 };
 
 // Deno Deploy never receives SIGINT/SIGTERM, and the runtime owns the
