@@ -20,6 +20,9 @@ import ProjectCreateModal from "./ProjectCreateModal.tsx";
 import TaskCreateModal from "./TaskCreateModal.tsx";
 import DashboardAnalyticsSnapshot from "./DashboardAnalyticsSnapshot.tsx";
 import ExecutiveDashboard from "./ExecutiveDashboard.tsx";
+import ActivityHeatmap from "./ActivityHeatmap.tsx";
+import WorkloadBalancer from "./WorkloadBalancer.tsx";
+import InsightsAssistant from "./InsightsAssistant.tsx";
 
 // ── Cache ──
 const cache = {
@@ -967,6 +970,33 @@ export default function DashboardClient() {
       <div class="dash-grid">
         <div class="dash-col-12">
           <ExecutiveDashboard />
+        </div>
+      </div>
+
+      {/* ═══ ACTIVITY HEATMAP ═══ */}
+      <div class="dash-grid">
+        <div class="dash-col-12">
+          <ActivityHeatmap />
+        </div>
+      </div>
+
+      {/* ═══ WORKLOAD + INSIGHTS ═══ */}
+      <div class="dash-grid">
+        <div class="dash-col-6">
+          <WorkloadBalancer
+            members={data?.memberWorkload ?? []}
+            tasks={tasks.slice(0, 50).map((t) => ({
+              assignee: t.assignee ? { id: t.assignee.id, name: t.assignee.name } : null,
+              title: t.title,
+            }))}
+          />
+        </div>
+        <div class="dash-col-6">
+          <InsightsAssistant
+            tasks={tasks.slice(0, 50)}
+            members={data?.memberWorkload ?? []}
+            completionRate={completionRate}
+          />
         </div>
       </div>
 

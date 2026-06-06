@@ -1,5 +1,5 @@
 {
-  "build_id": "d9b36eb6b0e46ddc1c1824c34298fe4a2f14e7f4",
+  "build_id": "e4d68eb95ca5cf16de3b1a3786abd32a94c96ad8",
   "files": {
     "island-taskdetailmodal.js": [
       "chunk-RD4EPZPZ.js",
@@ -83,6 +83,7 @@
       "chunk-Z47A3HLT.js"
     ],
     "island-workloadbalancer.js": [
+      "chunk-TYYHJ4NA.js",
       "chunk-4KRBOIHK.js",
       "chunk-AODRQGV4.js",
       "chunk-5YVNKX26.js",
@@ -544,6 +545,7 @@
       "chunk-Z47A3HLT.js"
     ],
     "island-dashboardclient.js": [
+      "chunk-TYYHJ4NA.js",
       "chunk-KRM3RDYW.js",
       "chunk-WEUR4YGK.js",
       "chunk-VXZHBSDJ.js",
@@ -553,6 +555,8 @@
       "chunk-5N54LNKF.js",
       "chunk-QAJ4FR7M.js",
       "chunk-Q6AISCCZ.js",
+      "chunk-KJJCMUEN.js",
+      "chunk-EZOIPOAF.js",
       "chunk-QBPPSALS.js",
       "chunk-4KRBOIHK.js",
       "chunk-ECU2GLKO.js",
@@ -564,6 +568,10 @@
       "chunk-YXMWSZIK.js",
       "chunk-5YVNKX26.js",
       "chunk-Z47A3HLT.js"
+    ],
+    "chunk-TYYHJ4NA.js": [
+      "chunk-4KRBOIHK.js",
+      "chunk-AODRQGV4.js"
     ],
     "chunk-KRM3RDYW.js": [
       "chunk-BSGK5N7R.js",
@@ -633,10 +641,15 @@
       "chunk-Z47A3HLT.js"
     ],
     "island-insightsassistant.js": [
+      "chunk-KJJCMUEN.js",
       "chunk-4KRBOIHK.js",
       "chunk-AODRQGV4.js",
       "chunk-5YVNKX26.js",
       "chunk-Z47A3HLT.js"
+    ],
+    "chunk-KJJCMUEN.js": [
+      "chunk-4KRBOIHK.js",
+      "chunk-AODRQGV4.js"
     ],
     "main.js": [
       "chunk-GI7LLYGM.js",
@@ -655,6 +668,7 @@
     ],
     "chunk-GI7LLYGM.js": [],
     "island-activityheatmap.js": [
+      "chunk-EZOIPOAF.js",
       "chunk-ECU2GLKO.js",
       "chunk-7PC327ZZ.js",
       "chunk-C6HD4MYN.js",
@@ -664,6 +678,11 @@
       "chunk-YXMWSZIK.js",
       "chunk-5YVNKX26.js",
       "chunk-Z47A3HLT.js"
+    ],
+    "chunk-EZOIPOAF.js": [
+      "chunk-ECU2GLKO.js",
+      "chunk-AODRQGV4.js",
+      "chunk-YXMWSZIK.js"
     ],
     "island-analyticsclient.js": [
       "chunk-D3UFYEOV.js",

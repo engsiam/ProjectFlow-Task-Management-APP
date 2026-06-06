@@ -6,11 +6,11 @@
 
 **Plan less. Ship more. Together.**
 
-ProjectFlow is a full-stack, production-ready task management and project collaboration platform built for modern teams. Real-time kanban boards, granular role-based access control, OAuth login, project analytics, and a beautiful UI — all wired up with a Hono + Prisma + MongoDB backend and a Fresh + Preact frontend.
+ProjectFlow is a full-stack, production-ready task management and project collaboration platform built for modern teams. Real-time kanban boards, granular role-based access control, OAuth login, project analytics, enterprise intelligence suite (Gantt timelines, activity heatmaps, workload balancer, insights assistant, portfolio risk matrix, PDF reports, health scoring), and a beautiful UI — all wired up with a Hono + Prisma + MongoDB backend and a Fresh + Preact frontend.
 
 <br />
 
-[![Live](https://img.shields.io/badge/🌐_Live_App-projectflow--frontend.engsiam.deno.net-00DC82?logo=deno)](https://projectflow-frontend.engsiam.deno.net)
+[![Live](https://img.shields.io/badge/🌐_Live_App-projectflow.engsiam.deno.net-00DC82?logo=deno)](https://projectflow.engsiam.deno.net)
 [![API](https://img.shields.io/badge/⚡_API-projectflow--backend.engsiam.deno.net-000000?logo=deno)](https://projectflow-backend.engsiam.deno.net/docs)
 [![Backend](https://img.shields.io/badge/Backend-Deno_2.x-black?logo=deno)](backend/)
 [![Frontend](https://img.shields.io/badge/Frontend-Fresh_1.7-00DC82?logo=fresh)](frontend/)
@@ -23,7 +23,7 @@ ProjectFlow is a full-stack, production-ready task management and project collab
 
 <br />
 
-[**✨ Live Demo**](https://projectflow-frontend.engsiam.deno.net) · [**⚡ API Docs**](https://projectflow-backend.engsiam.deno.net/docs) · [**🐛 Report Bug**](../../issues) · [**💡 Request Feature**](../../issues)
+[**✨ Live Demo**](https://projectflow.engsiam.deno.net) · [**⚡ API Docs**](https://projectflow-backend.engsiam.deno.net/docs) · [**🐛 Report Bug**](../../issues) · [**💡 Request Feature**](../../issues)
 
 <br />
 
@@ -47,7 +47,8 @@ ProjectFlow is a full-stack, production-ready task management and project collab
 | **✅ Tasks (Kanban)** | **📊 Dashboard** |
 | <img src="https://i.ibb.co.com/HDc9xQ7r/analytics.jpg" alt="Analytics" width="100%" /> | <img src="https://i.ibb.co.com/FL1CG90R/members.jpg" alt="Members" width="100%" /> |
 | **📈 Analytics** | **👥 Members** |
-| <img src="https://i.ibb.co.com/C5xM9wTr/settings.jpg" alt="Settings" width="100%" /> | |
+| <img src="https://i.ibb.co.com/C5xM9wTr/settings.jpg" alt="Settings" width="100%" /> | <img src="https://i.ibb.co.com/jP8bLhbC/task.jpg" alt="Task Board" width="100%" /> |
+| **⚙️ Settings** | **✅ Tasks (Kanban)** |
 
 ---
 
@@ -55,7 +56,7 @@ ProjectFlow is a full-stack, production-ready task management and project collab
 
 | Service | URL | Purpose |
 |---|---|---|
-| **Frontend** | https://projectflow-frontend.engsiam.deno.net | The user-facing app (Fresh + Preact) |
+| **Frontend** | https://projectflow.engsiam.deno.net | The user-facing app (Fresh + Preact) |
 | **Backend API** | https://projectflow-backend.engsiam.deno.net | The Hono + Prisma API |
 | **Swagger UI** | https://projectflow-backend.engsiam.deno.net/docs | Interactive API explorer |
 | **OpenAPI JSON** | https://projectflow-backend.engsiam.deno.net/openapi.json | Machine-readable spec |
@@ -140,6 +141,20 @@ ProjectFlow is a full-stack, production-ready task management and project collab
 - 📈 Workspace dashboard: project count, task status mix, priority mix, 30-day trend
 - 🏆 Per-project analytics: member workload, productivity, overdue comparison
 - 🩺 Public `/health` and Deploy-friendly `/readyz` endpoints
+
+### 🏛️ Enterprise Intelligence Suite
+
+| Feature | Location | Description |
+|---------|----------|-------------|
+| **Executive Command Center** | Dashboard hero | Health score ring, project/task/completion/at-risk stats with weekly trend |
+| **Project Timeline (Gantt)** | Project Detail → Timeline tab | Week-header Gantt rows, colored bars by status, overdue markers, today line |
+| **Activity Heatmap** | Dashboard | GitHub-style 90-day contribution grid with 5-level intensity coloring |
+| **Workload Balancer** | Dashboard | Balanced/overloaded/underutilized stats with bar chart & deterministic redistribution recommendations |
+| **Insights Assistant** | Dashboard | Rule-based recommendations (overdue tasks, overloaded members, low velocity, unassigned tasks) |
+| **Portfolio Page** | `/portfolio` route | Health score ring, risk matrix table, portfolio insights cards, expandable health intelligence per project |
+| **PDF Report Export** | Project Detail | `window.print()` with `@media print` CSS — zero-dependency professional report |
+
+### 🎯 Project Health Intelligence Engine** (continued below)
 
 ![Dashboard](https://i.ibb.co.com/d4kf5XW5/tashboard.jpg)
 ![Analytics](https://i.ibb.co.com/HDc9xQ7r/analytics.jpg)
@@ -303,6 +318,18 @@ ProjectFlow-Task-Management-APP/
 │
 ├── 📁 frontend/               # Deno Fresh + Preact UI
 │   ├── 📁 islands/            # Interactive client components
+│   ├── 📄 DashboardClient.tsx       # Dashboard with ECC hero, grid, teams, activity
+│   ├── 📄 ExecutiveDashboard.tsx    # Workspace health overview widget
+│   ├── 📄 ProjectDetailClient.tsx   # Project detail with tabs + PDF export
+│   ├── 📄 ProjectHealthCard.tsx     # Health score ring + risk breakdown
+│   ├── 📄 ProjectTimeline.tsx       # Gantt chart with week headers
+│   ├── 📄 ActivityHeatmap.tsx       # 90-day GitHub-style contribution grid
+│   ├── 📄 WorkloadBalancer.tsx      # Team workload analysis + recommendations
+│   ├── 📄 InsightsAssistant.tsx     # Rule-based AI-style assistant
+│   ├── 📄 PortfolioClient.tsx       # Portfolio page: risk matrix, insights, health
+│   ├── 📄 AnalyticsClient.tsx       # Workspace analytics charts
+│   ├── 📄 KanbanBoard.tsx           # Drag-and-drop task board
+│   └── 📄 ...
 │   ├── 📁 components/         # Server-rendered components
 │   ├── 📁 lib/                # API client, auth, RBAC, validation
 │   ├── 📁 routes/             # Fresh pages
@@ -482,7 +509,10 @@ All endpoints live under `/api` and are documented live at **`/docs`** (Swagger 
 - `GET /health` — liveness (always 200)
 - **`GET /readyz` — readiness (200 only when DB reachable)**
 - `GET /api/dashboard` — personal dashboard
+- `GET /api/dashboard/portfolio` — portfolio & executive overview
+- `GET /api/dashboard/health` — workspace health summary
 - `GET /api/analytics/dashboard` — workspace analytics
+- `GET /api/analytics/project/:projectId` — per-project analytics KPIs
 
 ---
 
