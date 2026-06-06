@@ -6955,6 +6955,15 @@ body.has-full-loader {
   }
 }
 
+@keyframes phi-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
 /* ----------------------------------------------------------
    Workspace Health Overview (dashboard widget)
    ---------------------------------------------------------- */
@@ -7211,6 +7220,7 @@ body.has-full-loader {
   border-radius: 18px;
   width: 100%;
   min-width: 0;
+  margin-top: 4px;
   background: linear-gradient(
     140deg,
     rgba(99, 102, 241, 0.06),
@@ -7588,8 +7598,8 @@ body.has-full-loader {
 }
 .eo-ti-contributors {
   border-top: 1px solid var(--phi-border);
-  padding-top: 10px;
-  margin-top: 4px;
+  padding-top: 12px;
+  margin-top: 6px;
 }
 .eo-ti-contrib-label {
   font-size: 10px;
@@ -7597,7 +7607,7 @@ body.has-full-loader {
   color: var(--phi-text-dim);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 .eo-ti-avatars {
   display: flex;
@@ -7608,17 +7618,23 @@ body.has-full-loader {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 8px 4px 4px;
+  padding: 4px 10px 4px 4px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--phi-border);
   border-radius: 999px;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+.eo-ti-person:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(148, 163, 184, 0.3);
 }
 .eo-ti-avatar {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
 }
 .eo-ti-avatar-img {
   width: 100%;
@@ -7642,13 +7658,18 @@ body.has-full-loader {
   color: var(--phi-text-strong);
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 80px;
+  max-width: 90px;
   white-space: nowrap;
 }
 .eo-ti-person-stat {
   font-size: 10px;
   color: var(--phi-text-dim);
   white-space: nowrap;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-feature-settings: "tnum";
 }
 
 /* Empty state */
