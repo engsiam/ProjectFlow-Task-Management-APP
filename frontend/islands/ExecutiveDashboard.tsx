@@ -110,7 +110,7 @@ const InsightCard = ({ items }: { items: EnterpriseInsight[] }) => {
   };
   return (
     <div class="eo-card eo-insight-card">
-      <h3 class="eo-card-title">💡 Enterprise Insights</h3>
+      <h3 class="eo-card-title">🤖 AI Project Insights</h3>
       <ul class="eo-insight-list">
         {items.map((i, idx) => (
           <li

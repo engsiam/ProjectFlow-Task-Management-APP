@@ -7200,7 +7200,7 @@ body.has-full-loader {
 }
 
 /* ============================================================
-   Executive Dashboard � Overview, Risk Matrix, Team Intel
+   Executive Dashboard — Overview, Risk Matrix, Team Intel
    ============================================================ */
 
 .eo-section {
@@ -7209,14 +7209,17 @@ body.has-full-loader {
   gap: 18px;
   padding: 22px;
   border-radius: 18px;
+  width: 100%;
+  min-width: 0;
   background: linear-gradient(
     140deg,
     rgba(99, 102, 241, 0.06),
     rgba(15, 23, 42, 0.55) 45%,
     rgba(15, 23, 42, 0.75) 100%
   );
-  border: 1px solid var(--phi-border, rgba(148, 163, 184, 0.16));
-  color: var(--phi-text, #e2e8f0);
+  border: 1px solid var(--phi-border);
+  color: var(--phi-text);
+  box-sizing: border-box;
 }
 .eo-header {
   display: flex;
@@ -7228,12 +7231,12 @@ body.has-full-loader {
   margin: 0;
   font-size: 17px;
   font-weight: 700;
-  color: var(--phi-text-strong, #f1f5f9);
+  color: var(--phi-text-strong);
 }
 .eo-subtitle {
   margin: 4px 0 0;
   font-size: 12px;
-  color: var(--phi-text-dim, #94a3b8);
+  color: var(--phi-text-dim);
   letter-spacing: 0.03em;
 }
 .eo-link {
@@ -7242,6 +7245,8 @@ body.has-full-loader {
   text-decoration: none;
   padding: 6px 10px;
   border-radius: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--phi-border);
   transition: color 150ms, background 150ms;
@@ -7251,10 +7256,17 @@ body.has-full-loader {
   background: rgba(255, 255, 255, 0.08);
 }
 
+/* KPI row — responsive 5-col */
 .eo-kpi-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 10px;
+  min-width: 0;
+}
+@media (max-width: 1200px) {
+  .eo-kpi-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 @media (max-width: 900px) {
   .eo-kpi-grid {
@@ -7266,13 +7278,20 @@ body.has-full-loader {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+@media (max-width: 380px) {
+  .eo-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
 
 .eo-kpi {
   display: flex;
   flex-direction: column;
   gap: 4px;
   padding: 14px 16px;
-  background: var(--phi-surface, rgba(15, 23, 42, 0.55));
+  min-width: 0;
+  overflow: hidden;
+  background: var(--phi-surface);
   border: 1px solid var(--phi-border);
   border-radius: 10px;
   transition: border-color 150ms;
@@ -7292,6 +7311,9 @@ body.has-full-loader {
   font-weight: 800;
   font-feature-settings: "tnum";
   line-height: 1.1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .eo-kpi-desc {
   font-size: 11px;
@@ -7299,12 +7321,17 @@ body.has-full-loader {
   font-weight: 500;
 }
 
+/* Trend arrow inside KPI tile */
 .eo-trend {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 .eo-trend-up {
   color: #10b981;
@@ -7316,11 +7343,14 @@ body.has-full-loader {
   color: #94a3b8;
 }
 
+/* Narrative block — premium insight quote */
 .eo-narrative {
-  padding: 14px 16px;
+  position: relative;
+  padding: 14px 16px 14px 20px;
   background: var(--phi-surface);
   border: 1px solid var(--phi-border);
   border-radius: 10px;
+  border-left: 3px solid var(--phi-accent, #6366f1);
   font-size: 13px;
   line-height: 1.6;
   color: var(--phi-text);
@@ -7329,10 +7359,12 @@ body.has-full-loader {
   color: var(--phi-text-strong);
 }
 
+/* Two-col layout: Forecast + Insights */
 .eo-two-col {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 14px;
+  min-width: 0;
 }
 @media (max-width: 900px) {
   .eo-two-col {
@@ -7348,6 +7380,7 @@ body.has-full-loader {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  min-width: 0;
 }
 .eo-card-title {
   margin: 0;
@@ -7367,6 +7400,7 @@ body.has-full-loader {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
 }
 .eo-dfc-label {
   font-size: 10px;
@@ -7378,6 +7412,9 @@ body.has-full-loader {
 .eo-dfc-value {
   font-size: 15px;
   font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .eo-dfc-meta {
   font-size: 11px;
@@ -7396,14 +7433,17 @@ body.has-full-loader {
   color: #94a3b8;
 }
 
-/* Enterprise Insights */
+/* AI Project Insights */
+.eo-insight-card {
+  gap: 10px;
+}
 .eo-insight-list {
   list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 .eo-insight-item {
   display: flex;
@@ -7423,13 +7463,18 @@ body.has-full-loader {
 }
 
 /* Risk Matrix Card */
+.eo-rm-card {
+  overflow: hidden;
+}
 .eo-rm-scroll {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .eo-rm-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 12px;
+  min-width: 500px;
 }
 .eo-rm-table th {
   text-align: left;
@@ -7440,10 +7485,12 @@ body.has-full-loader {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   border-bottom: 1px solid var(--phi-border);
+  white-space: nowrap;
 }
 .eo-rm-table td {
   padding: 8px 10px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  white-space: nowrap;
 }
 .eo-rm-row:hover td {
   background: rgba(255, 255, 255, 0.03);
@@ -7464,6 +7511,11 @@ body.has-full-loader {
 .eo-rm-project-name {
   font-weight: 600;
   color: var(--phi-text-strong);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+  display: inline-block;
+  vertical-align: middle;
 }
 .eo-rm-score {
   font-weight: 700;
@@ -7484,6 +7536,7 @@ body.has-full-loader {
   background: rgba(255, 255, 255, 0.06);
   overflow: hidden;
   max-width: 100px;
+  min-width: 40px;
 }
 .eo-rm-bar-fill {
   height: 100%;
@@ -7494,6 +7547,7 @@ body.has-full-loader {
   font-weight: 600;
   font-feature-settings: "tnum";
   color: var(--phi-text);
+  min-width: 32px;
 }
 .eo-rm-due {
   font-weight: 600;
@@ -7504,6 +7558,9 @@ body.has-full-loader {
 }
 
 /* Team Intelligence */
+.eo-ti-card {
+  gap: 14px;
+}
 .eo-ti-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -7513,6 +7570,7 @@ body.has-full-loader {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
 }
 .eo-ti-stat-label {
   font-size: 10px;
@@ -7525,6 +7583,8 @@ body.has-full-loader {
   font-size: 20px;
   font-weight: 700;
   font-feature-settings: "tnum";
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .eo-ti-contributors {
   border-top: 1px solid var(--phi-border);
@@ -7580,10 +7640,15 @@ body.has-full-loader {
   font-size: 12px;
   font-weight: 600;
   color: var(--phi-text-strong);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 80px;
+  white-space: nowrap;
 }
 .eo-ti-person-stat {
   font-size: 10px;
   color: var(--phi-text-dim);
+  white-space: nowrap;
 }
 
 /* Empty state */
@@ -7610,7 +7675,7 @@ body.has-full-loader {
   margin-inline: auto;
 }
 
-/* Loading */
+/* Loading skeleton */
 .eo-skel-header {
   height: 22px;
   width: 35%;
