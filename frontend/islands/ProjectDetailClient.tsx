@@ -41,6 +41,7 @@ import TaskCreateModal from "./TaskCreateModal.tsx";
 import InviteMemberModal from "./InviteMemberModal.tsx";
 import ProjectEditModal from "./ProjectEditModal.tsx";
 import ProjectAnalyticsTab from "./ProjectAnalyticsTab.tsx";
+import ProjectHealthCard from "./ProjectHealthCard.tsx";
 
 type Tab =
   | "Overview"
@@ -551,6 +552,9 @@ export default function ProjectDetailClient(
 
           {/* Right Column */}
           <div style="display:grid;gap:14px">
+            {/* AI Project Insights */}
+            <ProjectHealthCard projectId={project.id} />
+
             {/* Health Detail */}
             <div class="pd-card">
               <div class="pd-card-title">

@@ -23,6 +23,7 @@ import { notificationRouteEntries } from "./routes/notification.routes.ts";
 import { systemRouteEntries } from "./routes/system.routes.ts";
 import { uploadRouteEntries } from "./routes/upload.routes.ts";
 import { attachmentRouteEntries } from "./routes/attachment.routes.ts";
+import { healthRouteEntries } from "./routes/project-health.routes.ts";
 
 export const createApp = () => {
   const app = new OpenAPIHono();
@@ -83,6 +84,7 @@ export const createApp = () => {
     ...notificationRouteEntries,
     ...uploadRouteEntries,
     ...attachmentRouteEntries,
+    ...healthRouteEntries,
   ];
 
   for (const entry of allEntries) {

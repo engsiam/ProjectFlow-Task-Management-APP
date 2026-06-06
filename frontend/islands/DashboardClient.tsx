@@ -19,6 +19,7 @@ import { Avatar, fmtDate, Icon, Skeleton } from "../components/ui.tsx";
 import ProjectCreateModal from "./ProjectCreateModal.tsx";
 import TaskCreateModal from "./TaskCreateModal.tsx";
 import DashboardAnalyticsSnapshot from "./DashboardAnalyticsSnapshot.tsx";
+import AtRiskWidget from "./AtRiskWidget.tsx";
 
 // ── Cache ──
 const cache = {
@@ -889,6 +890,13 @@ export default function DashboardClient() {
                 </div>
               )}
           </div>
+        </div>
+      </div>
+
+      {/* ═══ AI PROJECT INSIGHTS ═══ */}
+      <div class="dash-grid">
+        <div class="dash-col-12">
+          <AtRiskWidget />
         </div>
       </div>
 

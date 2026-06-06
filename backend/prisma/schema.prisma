@@ -86,6 +86,7 @@ model Project {
   invitations Invitation[]
   tasks       Task[]
   activities  ActivityLog[]
+  healthSnapshots ProjectHealthSnapshot[]
   startDate   DateTime?
   deadline    DateTime?
   createdAt   DateTime  @default(now())
@@ -96,6 +97,42 @@ model Project {
   @@index([status])
   @@index([ownerId])
   @@index([ownerId, status])
+}
+
+// ============================================================
+// PROJECT HEALTH INSIGHTS
+// ============================================================
+// AI-powered project health scoring. Each snapshot is computed by the
+// health-score service and cached here for trend analysis. The score
+// blends five weighted signals: overdue tasks, recent completion
+// velocity, deadline proximity, member engagement, and workload
+// distribution. Risk levels and human-readable insights are derived
+// from the metrics and surface in the dashboard + project detail UI.
+
+model ProjectHealthSnapshot {
+  id                     String   @id @default(auto()) @map("_id") @db.ObjectId
+  projectId              String   @db.ObjectId
+  project                Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Overall 0-100 score
+  score                  Int
+  // ON_TRACK | AT_RISK | CRITICAL
+  riskLevel              String
+
+  // Weighted metric breakdown (also persisted for trend analysis)
+  metrics                Json
+
+  // [{ type: "warning" | "info" | "success" | "critical", title, text }]
+  insights               Json
+
+  // Predictive analytics
+  predictedCompletionDate DateTime?
+  onTrackProbability     Float
+
+  computedAt             DateTime @default(now())
+
+  @@index([projectId, computedAt])
+  @@index([riskLevel])
 }
 
 model ProjectMember {

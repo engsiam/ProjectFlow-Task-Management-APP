@@ -158,6 +158,35 @@ ProjectFlow is a full-stack, production-ready task management and project collab
 - Touch-friendly drag handles, swipe gestures, and bottom-tab navigation
 - Installable as a PWA on iOS and Android
 
+## 📊 Project Health Intelligence Engine
+
+A deterministic, 5-signal health engine that gives every project a 0–100 score, a risk band, predicted completion, and explainable insights — no LLM API keys required, works on the free Deno Deploy tier.
+
+| Signal | Weight | What it measures |
+|---|---|---|
+| Overdue tasks | 30 | Ratio of overdue, non-completed tasks |
+| Velocity (7d) | 20 | Tasks completed in the last 7 days |
+| Deadline proximity | 25 | Distance from now to project deadline |
+| Engagement | 15 | Active members vs total members |
+| Workload balance | 10 | Standard deviation of open tasks per member |
+
+**Risk bands:** `ON_TRACK` ≥ 70 · `AT_RISK` 40–69 · `CRITICAL` < 40
+
+**Predicted completion** = `remaining tasks / daily velocity` (capped at project deadline). **On-track probability** is a deterministic 0–1 estimate based on deadline proximity.
+
+**Endpoints:**
+
+```
+GET    /api/projects/:projectId/health          # current snapshot
+POST   /api/projects/:projectId/health/refresh  # force recompute
+GET    /api/projects/:projectId/health/history  # last 30 snapshots (sparkline)
+GET    /api/dashboard/health                    # workspace summary (avg + at-risk list)
+```
+
+- Dashboard widget shows workspace average score, at-risk/critical counts, and the top 5 worst-scoring projects.
+- Project detail shows the score gauge, top insight, on-track %, predicted ETA, and a collapsible score-breakdown for transparency.
+- Each refresh writes a new `ProjectHealthSnapshot` and an activity log entry (`PROJECT_HEALTH_COMPUTED`).
+
 ### 🛡️ Security & Permissions
 - 🔐 JWT access tokens + rotating refresh tokens (15min / 7d)
 - 🚦 IP-based rate limiting on auth endpoints
@@ -392,6 +421,12 @@ All endpoints live under `/api` and are documented live at **`/docs`** (Swagger 
 - `PATCH  /api/tasks/:id` — update
 - `POST   /api/tasks/:id/move` — change status
 - `DELETE /api/tasks/:id` — admin-only
+
+### 🤖 AI Project Health (`/api/projects/:id/health`, `/api/dashboard/health`)
+- `GET   /api/projects/:projectId/health` — current score, risk band, insights, predicted ETA
+- `POST  /api/projects/:projectId/health/refresh` — recompute + persist snapshot
+- `GET   /api/projects/:projectId/health/history?limit=30` — past snapshots (sparkline)
+- `GET   /api/dashboard/health` — workspace summary (avg score + at-risk list)
 
 ### 💬 Comments · 🔔 Notifications · 📎 Uploads
 - `POST /api/tasks/:id/comments` · `GET /api/tasks/:id/comments`

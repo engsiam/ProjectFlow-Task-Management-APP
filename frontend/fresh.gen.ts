@@ -18,6 +18,7 @@ import * as $signup from "./routes/signup.tsx";
 import * as $tasks from "./routes/tasks.tsx";
 import * as $AnalyticsClient from "./islands/AnalyticsClient.tsx";
 import * as $ApiMetricsTable from "./islands/ApiMetricsTable.tsx";
+import * as $AtRiskWidget from "./islands/AtRiskWidget.tsx";
 import * as $CommentBox from "./islands/CommentBox.tsx";
 import * as $ConfirmDialog from "./islands/ConfirmDialog.tsx";
 import * as $DashboardAnalyticsSnapshot from "./islands/DashboardAnalyticsSnapshot.tsx";
@@ -36,6 +37,7 @@ import * as $ProjectAnalyticsTab from "./islands/ProjectAnalyticsTab.tsx";
 import * as $ProjectCreateModal from "./islands/ProjectCreateModal.tsx";
 import * as $ProjectDetailClient from "./islands/ProjectDetailClient.tsx";
 import * as $ProjectEditModal from "./islands/ProjectEditModal.tsx";
+import * as $ProjectHealthCard from "./islands/ProjectHealthCard.tsx";
 import * as $ProjectsClient from "./islands/ProjectsClient.tsx";
 import * as $RootRedirect from "./islands/RootRedirect.tsx";
 import * as $SearchCommand from "./islands/SearchCommand.tsx";
@@ -73,6 +75,7 @@ const manifest = {
   islands: {
     "./islands/AnalyticsClient.tsx": $AnalyticsClient,
     "./islands/ApiMetricsTable.tsx": $ApiMetricsTable,
+    "./islands/AtRiskWidget.tsx": $AtRiskWidget,
     "./islands/CommentBox.tsx": $CommentBox,
     "./islands/ConfirmDialog.tsx": $ConfirmDialog,
     "./islands/DashboardAnalyticsSnapshot.tsx": $DashboardAnalyticsSnapshot,
@@ -91,6 +94,7 @@ const manifest = {
     "./islands/ProjectCreateModal.tsx": $ProjectCreateModal,
     "./islands/ProjectDetailClient.tsx": $ProjectDetailClient,
     "./islands/ProjectEditModal.tsx": $ProjectEditModal,
+    "./islands/ProjectHealthCard.tsx": $ProjectHealthCard,
     "./islands/ProjectsClient.tsx": $ProjectsClient,
     "./islands/RootRedirect.tsx": $RootRedirect,
     "./islands/SearchCommand.tsx": $SearchCommand,
