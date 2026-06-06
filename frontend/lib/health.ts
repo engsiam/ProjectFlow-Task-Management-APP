@@ -1,7 +1,13 @@
-// AI-Powered Project Health — frontend types and API client.
+// Project Health Intelligence — frontend types and API client.
 
 export type RiskLevel = "ON_TRACK" | "AT_RISK" | "CRITICAL";
-export type InsightType = "warning" | "info" | "success" | "critical";
+export type InsightType =
+  | "warning"
+  | "info"
+  | "success"
+  | "critical"
+  | "action";
+export type TrendDirection = "up" | "down" | "flat";
 
 export type HealthMetrics = {
   totalTasks: number;
@@ -28,13 +34,26 @@ export type HealthInsight = {
   text: string;
 };
 
+export type SignalContribution = {
+  signal: "overdue" | "velocity" | "deadline" | "engagement" | "distribution";
+  label: string;
+  points: number;
+  maxPoints: number;
+};
+
 export type HealthResult = {
   score: number;
   riskLevel: RiskLevel;
   metrics: HealthMetrics;
   insights: HealthInsight[];
+  topRiskFactors: HealthInsight[];
+  recommendations: HealthInsight[];
+  signalContributions: SignalContribution[];
   predictedCompletionDate: string | null;
   onTrackProbability: number;
+  previousScore: number | null;
+  scoreTrend: number | null;
+  trendDirection: TrendDirection | null;
   computedAt: string;
 };
 
@@ -45,7 +64,7 @@ export type HealthHistoryPoint = {
   computedAt: string;
 };
 
-export type AtRiskItem = {
+export type HealthItem = {
   projectId: string;
   projectName: string;
   projectColor: string;
@@ -60,9 +79,11 @@ export type AtRiskItem = {
 export type WorkspaceHealth = {
   totalProjects: number;
   averageScore: number;
+  onTrackCount: number;
   atRiskCount: number;
   criticalCount: number;
-  atRisk: AtRiskItem[];
+  atRisk: HealthItem[];
+  topHealthy: HealthItem[];
 };
 
 import { API_BASE_URL } from "./constants.ts";
@@ -135,4 +156,18 @@ export const riskEmoji = (risk: RiskLevel): string => {
   if (risk === "CRITICAL") return "🔴";
   if (risk === "AT_RISK") return "🟡";
   return "🟢";
+};
+
+export const riskShort = (risk: RiskLevel): string => {
+  if (risk === "CRITICAL") return "CRITICAL";
+  if (risk === "AT_RISK") return "AT_RISK";
+  return "ON_TRACK";
+};
+
+export const insightAccent = (type: InsightType): string => {
+  if (type === "critical") return "var(--health-danger, #ef4444)";
+  if (type === "warning") return "var(--health-warning, #f59e0b)";
+  if (type === "success") return "var(--health-success, #10b981)";
+  if (type === "action") return "var(--health-primary, #6366f1)";
+  return "var(--health-info, #3b82f6)";
 };

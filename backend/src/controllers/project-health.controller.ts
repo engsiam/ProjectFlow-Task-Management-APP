@@ -1,4 +1,4 @@
-// Project Health Insights — controllers.
+// Project Health Intelligence — controllers.
 
 import type { Context } from "hono";
 import * as healthService from "../services/health-score.service.ts";

@@ -1,4 +1,4 @@
-// AI-Powered Project Health Insights.
+// Project Health Intelligence Engine.
 //
 // Computes a 0-100 health score for a project by blending five weighted
 // signals from live project data:
@@ -10,17 +10,17 @@
 //   5. Workload distribution    (10 pts)  - assignment stddev across members
 //
 // Each snapshot is persisted to ProjectHealthSnapshot for trend analysis
-// and surfaced as plain-English insights. The algorithm is deterministic
-// (no LLM, no API key) but the insights are framed as "AI-Powered" in
-// the product UI — a common pattern in commercial SaaS that delivers
-// real value without operational complexity.
+// and surfaced as Top Risk Factors and Recommended Actions. The engine
+// is fully deterministic (no LLM, no API key, no external service) so it
+// runs identically on Deno Deploy's free tier as it does locally.
 
 import { prisma } from "../prisma/client.ts";
 import { ActivityAction } from "../types/domain.ts";
 import { logActivity } from "./activity.service.ts";
 
 export type RiskLevel = "ON_TRACK" | "AT_RISK" | "CRITICAL";
-export type InsightType = "warning" | "info" | "success" | "critical";
+export type InsightType = "warning" | "info" | "success" | "critical" | "action";
+export type TrendDirection = "up" | "down" | "flat";
 
 export type HealthMetrics = {
   totalTasks: number;
@@ -47,13 +47,26 @@ export type HealthInsight = {
   text: string;
 };
 
+export type SignalContribution = {
+  signal: "overdue" | "velocity" | "deadline" | "engagement" | "distribution";
+  label: string;
+  points: number;
+  maxPoints: number;
+};
+
 export type HealthResult = {
   score: number;
   riskLevel: RiskLevel;
   metrics: HealthMetrics;
   insights: HealthInsight[];
+  topRiskFactors: HealthInsight[];
+  recommendations: HealthInsight[];
+  signalContributions: SignalContribution[];
   predictedCompletionDate: Date | null;
   onTrackProbability: number;
+  previousScore: number | null;
+  scoreTrend: number | null;
+  trendDirection: TrendDirection | null;
   computedAt: Date;
 };
 
@@ -69,12 +82,7 @@ const stdDev = (values: number[]): number => {
 const daysBetween = (a: Date, b: Date): number =>
   Math.floor((a.getTime() - b.getTime()) / (24 * 60 * 60 * 1000));
 
-const formatList = (items: string[]): string => {
-  if (items.length === 0) return "";
-  if (items.length === 1) return items[0];
-  if (items.length === 2) return `${items[0]} and ${items[1]}`;
-  return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`;
-};
+const roundPct = (n: number) => Math.round(n * 100);
 
 export const computeHealth = async (projectId: string): Promise<HealthResult> => {
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
@@ -114,9 +122,8 @@ export const computeHealth = async (projectId: string): Promise<HealthResult> =>
   const tasks = project.tasks;
   const total = tasks.length;
   const completed = tasks.filter((t) => isCompleted(t.status)).length;
-  const overdue = tasks.filter((t) =>
-    t.dueDate && new Date(t.dueDate) < now && !isCompleted(t.status)
-  ).length;
+  const overdue =
+    tasks.filter((t) => t.dueDate && new Date(t.dueDate) < now && !isCompleted(t.status)).length;
   const inProgress = tasks.filter((t) => t.status === "IN_PROGRESS").length;
   const todo = tasks.filter((t) => t.status === "TODO").length;
   const remaining = total - completed;
@@ -149,12 +156,8 @@ export const computeHealth = async (projectId: string): Promise<HealthResult> =>
 
   // 4. Engagement (15 pts)
   const totalMembers = project.members.length;
-  const activeMembers = project.members.filter((m) =>
-    m.user.activityLogs.length > 0
-  ).length;
-  const engagementScore = totalMembers > 0
-    ? Math.round((activeMembers / totalMembers) * 15)
-    : 0;
+  const activeMembers = project.members.filter((m) => m.user.activityLogs.length > 0).length;
+  const engagementScore = totalMembers > 0 ? Math.round((activeMembers / totalMembers) * 15) : 0;
 
   // 5. Workload distribution (10 pts) — lower stddev of open-task counts
   const openCounts = project.members.map((m) =>
@@ -172,9 +175,7 @@ export const computeHealth = async (projectId: string): Promise<HealthResult> =>
 
   // Prediction
   const dailyVelocity = recentCompleted / 7;
-  const predictedDays = dailyVelocity > 0
-    ? Math.ceil(remaining / dailyVelocity)
-    : null;
+  const predictedDays = dailyVelocity > 0 ? Math.ceil(remaining / dailyVelocity) : null;
   const predictedCompletionDate = predictedDays !== null
     ? new Date(now.getTime() + predictedDays * 24 * 60 * 60 * 1000)
     : null;
@@ -191,12 +192,17 @@ export const computeHealth = async (projectId: string): Promise<HealthResult> =>
     onTrackProbability = 0.6; // unknown
   }
 
-  // Insights
+  // Signal contributions for the breakdown panel
+  const signalContributions: SignalContribution[] = [
+    { signal: "overdue", label: "Overdue Tasks", points: overdueScore, maxPoints: 30 },
+    { signal: "velocity", label: "Completion Velocity", points: velocityScore, maxPoints: 20 },
+    { signal: "deadline", label: "Deadline Distance", points: deadlineScore, maxPoints: 25 },
+    { signal: "engagement", label: "Team Engagement", points: engagementScore, maxPoints: 15 },
+    { signal: "distribution", label: "Workload Balance", points: distributionScore, maxPoints: 10 },
+  ];
+
+  // General observations (insights)
   const insights: HealthInsight[] = [];
-  const overdueTitles = tasks
-    .filter((t) => t.dueDate && new Date(t.dueDate) < now && !isCompleted(t.status))
-    .slice(0, 3)
-    .map((t) => t.id);
 
   if (overdue > 0) {
     insights.push({
@@ -215,19 +221,17 @@ export const computeHealth = async (projectId: string): Promise<HealthResult> =>
       insights.push({
         type: "critical",
         title: "Project deadline passed",
-        text:
-          `The project deadline was ${Math.abs(daysToDeadline)} day${
-            Math.abs(daysToDeadline) > 1 ? "s" : ""
-          } ago. ${remaining} task${remaining > 1 ? "s" : ""} remaining.`,
+        text: `The project deadline was ${Math.abs(daysToDeadline)} day${
+          Math.abs(daysToDeadline) > 1 ? "s" : ""
+        } ago. ${remaining} task${remaining > 1 ? "s" : ""} remaining.`,
       });
     } else if (daysToDeadline <= 7 && score < 70) {
       insights.push({
         type: "warning",
         title: "Deadline approaching",
-        text:
-          `Project deadline is in ${daysToDeadline} day${
-            daysToDeadline > 1 ? "s" : ""
-          } with ${remaining} task${remaining > 1 ? "s" : ""} remaining.`,
+        text: `Project deadline is in ${daysToDeadline} day${
+          daysToDeadline > 1 ? "s" : ""
+        } with ${remaining} task${remaining > 1 ? "s" : ""} remaining.`,
       });
     }
   }
@@ -236,10 +240,9 @@ export const computeHealth = async (projectId: string): Promise<HealthResult> =>
     insights.push({
       type: "info",
       title: "Team velocity",
-      text:
-        `${recentCompleted} task${recentCompleted > 1 ? "s" : ""} completed in the last 7 days (${
-          (recentCompleted / 7).toFixed(1)
-        }/day).`,
+      text: `${recentCompleted} task${
+        recentCompleted > 1 ? "s" : ""
+      } completed in the last 7 days (${(recentCompleted / 7).toFixed(1)}/day).`,
     });
   } else if (total > 0 && remaining > 0) {
     insights.push({
@@ -253,8 +256,7 @@ export const computeHealth = async (projectId: string): Promise<HealthResult> =>
     insights.push({
       type: "info",
       title: "Low team engagement",
-      text:
-        `Only ${activeMembers} of ${totalMembers} members have activity in the last 7 days.`,
+      text: `Only ${activeMembers} of ${totalMembers} members have activity in the last 7 days.`,
     });
   }
 
@@ -262,8 +264,9 @@ export const computeHealth = async (projectId: string): Promise<HealthResult> =>
     insights.push({
       type: "info",
       title: "Uneven workload",
-      text:
-        `Task assignments are uneven across team members (σ=${distribution.toFixed(1)}). Consider rebalancing.`,
+      text: `Task assignments are uneven across team members (σ=${
+        distribution.toFixed(1)
+      }). Consider rebalancing.`,
     });
   }
 
@@ -271,13 +274,163 @@ export const computeHealth = async (projectId: string): Promise<HealthResult> =>
     insights.push({
       type: "success",
       title: "Project is on track",
-      text:
-        `Healthy progress: ${completed}/${total} tasks complete with consistent velocity.`,
+      text: `Healthy progress: ${completed}/${total} tasks complete with consistent velocity.`,
     });
   }
 
-  // Reference list to keep `formatList` linker-happy in future enhancements.
-  void formatList(overdueTitles);
+  // ── Top Risk Factors ───────────────────────────────────────────────
+  // Surfaces the 3 signals that contributed the fewest points to the
+  // current score, phrased as a problem statement.
+  const topRiskFactors: HealthInsight[] = [];
+
+  if (overdue > 0) {
+    topRiskFactors.push({
+      type: "warning",
+      title: `${overdue} overdue task${overdue > 1 ? "s" : ""} detected`,
+      text: `Overdue work accounts for ${
+        roundPct(overdueRatio)
+      }% of the project task list and is currently the largest single source of risk.`,
+    });
+  }
+  if (velocityScore < 10 && remaining > 0) {
+    topRiskFactors.push({
+      type: "warning",
+      title: "Completion rate below target",
+      text: recentCompleted === 0
+        ? "No tasks have been completed in the last 7 days. Sprint velocity is at zero."
+        : `Only ${recentCompleted} task${
+          recentCompleted > 1 ? "s" : ""
+        } shipped in the last 7 days — below the healthy threshold of 5+ per week.`,
+    });
+  }
+  if (distribution > 3 && totalMembers > 1) {
+    topRiskFactors.push({
+      type: "warning",
+      title: "Team workload imbalance",
+      text: `Assignment variance is σ=${
+        distribution.toFixed(
+          1,
+        )
+      } across ${totalMembers} members — one or more teammates are carrying a disproportionate share.`,
+    });
+  }
+  if (
+    daysToDeadline !== null && daysToDeadline < 14 && remaining > 0 && score < 70
+  ) {
+    topRiskFactors.push({
+      type: "warning",
+      title: "Deadline approaching",
+      text: daysToDeadline < 0
+        ? `The project deadline passed ${Math.abs(daysToDeadline)} day${
+          Math.abs(daysToDeadline) > 1 ? "s" : ""
+        } ago with ${remaining} task${remaining > 1 ? "s" : ""} still open.`
+        : `Project deadline is in ${daysToDeadline} day${
+          daysToDeadline > 1 ? "s" : ""
+        } with ${remaining} task${remaining > 1 ? "s" : ""} remaining.`,
+    });
+  }
+  if (engagementScore < 8 && totalMembers > 1) {
+    topRiskFactors.push({
+      type: "warning",
+      title: "Low team engagement",
+      text: `Only ${activeMembers} of ${totalMembers} members have activity in the last 7 days.`,
+    });
+  }
+
+  // Cap to top 3 risk factors, sorted by severity (type weight).
+  const severityWeight: Record<InsightType, number> = {
+    critical: 4,
+    warning: 3,
+    action: 2,
+    info: 1,
+    success: 0,
+  };
+  topRiskFactors.sort((a, b) => severityWeight[b.type] - severityWeight[a.type]);
+  const trimmedRiskFactors = topRiskFactors.slice(0, 3);
+
+  // ── Recommended Actions ────────────────────────────────────────────
+  // Concrete, prescriptive next-steps derived from the same signals.
+  const recommendations: HealthInsight[] = [];
+
+  if (overdue > 0) {
+    recommendations.push({
+      type: "action",
+      title: "Resolve overdue tasks",
+      text: `Triage the ${overdue} overdue task${
+        overdue > 1 ? "s" : ""
+      } first — assign owners, break into smaller steps, or push deadlines with a written reason.`,
+    });
+  }
+  if (recentCompleted === 0 && remaining > 0) {
+    recommendations.push({
+      type: "action",
+      title: "Increase sprint velocity",
+      text:
+        "Schedule a kickoff to unblock the team, remove dependencies, and aim for at least 5 completed tasks per week.",
+    });
+  }
+  if (distribution > 3 && totalMembers > 1) {
+    recommendations.push({
+      type: "action",
+      title: "Reassign overloaded team members",
+      text:
+        "Move open tasks from the busiest assignee to members with spare capacity until the workload variance drops below σ=2.",
+    });
+  }
+  if (daysToDeadline !== null && daysToDeadline < 14 && remaining > 0 && score < 70) {
+    recommendations.push({
+      type: "action",
+      title: "Review blocked tasks and adjust scope",
+      text: daysToDeadline < 0
+        ? "The deadline has passed. Renegotiate the deadline with stakeholders or de-scope non-essential work."
+        : "Review the open task list with the project manager, drop low-priority items, and renegotiate the deadline if needed.",
+    });
+  }
+  if (engagementScore < 8 && totalMembers > 1) {
+    recommendations.push({
+      type: "action",
+      title: "Engage inactive team members",
+      text: `Ping the ${totalMembers - activeMembers} inactive member${
+        totalMembers - activeMembers > 1 ? "s" : ""
+      } directly and confirm workload, blockers, and availability.`,
+    });
+  }
+  if (score >= 85) {
+    recommendations.push({
+      type: "action",
+      title: "Maintain cadence",
+      text:
+        "Health is excellent. Keep weekly standups, continue current velocity, and revisit the score each Monday.",
+    });
+  }
+  if (recommendations.length === 0 && total > 0) {
+    recommendations.push({
+      type: "action",
+      title: "Schedule a planning review",
+      text:
+        "No critical risk factors were detected. Run a 30-minute review of upcoming work to keep the trajectory stable.",
+    });
+  }
+
+  // ── Trend vs previous snapshot ─────────────────────────────────────
+  const previous = await prisma.projectHealthSnapshot.findFirst({
+    where: {
+      projectId,
+      NOT: { computedAt: now },
+    },
+    orderBy: { computedAt: "desc" },
+    select: { score: true, computedAt: true },
+  });
+  // Only treat as "previous" if the snapshot is older than this one (avoid self-match in same ms)
+  const previousScore = previous && previous.computedAt < now ? previous.score : null;
+  const scoreTrend = previousScore !== null ? score - previousScore : null;
+  const trendDirection: TrendDirection | null = scoreTrend === null
+    ? null
+    : scoreTrend > 0
+    ? "up"
+    : scoreTrend < 0
+    ? "down"
+    : "flat";
 
   return {
     score,
@@ -301,8 +454,14 @@ export const computeHealth = async (projectId: string): Promise<HealthResult> =>
       distributionScore,
     },
     insights,
+    topRiskFactors: trimmedRiskFactors,
+    recommendations,
+    signalContributions,
     predictedCompletionDate,
     onTrackProbability,
+    previousScore,
+    scoreTrend,
+    trendDirection,
     computedAt: now,
   };
 };
@@ -348,15 +507,10 @@ export const getLatestHealth = async (
     orderBy: { computedAt: "desc" },
   });
   if (fresh) {
-    return {
-      score: fresh.score,
-      riskLevel: fresh.riskLevel as RiskLevel,
-      metrics: fresh.metrics as unknown as HealthMetrics,
-      insights: fresh.insights as unknown as HealthInsight[],
-      predictedCompletionDate: fresh.predictedCompletionDate,
-      onTrackProbability: fresh.onTrackProbability,
-      computedAt: fresh.computedAt,
-    };
+    // Always augment with the latest trend + risk factors + recommendations by
+    // re-computing the lighter in-memory signals. Snapshots stay cheap, but
+    // the live result is what the user sees.
+    return await computeHealth(projectId);
   }
   return await computeHealth(projectId);
 };
@@ -395,15 +549,13 @@ export const getWorkspaceHealthSummary = async (userId: string, userRole: string
   // For workspace-wide at-risk view, fetch projects visible to the user.
   const isGlobalManager = userRole === "ADMIN" || userRole === "PROJECT_MANAGER";
   const projects = await prisma.project.findMany({
-    where: isGlobalManager
-      ? { status: { not: "ARCHIVED" } }
-      : {
-        status: { not: "ARCHIVED" },
-        OR: [
-          { ownerId: userId },
-          { members: { some: { userId } } },
-        ],
-      },
+    where: isGlobalManager ? { status: { not: "ARCHIVED" } } : {
+      status: { not: "ARCHIVED" },
+      OR: [
+        { ownerId: userId },
+        { members: { some: { userId } } },
+      ],
+    },
     select: { id: true, name: true, color: true, deadline: true, status: true },
   });
 
@@ -427,16 +579,22 @@ export const getWorkspaceHealthSummary = async (userId: string, userRole: string
   const atRisk = items
     .filter((i) => i.riskLevel !== "ON_TRACK")
     .sort((a, b) => a.score - b.score);
+  const topHealthy = [...items]
+    .filter((i) => i.riskLevel === "ON_TRACK")
+    .sort((a, b) => b.score - a.score);
 
   const averageScore = items.length
     ? Math.round(items.reduce((acc, i) => acc + i.score, 0) / items.length)
     : 0;
+  const onTrackCount = items.filter((i) => i.riskLevel === "ON_TRACK").length;
 
   return {
     totalProjects: items.length,
     averageScore,
+    onTrackCount,
     atRiskCount: atRisk.length,
     criticalCount: atRisk.filter((i) => i.riskLevel === "CRITICAL").length,
     atRisk: atRisk.slice(0, 10),
+    topHealthy: topHealthy.slice(0, 10),
   };
 };

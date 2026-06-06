@@ -552,77 +552,8 @@ export default function ProjectDetailClient(
 
           {/* Right Column */}
           <div style="display:grid;gap:14px">
-            {/* AI Project Insights */}
+            {/* Project Health Intelligence */}
             <ProjectHealthCard projectId={project.id} />
-
-            {/* Health Detail */}
-            <div class="pd-card">
-              <div class="pd-card-title">
-                <Icon name="monitor_heart" size={16} /> Project Health
-              </div>
-              <div class="pd-health-card">
-                <div class="pd-hc-row">
-                  <span class="pd-hc-label">Status</span>
-                  <span
-                    class={`pd-health ${health.className}`}
-                    style="padding:2px 8px;font-size:11px"
-                  >
-                    <span class="pd-health-dot" /> {health.label}
-                  </span>
-                </div>
-                <div class="pd-hc-divider" />
-                <div class="pd-hc-row">
-                  <span class="pd-hc-label">Overdue tasks</span>
-                  <span
-                    class="pd-hc-value"
-                    style={tasks.filter((t) =>
-                        t.dueDate && new Date(t.dueDate) < new Date() &&
-                        !isCompletedStatus(t.status)
-                      ).length > 0
-                      ? "color:var(--danger)"
-                      : ""}
-                  >
-                    {tasks.filter((t) =>
-                      t.dueDate && new Date(t.dueDate) < new Date() &&
-                      !isCompletedStatus(t.status)
-                    ).length}
-                  </span>
-                </div>
-                <div class="pd-hc-row">
-                  <span class="pd-hc-label">Completion rate</span>
-                  <span class="pd-hc-value">
-                    {tasks.length > 0
-                      ? Math.round(
-                        ((counts.COMPLETED ?? 0) / tasks.length) * 100,
-                      )
-                      : 0}%
-                  </span>
-                </div>
-                <div class="pd-hc-row">
-                  <span class="pd-hc-label">Open vs closed</span>
-                  <span class="pd-hc-value">
-                    {openTasks} / {counts.COMPLETED ?? 0}
-                  </span>
-                </div>
-                <div class="pd-hc-divider" />
-                <div class="pd-hc-row">
-                  <span class="pd-hc-label">Created</span>
-                  <span class="pd-hc-value">
-                    {project.createdAt
-                      ? new Date(project.createdAt).toLocaleDateString()
-                      : "—"}
-                  </span>
-                </div>
-                <div class="pd-hc-row">
-                  <span class="pd-hc-label">Last activity</span>
-                  <span class="pd-hc-value">
-                    {activity.length > 0
-                      ? new Date(activity[0].createdAt).toLocaleDateString()
-                      : "—"}
-                  </span>
-                </div>
-              </div>
-            </div>
 
             {/* Activity Timeline */}
             <div class="pd-card">

@@ -1,4 +1,4 @@
-// Project Health Insights — OpenAPI routes.
+// Project Health Intelligence — OpenAPI routes.
 
 import { createRoute, z } from "@hono/zod-openapi";
 import type { Handler, MiddlewareHandler } from "hono";
@@ -12,7 +12,7 @@ import {
   jsonOkResponse,
 } from "../docs/openapi.ts";
 
-const tag = ["Health Insights"];
+const tag = ["Project Health Intelligence"];
 const security = [{ bearerAuth: [] }];
 
 const projectIdParam = z.object({
@@ -20,7 +20,7 @@ const projectIdParam = z.object({
 });
 
 const insightSchema = z.object({
-  type: z.enum(["warning", "info", "success", "critical"]),
+  type: z.enum(["warning", "info", "success", "critical", "action"]),
   title: z.string(),
   text: z.string(),
 });
@@ -44,13 +44,26 @@ const metricsSchema = z.object({
   distributionScore: z.number().int(),
 });
 
+const signalContributionSchema = z.object({
+  signal: z.enum(["overdue", "velocity", "deadline", "engagement", "distribution"]),
+  label: z.string(),
+  points: z.number().int(),
+  maxPoints: z.number().int(),
+});
+
 const healthResultSchema = z.object({
   score: z.number().int().min(0).max(100),
   riskLevel: z.enum(["ON_TRACK", "AT_RISK", "CRITICAL"]),
   metrics: metricsSchema,
   insights: z.array(insightSchema),
+  topRiskFactors: z.array(insightSchema),
+  recommendations: z.array(insightSchema),
+  signalContributions: z.array(signalContributionSchema),
   predictedCompletionDate: z.string().datetime().nullable(),
   onTrackProbability: z.number().min(0).max(1),
+  previousScore: z.number().int().nullable(),
+  scoreTrend: z.number().int().nullable(),
+  trendDirection: z.enum(["up", "down", "flat"]).nullable(),
   computedAt: z.string().datetime(),
 });
 
@@ -76,20 +89,22 @@ const atRiskItemSchema = z.object({
 const workspaceHealthSchema = z.object({
   totalProjects: z.number().int(),
   averageScore: z.number().int(),
+  onTrackCount: z.number().int(),
   atRiskCount: z.number().int(),
   criticalCount: z.number().int(),
   atRisk: z.array(atRiskItemSchema),
+  topHealthy: z.array(atRiskItemSchema),
 });
 
 export const getProjectHealthRoute = createRoute({
   method: "get",
   path: "/api/projects/:projectId/health",
   tags: tag,
-  summary: "Get current project health score and AI insights",
-  description:
-    "Returns a 0-100 health score, risk level, weighted metrics, " +
-    "human-readable insights, predicted completion date, and on-track probability. " +
-    "Computed deterministically from live project data; no LLM required.",
+  summary: "Get current project health intelligence",
+  description: "Returns a 0-100 health score, risk level, weighted metrics, " +
+    "top risk factors, recommended actions, predicted completion date, " +
+    "on-track probability, score trend, and a per-signal breakdown. " +
+    "Computed deterministically from live project data — no LLM required.",
   security,
   request: { params: projectIdParam },
   responses: {
@@ -107,8 +122,7 @@ export const refreshProjectHealthRoute = createRoute({
   path: "/api/projects/:projectId/health/refresh",
   tags: tag,
   summary: "Force a fresh health computation and persist a snapshot",
-  description:
-    "Recomputes the health score, saves a new ProjectHealthSnapshot, " +
+  description: "Recomputes the health score, saves a new ProjectHealthSnapshot, " +
     "and emits a PROJECT_HEALTH_COMPUTED activity log entry. " +
     "Use this after a meaningful change to refresh the dashboard immediately.",
   security,
@@ -138,7 +152,10 @@ export const getProjectHealthHistoryRoute = createRoute({
     }),
   },
   responses: {
-    200: jsonOkResponse("Health history", z.object({ items: z.array(healthHistoryPointSchema) })),
+    200: jsonOkResponse(
+      "Health history",
+      z.object({ items: z.array(healthHistoryPointSchema) }),
+    ),
     ...jsonErrorResponses([
       { status: 401, description: "Unauthorized" },
       { status: 403, description: "Not a project member" },
@@ -150,10 +167,10 @@ export const getWorkspaceHealthRoute = createRoute({
   method: "get",
   path: "/api/dashboard/health",
   tags: tag,
-  summary: "Workspace-wide at-risk project summary (dashboard widget)",
-  description:
-    "Returns the average health score across the caller's visible projects, " +
-    "the count of at-risk and critical projects, and the 10 worst-scoring projects.",
+  summary: "Workspace-wide health intelligence overview",
+  description: "Returns the average health score, on-track / at-risk / critical counts, " +
+    "and the 10 worst- and 10 best-scoring projects. Powers the dashboard " +
+    "Workspace Health Overview widget.",
   security,
   responses: {
     200: jsonOkResponse("Workspace health", workspaceHealthSchema),

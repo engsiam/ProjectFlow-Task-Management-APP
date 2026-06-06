@@ -160,32 +160,77 @@ ProjectFlow is a full-stack, production-ready task management and project collab
 
 ## 📊 Project Health Intelligence Engine
 
-A deterministic, 5-signal health engine that gives every project a 0–100 score, a risk band, predicted completion, and explainable insights — no LLM API keys required, works on the free Deno Deploy tier.
+A deterministic, enterprise-grade **Project Health Intelligence** module — the same kind of risk assessment engine you find in Jira, Linear, Asana, ClickUp, Monday.com, and Notion Projects. Every project is continuously scored, classified, forecasted, and presented with a clear action plan. No third-party services, no API keys, no surprise billing — runs identically on the free Deno Deploy tier and on a $5 VPS.
+
+### What it computes
+
+A single 0–100 **Health Score** is blended from five weighted signals drawn from live project data:
 
 | Signal | Weight | What it measures |
+|---|---:|---|
+| Overdue tasks | 30 | Ratio of overdue, non-completed tasks (hard cap on rot) |
+| Completion velocity (7-day) | 20 | Tasks shipped in the last 7 days, scaled 2 pts/task |
+| Deadline proximity | 25 | Distance from now to project deadline (tiered 0 / 8 / 15 / 20 / 25) |
+| Team engagement | 15 | Active members in last 7 days vs. total members |
+| Workload balance | 10 | Standard deviation of open tasks across assignees (lower = better) |
+
+**Risk classification** (auto-derived from the score):
+
+- 🟢 `ON_TRACK` — score ≥ 70
+- 🟡 `AT_RISK` — score 40–69
+- 🔴 `CRITICAL` — score < 40
+
+**Predictive analytics:**
+
+- **Predicted completion date** = `remaining tasks / 7-day velocity` (capped at project deadline)
+- **On-track probability** — a 0–1 estimate bucketed by how far ahead/behind the predicted completion sits
+- **Score trend** — `current - previous snapshot`, with `↑ / → / ↓` indicator
+- **Historical trend chart** — SVG sparkline of the last 30 snapshots, with the line color following the current risk band
+
+### What it surfaces
+
+- **Top Risk Factors** — the three biggest reasons the score is what it is (e.g. "1 overdue task detected", "Completion rate below target", "Team workload imbalance", "Deadline approaching"), ordered by severity.
+- **Recommended Actions** — concrete next steps derived from the same signals (e.g. "Resolve overdue tasks", "Increase sprint velocity", "Reassign overloaded team members", "Engage inactive team members", "Maintain cadence").
+- **Health Score Breakdown** — collapsible per-signal contribution panel with progress bars (`Overdue -10 / 30`, `Velocity +20 / 20`, `Engagement +15 / 15`, `Workload Balance +10 / 10`, `Deadline Distance +36 / 25` → `Final 71 / 100`).
+- **Workspace Health Overview** (dashboard) — average score, on-track / at-risk / critical counts, and the **Top 5 Risk** + **Top 5 Healthy** projects side-by-side.
+
+### Screenshots
+
+| | |
+|---|---|
+| ![Workspace Health Overview — dashboard widget](https://i.ibb.co.com/C5xM9wTr/settings.jpg) | ![Project Health Intelligence — project detail](https://i.ibb.co.com/jP8bLhbC/task.jpg) |
+| **Workspace Health Overview** | **Project Health Intelligence** |
+
+> Drop the real screenshots into `frontend/docs/screenshots/` and update the image URLs above once you have them.
+
+### API surface
+
+| Method | Path | Purpose |
 |---|---|---|
-| Overdue tasks | 30 | Ratio of overdue, non-completed tasks |
-| Velocity (7d) | 20 | Tasks completed in the last 7 days |
-| Deadline proximity | 25 | Distance from now to project deadline |
-| Engagement | 15 | Active members vs total members |
-| Workload balance | 10 | Standard deviation of open tasks per member |
+| `GET`  | `/api/projects/:projectId/health`         | Current health score, risk, risk factors, recommendations, breakdown, trend |
+| `POST` | `/api/projects/:projectId/health/refresh` | Force a fresh computation + persist a new `ProjectHealthSnapshot` + activity log |
+| `GET`  | `/api/projects/:projectId/health/history` | Last 30 snapshots for the trend chart |
+| `GET`  | `/api/dashboard/health`                   | Workspace summary: average, counts, top 5 risk + top 5 healthy |
 
-**Risk bands:** `ON_TRACK` ≥ 70 · `AT_RISK` 40–69 · `CRITICAL` < 40
+### Capabilities (recruiter view)
 
-**Predicted completion** = `remaining tasks / daily velocity` (capped at project deadline). **On-track probability** is a deterministic 0–1 estimate based on deadline proximity.
+- ✅ Health Score (0–100) with weighted multi-signal algorithm
+- ✅ Risk Classification (`ON_TRACK` / `AT_RISK` / `CRITICAL`)
+- ✅ Completion Forecasting (predicted completion date)
+- ✅ On-Track Probability (0–1)
+- ✅ Historical Trend Analysis (last 30 snapshots, sparkline)
+- ✅ Top Risk Factors (severity-ranked)
+- ✅ Recommended Actions (prescriptive next steps)
+- ✅ Per-signal Score Breakdown (transparent, explainable)
+- ✅ Workspace Health Monitoring (dashboard widget)
+- ✅ Persistent snapshots + activity log integration
+- ✅ Deterministic — no LLM, no external API, identical results everywhere
 
-**Endpoints:**
+### How it stays free
 
-```
-GET    /api/projects/:projectId/health          # current snapshot
-POST   /api/projects/:projectId/health/refresh  # force recompute
-GET    /api/projects/:projectId/health/history  # last 30 snapshots (sparkline)
-GET    /api/dashboard/health                    # workspace summary (avg + at-risk list)
-```
-
-- Dashboard widget shows workspace average score, at-risk/critical counts, and the top 5 worst-scoring projects.
-- Project detail shows the score gauge, top insight, on-track %, predicted ETA, and a collapsible score-breakdown for transparency.
-- Each refresh writes a new `ProjectHealthSnapshot` and an activity log entry (`PROJECT_HEALTH_COMPUTED`).
+- Pure CPU-bound computation: 1 Prisma query for the project tree, 5 arithmetic passes, 1 `prisma.create()`. No vector store, no embeddings, no GPU.
+- Snapshot cache: a result is reused for 1 hour before being recomputed unless the user clicks **Refresh**.
+- MongoDB Binary storage (no S3/R2 fees) — snapshots are ~1 KB JSON, well below the 16 MB document limit.
 
 ### 🛡️ Security & Permissions
 - 🔐 JWT access tokens + rotating refresh tokens (15min / 7d)
@@ -422,11 +467,11 @@ All endpoints live under `/api` and are documented live at **`/docs`** (Swagger 
 - `POST   /api/tasks/:id/move` — change status
 - `DELETE /api/tasks/:id` — admin-only
 
-### 🤖 AI Project Health (`/api/projects/:id/health`, `/api/dashboard/health`)
-- `GET   /api/projects/:projectId/health` — current score, risk band, insights, predicted ETA
-- `POST  /api/projects/:projectId/health/refresh` — recompute + persist snapshot
+### 📊 Project Health Intelligence (`/api/projects/:id/health`, `/api/dashboard/health`)
+- `GET   /api/projects/:projectId/health` — score, risk, top risk factors, recommendations, breakdown, trend
+- `POST  /api/projects/:projectId/health/refresh` — recompute + persist snapshot + activity log
 - `GET   /api/projects/:projectId/health/history?limit=30` — past snapshots (sparkline)
-- `GET   /api/dashboard/health` — workspace summary (avg score + at-risk list)
+- `GET   /api/dashboard/health` — workspace summary (avg score, on-track/at-risk/critical, top 5 risk + top 5 healthy)
 
 ### 💬 Comments · 🔔 Notifications · 📎 Uploads
 - `POST /api/tasks/:id/comments` · `GET /api/tasks/:id/comments`

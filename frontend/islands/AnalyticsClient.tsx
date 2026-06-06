@@ -8,6 +8,7 @@ import { TrendLineChart } from "../components/charts/TrendLineChart.tsx";
 import { ProductivityBarChart } from "../components/charts/ProductivityBarChart.tsx";
 import { ComparisonBarChart } from "../components/charts/ComparisonBarChart.tsx";
 import type { AnalyticsCharts, Project } from "../lib/types.ts";
+import AnalyticsTrendsCharts from "./AnalyticsTrendsCharts.tsx";
 
 type Range = "7" | "30" | "90";
 
@@ -313,6 +314,7 @@ export default function AnalyticsClient(
           />
         </ChartCard>
       </section>
+      <AnalyticsTrendsCharts />
     </div>
   );
 }
