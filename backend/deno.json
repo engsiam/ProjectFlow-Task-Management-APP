@@ -2,12 +2,12 @@
   "nodeModulesDir": "auto",
   "lock": false,
   "tasks": {
-    "dev": "deno run -A --unstable-detect-cjs --watch src/server.ts",
-    "start": "deno run -A --unstable-detect-cjs src/server.ts",
+    "dev": "deno run -A --watch src/server.ts",
+    "start": "deno run -A src/server.ts",
     "prisma:generate": "deno run -A npm:prisma@5.22.0 generate",
     "prisma:push": "deno run -A npm:prisma@5.22.0 db push",
     "prisma:studio": "deno run -A npm:prisma@5.22.0 studio",
-    "seed": "deno run -A --unstable-detect-cjs prisma/seed.ts",
+    "seed": "deno run -A prisma/seed.ts",
     "typecheck": "deno check src/**/*.ts prisma/seed.ts",
     "build:deploy": "deno task prisma:generate"
   },
@@ -26,6 +26,7 @@
     "noImplicitAny": false,
     "strictNullChecks": true
   },
+  "unstable": ["detect-cjs"],
   "fmt": {
     "lineWidth": 100,
     "indentWidth": 2,
