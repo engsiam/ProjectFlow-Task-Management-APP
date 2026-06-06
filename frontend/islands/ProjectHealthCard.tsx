@@ -4,12 +4,10 @@ import {
   fetchProjectHealthHistory,
   type HealthHistoryPoint,
   type HealthResult,
-  insightAccent,
   refreshProjectHealth,
   riskColor,
   riskEmoji,
   riskLabel,
-  riskShort,
   type SignalContribution,
 } from "../lib/health.ts";
 import { getAccessToken } from "../lib/auth.ts";
@@ -19,7 +17,7 @@ interface Props {
 }
 
 const fmtDate = (d: string | null) => {
-  if (!d) return "—";
+  if (!d) return "\u2014";
   const date = new Date(d);
   return date.toLocaleDateString(undefined, {
     month: "short",
@@ -28,134 +26,84 @@ const fmtDate = (d: string | null) => {
   });
 };
 
-const fmtPct = (n: number) => `${Math.round(n * 100)}%`;
+const fmtPct = (n: number) =>
+  n === 0 ? "0%" : String(Math.round(n * 100)) + "%";
 
-// ── SVG circular gauge ─────────────────────────────────────────────
 const Gauge = ({ score, color }: { score: number; color: string }) => {
-  const radius = 56;
+  const radius = 52;
   const circ = 2 * Math.PI * radius;
   const offset = circ - (score / 100) * circ;
   return (
-    <svg viewBox="0 0 140 140" class="phi-gauge-svg" aria-hidden="true">
+    <svg viewBox="0 0 130 130" class="phc-gauge-svg" aria-hidden="true">
       <defs>
-        <linearGradient
-          id="phi-gauge-gradient"
-          x1="0%"
-          y1="0%"
-          x2="100%"
-          y2="100%"
-        >
-          <stop offset="0%" stop-color={color} stop-opacity="0.85" />
+        <linearGradient id="phc-gg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color={color} stop-opacity="0.7" />
           <stop offset="100%" stop-color={color} stop-opacity="1" />
         </linearGradient>
       </defs>
       <circle
-        cx="70"
-        cy="70"
+        cx="65"
+        cy="65"
         r={radius}
         fill="none"
-        stroke="rgba(255,255,255,0.06)"
-        stroke-width="12"
+        stroke="rgba(255,255,255,0.05)"
+        stroke-width="10"
       />
       <circle
-        cx="70"
-        cy="70"
+        cx="65"
+        cy="65"
         r={radius}
         fill="none"
-        stroke="url(#phi-gauge-gradient)"
-        stroke-width="12"
+        stroke="url(#phc-gg)"
+        stroke-width="10"
         stroke-linecap="round"
         stroke-dasharray={circ}
         stroke-dashoffset={offset}
-        transform="rotate(-90 70 70)"
-        style="transition: stroke-dashoffset 700ms cubic-bezier(0.4, 0, 0.2, 1);"
+        transform="rotate(-90 65 65)"
+        style="transition: stroke-dashoffset 800ms cubic-bezier(0.4, 0, 0.2, 1);"
       />
     </svg>
   );
 };
 
-// ── Mini sparkline ─────────────────────────────────────────────────
-const Sparkline = ({ points }: { points: HealthHistoryPoint[] }) => {
-  if (points.length < 2) {
-    return (
-      <div class="phi-spark-empty">
-        No history yet — refresh to capture snapshots.
-      </div>
-    );
-  }
-  const w = 320;
-  const h = 64;
-  const pad = 4;
-  const xs = points.map((p) => new Date(p.computedAt).getTime());
-  const minX = Math.min(...xs);
-  const maxX = Math.max(...xs);
-  const rangeX = Math.max(1, maxX - minX);
-  const ys = points.map((p) => p.score);
-  const minY = 0;
-  const maxY = 100;
-  const rangeY = Math.max(1, maxY - minY);
-  const toX = (x: number) => pad + ((x - minX) / rangeX) * (w - pad * 2);
-  const toY = (y: number) => pad + (1 - (y - minY) / rangeY) * (h - pad * 2);
-  const path = points
-    .map((p, i) =>
-      `${i === 0 ? "M" : "L"} ${toX(new Date(p.computedAt).getTime())} ${
-        toY(p.score)
-      }`
-    )
-    .join(" ");
-  const last = points[points.length - 1];
-  const color = riskColor(last.riskLevel);
-  return (
-    <svg
-      viewBox={`0 0 ${w} ${h}`}
-      class="phi-spark-svg"
-      preserveAspectRatio="none"
-    >
-      <defs>
-        <linearGradient id="phi-spark-fill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color={color} stop-opacity="0.35" />
-          <stop offset="100%" stop-color={color} stop-opacity="0" />
-        </linearGradient>
-      </defs>
-      <path
-        d={`${path} L ${toX(maxX)} ${h - pad} L ${toX(minX)} ${h - pad} Z`}
-        fill="url(#phi-spark-fill)"
-      />
-      <path
-        d={path}
-        fill="none"
-        stroke={color}
-        stroke-width="2"
-        stroke-linecap="round"
-      />
-    </svg>
-  );
-};
+const PHCKPI = (
+  { label, value, danger }: { label: string; value: string; danger?: boolean },
+) => (
+  <div class={"phc-kpi" + (danger ? " phc-kpi-danger" : "")}>
+    <div class="phc-kpi-label">{label}</div>
+    <div class="phc-kpi-value">{value}</div>
+  </div>
+);
 
-// ── Signal bar row ─────────────────────────────────────────────────
-const SignalBar = ({ s }: { s: SignalContribution }) => {
+const PHCBreakdownBar = ({ s }: { s: SignalContribution }) => {
   const pct = Math.round((s.points / s.maxPoints) * 100);
-  const color = pct >= 80
-    ? "var(--health-success, #10b981)"
-    : pct >= 50
-    ? "var(--health-warning, #f59e0b)"
-    : "var(--health-danger, #ef4444)";
+  const cm: Record<string, string> = {
+    overdue: "#ef4444",
+    velocity: "#3b82f6",
+    deadline: "#f59e0b",
+    engagement: "#8b5cf6",
+    distribution: "#10b981",
+  };
+  const color = cm[s.signal] ?? "#6366f1";
   return (
-    <li class="phi-signal-row">
-      <div class="phi-signal-row-label">
-        <span>{s.label}</span>
-        <span class="phi-signal-row-value">
-          <strong>{s.points}</strong>
-          <span class="phi-signal-row-max">/ {s.maxPoints}</span>
+    <div class="phc-bar-row">
+      <div class="phc-bar-header">
+        <span class="phc-bar-label">{s.label}</span>
+        <span class="phc-bar-score">
+          {s.points}
+          <span class="phc-bar-max">/{s.maxPoints}</span>
         </span>
       </div>
-      <div class="phi-signal-bar">
+      <div class="phc-bar-track">
         <div
-          class="phi-signal-bar-fill"
-          style={`width:${pct}%;background:${color}`}
+          class="phc-bar-fill"
+          style={{ width: String(pct) + "%", background: color } as Record<
+            string,
+            string
+          >}
         />
       </div>
-    </li>
+    </div>
   );
 };
 
@@ -217,12 +165,12 @@ export default function ProjectHealthCard({ projectId }: Props) {
 
   if (loading) {
     return (
-      <div class="phi-card phi-loading">
-        <div class="phi-skel-row" />
-        <div class="phi-skel-grid">
-          <div class="phi-skel-tile" />
-          <div class="phi-skel-tile" />
-          <div class="phi-skel-tile" />
+      <div class="phc-card phc-loading">
+        <div class="phc-skel-row" />
+        <div class="phc-skel-grid">
+          <div class="phc-skel-tile" />
+          <div class="phc-skel-tile" />
+          <div class="phc-skel-tile" />
         </div>
       </div>
     );
@@ -230,217 +178,181 @@ export default function ProjectHealthCard({ projectId }: Props) {
 
   if (error || !health) {
     return (
-      <div class="phi-card phi-error">
-        <p>⚠️ {error ?? "Health data unavailable"}</p>
+      <div class="phc-card phc-error">
+        <p>{error ?? "Health data unavailable"}</p>
       </div>
     );
   }
 
   const score = health.score;
   const color = riskColor(health.riskLevel);
-  const trendIcon = health.trendDirection === "up"
-    ? "↑"
-    : health.trendDirection === "down"
-    ? "↓"
-    : "→";
-  const trendClass = health.trendDirection === "up"
-    ? "phi-trend-up"
-    : health.trendDirection === "down"
-    ? "phi-trend-down"
-    : "phi-trend-flat";
-  const trendLabel = health.scoreTrend === null
+
+  const td = health.trendDirection;
+  const trendIcon = td === "up"
+    ? "\u2191"
+    : td === "down"
+    ? "\u2193"
+    : "\u2192";
+  const trendSign = (health.scoreTrend ?? 0) > 0 ? "+" : "";
+  const trendVal = health.scoreTrend ?? 0;
+  const trendText = health.scoreTrend === null
     ? "First snapshot"
-    : health.scoreTrend === 0
-    ? "No change since last snapshot"
-    : `${
-      health.scoreTrend > 0 ? "+" : ""
-    }${health.scoreTrend} from last snapshot`;
+    : trendSign + String(trendVal) + " this week";
+
+  const riskCls = "phc-risk-chip phc-risk-" + health.riskLevel.toLowerCase();
+  const trendChipCls = "phc-trend-chip " + (
+    td === "up"
+      ? "phc-trend-up"
+      : td === "down"
+      ? "phc-trend-down"
+      : "phc-trend-flat"
+  );
 
   return (
-    <section class="phi-card" style={`--phi-accent:${color}`}>
-      <header class="phi-header">
+    <div
+      class="phc-card"
+      style={{ "--phc-accent": color } as Record<string, string>}
+    >
+      <div class="phc-top">
         <div>
-          <h2 class="phi-title">📊 Project Health Intelligence</h2>
-          <p class="phi-subtitle">
-            Risk Assessment Engine · Continuous Forecast
-          </p>
+          <h2 class="phc-title">Project Health Intelligence</h2>
+          <div class="phc-top-badges">
+            <span
+              class="phc-score-chip"
+              style={{ "--phc-chip-color": "var(--health-primary)" } as Record<
+                string,
+                string
+              >}
+            >
+              Score: {score}
+            </span>
+            <span class={riskCls}>
+              {riskEmoji(health.riskLevel)} {riskLabel(health.riskLevel)}
+            </span>
+          </div>
         </div>
         <button
           type="button"
-          class="phi-refresh"
+          class="phc-refresh"
           onClick={onRefresh}
           disabled={refreshing}
-          aria-label="Recompute health"
+          aria-label="Refresh health data"
         >
-          {refreshing ? "⏳" : "🔄"}{" "}
-          <span class="phi-refresh-label">
-            {refreshing ? "Computing…" : "Refresh"}
-          </span>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="23 4 23 10 17 10" />
+            <polyline points="1 20 1 14 7 14" />
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+          </svg>
+          {refreshing ? "Computing\u2026" : "Refresh"}
         </button>
-      </header>
+      </div>
 
-      <div class="phi-headline">
-        <div class="phi-gauge">
+      <div class="phc-center">
+        <div class="phc-gauge-wrap">
           <Gauge score={score} color={color} />
-          <div class="phi-gauge-text">
-            <div class="phi-score" style={`color:${color}`}>{score}</div>
-            <div class="phi-score-suffix">/ 100</div>
-          </div>
-        </div>
-
-        <div class="phi-headline-info">
-          <div class="phi-status">
-            <span class="phi-status-dot" style={`background:${color}`} />
-            <span class="phi-status-label">
-              {riskEmoji(health.riskLevel)} {riskShort(health.riskLevel)}
+          <div class="phc-gauge-inner">
+            <span
+              class="phc-gauge-score"
+              style={{ color } as Record<string, string>}
+            >
+              {score}
             </span>
-            <span class="phi-status-desc">{riskLabel(health.riskLevel)}</span>
-          </div>
-
-          <div class={`phi-trend ${trendClass}`}>
-            <span class="phi-trend-icon">{trendIcon}</span>
-            <span class="phi-trend-text">{trendLabel}</span>
-          </div>
-
-          <div class="phi-trend-strip">
-            <Sparkline points={history} />
+            <span class="phc-gauge-label">Health Score</span>
           </div>
         </div>
+        {health.scoreTrend !== null && (
+          <div class={trendChipCls}>
+            {trendIcon} {trendText}
+          </div>
+        )}
       </div>
 
-      <div class="phi-metric-grid">
-        <div class="phi-metric">
-          <div class="phi-metric-label">Health Score</div>
-          <div class="phi-metric-value" style={`color:${color}`}>
-            {score}
-            <span class="phi-metric-suffix">/100</span>
-          </div>
-        </div>
-        <div class="phi-metric">
-          <div class="phi-metric-label">Risk Level</div>
-          <div
-            class="phi-metric-value phi-metric-text"
-            style={`color:${color}`}
-          >
-            {riskShort(health.riskLevel)}
-          </div>
-        </div>
-        <div class="phi-metric">
-          <div class="phi-metric-label">On-Track Probability</div>
-          <div class="phi-metric-value">
-            {fmtPct(health.onTrackProbability)}
-            <div class="phi-prob-bar">
-              <div
-                class="phi-prob-bar-fill"
-                style={`width:${
-                  Math.round(health.onTrackProbability * 100)
-                }%;background:${color}`}
-              />
+      <div class="phc-kpi-grid">
+        <PHCKPI
+          label="Delivery Confidence"
+          value={fmtPct(health.onTrackProbability)}
+        />
+        <PHCKPI
+          label="Predicted Completion"
+          value={fmtDate(health.predictedCompletionDate)}
+        />
+        <PHCKPI
+          label="Overdue Tasks"
+          value={String(health.metrics.overdueTasks)}
+          danger={health.metrics.overdueTasks > 0}
+        />
+        <PHCKPI
+          label="Open Tasks"
+          value={String(
+            health.metrics.totalTasks - health.metrics.completedTasks,
+          )}
+        />
+        <PHCKPI
+          label="Completed"
+          value={String(health.metrics.completedTasks)}
+        />
+        <PHCKPI
+          label="Team Members"
+          value={String(health.metrics.activeMembers)}
+        />
+      </div>
+
+      <div class="phc-section-card">
+        <h3 class="phc-section-title">
+          <span class="phc-section-icon">{"\u26A0\uFE0F"}</span>{" "}
+          Top Risk Factors
+        </h3>
+        {health.topRiskFactors.length === 0
+          ? <p class="phc-empty">No material risk factors detected.</p>
+          : (
+            <div class="phc-risk-list">
+              {health.topRiskFactors.map((f, i) => (
+                <div key={i} class="phc-risk-item">
+                  <span class="phc-risk-icon">{"\u26A0"}</span>
+                  <div>
+                    <div class="phc-risk-item-title">{f.title}</div>
+                    <div class="phc-risk-item-desc">{f.text}</div>
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
-        </div>
-        <div class="phi-metric">
-          <div class="phi-metric-label">Predicted Completion</div>
-          <div class="phi-metric-value phi-metric-text">
-            {fmtDate(health.predictedCompletionDate)}
-          </div>
-        </div>
-        <div class="phi-metric">
-          <div class="phi-metric-label">Open Tasks</div>
-          <div class="phi-metric-value">
-            {health.metrics.totalTasks - health.metrics.completedTasks}
-            <span class="phi-metric-suffix">
-              / {health.metrics.totalTasks}
-            </span>
-          </div>
-        </div>
-        <div class="phi-metric">
-          <div class="phi-metric-label">Completed Tasks</div>
-          <div class="phi-metric-value phi-metric-success">
-            {health.metrics.completedTasks}
-          </div>
-        </div>
-        <div class="phi-metric">
-          <div class="phi-metric-label">Overdue Tasks</div>
-          <div
-            class={`phi-metric-value ${
-              health.metrics.overdueTasks > 0 ? "phi-metric-danger" : ""
-            }`}
-          >
-            {health.metrics.overdueTasks}
-          </div>
-        </div>
-        <div class="phi-metric">
-          <div class="phi-metric-label">Open vs Closed</div>
-          <div class="phi-metric-value phi-metric-text">
-            {health.metrics.totalTasks - health.metrics.completedTasks} :{" "}
-            {health.metrics.completedTasks}
-          </div>
-        </div>
+          )}
       </div>
 
-      <div class="phi-section-grid">
-        <section class="phi-section">
-          <h3 class="phi-section-title">
-            <span class="phi-section-icon" style="color:#f59e0b">⚠️</span>
-            Top Risk Factors
-          </h3>
-          {health.topRiskFactors.length === 0
-            ? <p class="phi-empty">No material risk factors detected. 🎉</p>
-            : (
-              <ul class="phi-list">
-                {health.topRiskFactors.map((f, i) => (
-                  <li
-                    key={i}
-                    class="phi-list-item"
-                    style={`--phi-list-accent:${insightAccent(f.type)}`}
-                  >
-                    <div class="phi-list-title">{f.title}</div>
-                    <div class="phi-list-text">{f.text}</div>
-                  </li>
-                ))}
-              </ul>
-            )}
-        </section>
-
-        <section class="phi-section">
-          <h3 class="phi-section-title">
-            <span class="phi-section-icon" style="color:#6366f1">✓</span>
+      {health.recommendations.length > 0 && (
+        <div class="phc-section-card">
+          <h3 class="phc-section-title">
+            <span class="phc-section-icon" style="color:#6366f1">
+              {"\u2713"}
+            </span>{" "}
             Recommended Actions
           </h3>
-          {health.recommendations.length === 0
-            ? <p class="phi-empty">No actions needed right now.</p>
-            : (
-              <ul class="phi-list">
-                {health.recommendations.map((a, i) => (
-                  <li
-                    key={i}
-                    class="phi-list-item phi-list-item-action"
-                    style={`--phi-list-accent:${insightAccent(a.type)}`}
-                  >
-                    <div class="phi-list-title">{a.title}</div>
-                    <div class="phi-list-text">{a.text}</div>
-                  </li>
-                ))}
-              </ul>
-            )}
-        </section>
-      </div>
+          <div class="phc-action-list">
+            {health.recommendations.map((a, i) => (
+              <span key={i} class="phc-action-pill">{a.title}</span>
+            ))}
+          </div>
+        </div>
+      )}
 
-      <details class="phi-breakdown">
-        <summary>
-          <span>Health Score Breakdown</span>
-          <span class="phi-breakdown-final">
-            <strong>{score}</strong>
-            <span class="phi-breakdown-suffix">/100</span>
-          </span>
-        </summary>
-        <ul class="phi-signals">
+      <div class="phc-section-card">
+        <h3 class="phc-section-title">
+          <span class="phc-section-icon">{"\uD83D\uDCCA"}</span>{" "}
+          Health Score Breakdown
+        </h3>
+        <div class="phc-breakdown-list">
           {health.signalContributions.map((s) => (
-            <SignalBar key={s.signal} s={s} />
+            <PHCBreakdownBar key={s.signal} s={s} />
           ))}
-        </ul>
-      </details>
-    </section>
+        </div>
+      </div>
+    </div>
   );
 }
