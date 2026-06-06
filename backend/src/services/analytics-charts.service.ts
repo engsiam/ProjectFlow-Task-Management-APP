@@ -31,13 +31,13 @@ const buildUserMap = (rows: UserLite[]) => new Map(rows.map((u) => [u.id, u]));
 
 const buildProjectFilter = (userId: string, userRole: RoleType | undefined) =>
   userRole === "VIEWER"
-    ? { status: { in: ["ACTIVE", "COMPLETED"] } }
+    ? { status: { in: ["ACTIVE", "COMPLETED", "ON_HOLD"] } }
     : {
       OR: [
         { ownerId: userId },
         { members: { some: { userId } } },
       ],
-      status: { in: ["ACTIVE", "COMPLETED"] },
+      status: { in: ["ACTIVE", "COMPLETED", "ON_HOLD"] },
     };
 
 export type PriorityDatum = {

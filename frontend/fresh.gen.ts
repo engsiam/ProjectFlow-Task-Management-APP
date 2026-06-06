@@ -11,11 +11,13 @@ import * as $index from "./routes/index.tsx";
 import * as $login from "./routes/login.tsx";
 import * as $members from "./routes/members.tsx";
 import * as $notifications from "./routes/notifications.tsx";
+import * as $portfolio from "./routes/portfolio.tsx";
 import * as $projects_id_ from "./routes/projects/[id].tsx";
 import * as $projects_index from "./routes/projects/index.tsx";
 import * as $settings from "./routes/settings.tsx";
 import * as $signup from "./routes/signup.tsx";
 import * as $tasks from "./routes/tasks.tsx";
+import * as $ActivityHeatmap from "./islands/ActivityHeatmap.tsx";
 import * as $AnalyticsClient from "./islands/AnalyticsClient.tsx";
 import * as $AnalyticsTrendsCharts from "./islands/AnalyticsTrendsCharts.tsx";
 import * as $ApiMetricsTable from "./islands/ApiMetricsTable.tsx";
@@ -27,6 +29,7 @@ import * as $DashboardClient from "./islands/DashboardClient.tsx";
 import * as $ExecutiveDashboard from "./islands/ExecutiveDashboard.tsx";
 import * as $FullLoader from "./islands/FullLoader.tsx";
 import * as $GlobalErrorHandler from "./islands/GlobalErrorHandler.tsx";
+import * as $InsightsAssistant from "./islands/InsightsAssistant.tsx";
 import * as $InviteMemberModal from "./islands/InviteMemberModal.tsx";
 import * as $KanbanBoard from "./islands/KanbanBoard.tsx";
 import * as $LoginForm from "./islands/LoginForm.tsx";
@@ -35,11 +38,13 @@ import * as $NavigationGuard from "./islands/NavigationGuard.tsx";
 import * as $NotificationDropdown from "./islands/NotificationDropdown.tsx";
 import * as $NotificationsClient from "./islands/NotificationsClient.tsx";
 import * as $OAuthCallbackHandler from "./islands/OAuthCallbackHandler.tsx";
+import * as $PortfolioClient from "./islands/PortfolioClient.tsx";
 import * as $ProjectAnalyticsTab from "./islands/ProjectAnalyticsTab.tsx";
 import * as $ProjectCreateModal from "./islands/ProjectCreateModal.tsx";
 import * as $ProjectDetailClient from "./islands/ProjectDetailClient.tsx";
 import * as $ProjectEditModal from "./islands/ProjectEditModal.tsx";
 import * as $ProjectHealthCard from "./islands/ProjectHealthCard.tsx";
+import * as $ProjectTimeline from "./islands/ProjectTimeline.tsx";
 import * as $ProjectsClient from "./islands/ProjectsClient.tsx";
 import * as $RootRedirect from "./islands/RootRedirect.tsx";
 import * as $SearchCommand from "./islands/SearchCommand.tsx";
@@ -55,6 +60,7 @@ import * as $TaskFilters from "./islands/TaskFilters.tsx";
 import * as $TasksClient from "./islands/TasksClient.tsx";
 import * as $ThemeToggle from "./islands/ThemeToggle.tsx";
 import * as $ToastProvider from "./islands/ToastProvider.tsx";
+import * as $WorkloadBalancer from "./islands/WorkloadBalancer.tsx";
 import type { Manifest } from "$fresh/server.ts";
 
 const manifest = {
@@ -68,6 +74,7 @@ const manifest = {
     "./routes/login.tsx": $login,
     "./routes/members.tsx": $members,
     "./routes/notifications.tsx": $notifications,
+    "./routes/portfolio.tsx": $portfolio,
     "./routes/projects/[id].tsx": $projects_id_,
     "./routes/projects/index.tsx": $projects_index,
     "./routes/settings.tsx": $settings,
@@ -75,6 +82,7 @@ const manifest = {
     "./routes/tasks.tsx": $tasks,
   },
   islands: {
+    "./islands/ActivityHeatmap.tsx": $ActivityHeatmap,
     "./islands/AnalyticsClient.tsx": $AnalyticsClient,
     "./islands/AnalyticsTrendsCharts.tsx": $AnalyticsTrendsCharts,
     "./islands/ApiMetricsTable.tsx": $ApiMetricsTable,
@@ -86,6 +94,7 @@ const manifest = {
     "./islands/ExecutiveDashboard.tsx": $ExecutiveDashboard,
     "./islands/FullLoader.tsx": $FullLoader,
     "./islands/GlobalErrorHandler.tsx": $GlobalErrorHandler,
+    "./islands/InsightsAssistant.tsx": $InsightsAssistant,
     "./islands/InviteMemberModal.tsx": $InviteMemberModal,
     "./islands/KanbanBoard.tsx": $KanbanBoard,
     "./islands/LoginForm.tsx": $LoginForm,
@@ -94,11 +103,13 @@ const manifest = {
     "./islands/NotificationDropdown.tsx": $NotificationDropdown,
     "./islands/NotificationsClient.tsx": $NotificationsClient,
     "./islands/OAuthCallbackHandler.tsx": $OAuthCallbackHandler,
+    "./islands/PortfolioClient.tsx": $PortfolioClient,
     "./islands/ProjectAnalyticsTab.tsx": $ProjectAnalyticsTab,
     "./islands/ProjectCreateModal.tsx": $ProjectCreateModal,
     "./islands/ProjectDetailClient.tsx": $ProjectDetailClient,
     "./islands/ProjectEditModal.tsx": $ProjectEditModal,
     "./islands/ProjectHealthCard.tsx": $ProjectHealthCard,
+    "./islands/ProjectTimeline.tsx": $ProjectTimeline,
     "./islands/ProjectsClient.tsx": $ProjectsClient,
     "./islands/RootRedirect.tsx": $RootRedirect,
     "./islands/SearchCommand.tsx": $SearchCommand,
@@ -114,6 +125,7 @@ const manifest = {
     "./islands/TasksClient.tsx": $TasksClient,
     "./islands/ThemeToggle.tsx": $ThemeToggle,
     "./islands/ToastProvider.tsx": $ToastProvider,
+    "./islands/WorkloadBalancer.tsx": $WorkloadBalancer,
   },
   baseUrl: import.meta.url,
 } satisfies Manifest;

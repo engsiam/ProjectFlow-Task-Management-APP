@@ -42,11 +42,13 @@ import InviteMemberModal from "./InviteMemberModal.tsx";
 import ProjectEditModal from "./ProjectEditModal.tsx";
 import ProjectAnalyticsTab from "./ProjectAnalyticsTab.tsx";
 import ProjectHealthCard from "./ProjectHealthCard.tsx";
+import ProjectTimeline from "./ProjectTimeline.tsx";
 
 type Tab =
   | "Overview"
   | "Board"
   | "Tasks"
+  | "Timeline"
   | "Members"
   | "Activity"
   | "Analytics";
@@ -54,6 +56,7 @@ const tabs: Tab[] = [
   "Overview",
   "Board",
   "Tasks",
+  "Timeline",
   "Members",
   "Activity",
   "Analytics",
@@ -332,6 +335,13 @@ export default function ProjectDetailClient(
                 <Icon name="add_task" size={16} /> New Task
               </Button>
             )}
+            <button
+              type="button"
+              class="pd-export-btn"
+              onClick={() => window.print()}
+            >
+              <Icon name="description" size={16} /> PDF Report
+            </button>
           </div>
         </div>
       </div>
@@ -618,6 +628,7 @@ export default function ProjectDetailClient(
         />
       )}
       {tab === "Tasks" && <TaskTable tasks={tasks} />}
+      {tab === "Timeline" && <ProjectTimeline tasks={tasks} />}
       {tab === "Members" && (
         <MemberList
           actorRole={currentRole}

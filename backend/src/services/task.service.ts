@@ -131,13 +131,13 @@ export const listForUser = async (
   const isGlobalManager = userRole && isRoleAtLeast(userRole, "PROJECT_MANAGER");
   const isGlobalViewer = userRole === "VIEWER";
   const projectWhere = isGlobalManager || isGlobalViewer
-    ? { status: { in: ["ACTIVE", "COMPLETED"] } }
+    ? { status: { in: ["ACTIVE", "COMPLETED", "ON_HOLD"] } }
     : {
       OR: [
         { ownerId: userId },
         { members: { some: { userId } } },
       ],
-      status: { in: ["ACTIVE", "COMPLETED"] },
+      status: { in: ["ACTIVE", "COMPLETED", "ON_HOLD"] },
     };
   const myProjects = await prisma.project.findMany({
     where: projectWhere,

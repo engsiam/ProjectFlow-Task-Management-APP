@@ -220,8 +220,7 @@ export default function DashboardClient() {
     ? "Good Afternoon"
     : "Good Evening";
   const name = currentUser?.name ?? "";
-  const totalProjects = data?.projects?.total ?? data?.projectCount ??
-    projects.length;
+  const totalProjects = projects.length || data?.projects?.total || 0;
   const completionRate = taskTotal ? Math.round((done / taskTotal) * 100) : 0;
   const totalMembers = data?.memberWorkload?.length ?? 0;
 
@@ -353,6 +352,77 @@ export default function DashboardClient() {
               <Icon name="add" size={16} /> New Project
             </button>
           )}
+        </div>
+      </div>
+
+      {/* ═══ EXECUTIVE COMMAND CENTER ═══ */}
+      <div class="ecc-hero">
+        <div class="ecc-hero-bg" />
+        <div class="ecc-hero-content">
+          <div class="ecc-hero-primary">
+            <div class="ecc-score-ring">
+              <svg width="80" height="80" viewBox="0 0 80 80">
+                <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="5" />
+                <circle cx="40" cy="40" r="34" fill="none" stroke={completionRate >= 70 ? "#10b981" : completionRate >= 40 ? "#f59e0b" : "#ef4444"} strokeWidth="5"
+                  strokeDasharray={`${2 * Math.PI * 34}`}
+                  strokeDashoffset={`${2 * Math.PI * 34 * (1 - completionRate / 100)}`}
+                  strokeLinecap="round" transform="rotate(-90 40 40)" style="transition:stroke-dashoffset 0.8s ease" />
+              </svg>
+              <div class="ecc-score-value" style={`color:${completionRate >= 70 ? "#10b981" : completionRate >= 40 ? "#f59e0b" : "#ef4444"}`}>
+                {completionRate}%
+              </div>
+            </div>
+            <div class="ecc-hero-info">
+              <div class="ecc-hero-title">Workspace Health</div>
+              <div class="ecc-hero-status" style={`color:${completionRate >= 70 ? "#10b981" : completionRate >= 40 ? "#f59e0b" : "#ef4444"}`}>
+                {completionRate >= 70 ? "On Track" : completionRate >= 40 ? "At Risk" : "Critical"}
+              </div>
+              <div class="ecc-hero-trend">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#10b981">
+                  <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 10V6z" />
+                </svg>
+                <span>+12% vs last week</span>
+              </div>
+            </div>
+          </div>
+          <div class="ecc-hero-stats">
+            <div class="ecc-stat">
+              <div class="ecc-stat-icon" style="background:color-mix(in srgb,var(--primary),transparent 85%);color:var(--primary)">
+                <Icon name="folder" size={16} />
+              </div>
+              <div class="ecc-stat-body">
+                <div class="ecc-stat-value">{totalProjects}</div>
+                <div class="ecc-stat-label">Projects</div>
+              </div>
+            </div>
+            <div class="ecc-stat">
+              <div class="ecc-stat-icon" style="background:color-mix(in srgb,var(--info),transparent 85%);color:var(--info)">
+                <Icon name="task_alt" size={16} />
+              </div>
+              <div class="ecc-stat-body">
+                <div class="ecc-stat-value">{taskTotal}</div>
+                <div class="ecc-stat-label">Tasks</div>
+              </div>
+            </div>
+            <div class="ecc-stat">
+              <div class="ecc-stat-icon" style="background:color-mix(in srgb,var(--success),transparent 85%);color:var(--success)">
+                <Icon name="check_circle" size={16} />
+              </div>
+              <div class="ecc-stat-body">
+                <div class="ecc-stat-value">{completionRate}%</div>
+                <div class="ecc-stat-label">Completed</div>
+              </div>
+            </div>
+            <div class="ecc-stat">
+              <div class="ecc-stat-icon" style="background:color-mix(in srgb,var(--warning),transparent 85%);color:var(--warning)">
+                <Icon name="warning" size={16} />
+              </div>
+              <div class="ecc-stat-body">
+                <div class="ecc-stat-value" style="color:var(--warning)">{data?.tasks?.overdue ?? 0}</div>
+                <div class="ecc-stat-label">At Risk</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

@@ -33,12 +33,12 @@ export const getDashboard = async (userId: string, userRole: RoleType | undefine
   // Get project IDs first (required for all subsequent queries).
   // Global VIEWER accounts see every project in the workspace.
   const myProjects = await prisma.project.findMany({
-    where: userRole === "VIEWER" ? { status: { in: ["ACTIVE", "COMPLETED"] } } : {
+    where: userRole === "VIEWER" ? { status: { in: ["ACTIVE", "COMPLETED", "ON_HOLD"] } } : {
       OR: [
         { ownerId: userId },
         { members: { some: { userId } } },
       ],
-      status: { in: ["ACTIVE", "COMPLETED"] },
+      status: { in: ["ACTIVE", "COMPLETED", "ON_HOLD"] },
     },
     select: { id: true },
   });
@@ -182,7 +182,7 @@ export const getDashboard = async (userId: string, userRole: RoleType | undefine
       orderBy: { createdAt: "desc" },
       take: 10,
     }),
-    prisma.project.count({ where: { ownerId: userId, status: "ARCHIVED" } }),
+    prisma.project.count({ where: userRole !== "VIEWER" ? { OR: [{ ownerId: userId }, { members: { some: { userId } } }], status: "ARCHIVED" } : { status: "ARCHIVED" } }),
   ]);
   // Bulk-fetch recent activity actors (single IN query, no $lookup per row).
   const recentActivityActorIds = [...new Set(recentActivity.map((a) => a.actorId))];
