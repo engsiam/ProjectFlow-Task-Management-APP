@@ -100,12 +100,16 @@ export const env = {
   FRONTEND_URL: optional("FRONTEND_URL", defaultFrontendUrl),
   PORT: optional("PORT", "8000"),
   NODE_ENV: optional("NODE_ENV", "development"),
-  // When set, uploaded files are stored on the local FS under this dir.
-  // On Deploy, leave empty so the upload service returns 503 with a clear
-  // message pointing at object storage (R2/S3) for production storage.
+  // Filesystem root for the "local" STORAGE_BACKEND. Ignored when
+  // STORAGE_BACKEND="db" (Deno Deploy's read-only FS is never touched).
   UPLOAD_DIR: optional("UPLOAD_DIR", "uploads"),
-  // When true, force local FS uploads to be disabled (Deploy-safe default).
-  STORAGE_BACKEND: optional("STORAGE_BACKEND", isDeployRuntime ? "disabled" : "local"),
+  // Storage driver for uploaded files.
+  //   "local"    = local FS (good for dev; writes under UPLOAD_DIR)
+  //   "db"       = MongoDB Binary (works on Deno Deploy; no FS needed)
+  //   "disabled" = uploads rejected with 503 (explicit opt-out)
+  //   "r2"/"s3"  = reserved for future object-storage drivers
+  // On Deno Deploy, "db" is the default since the FS is read-only.
+  STORAGE_BACKEND: optional("STORAGE_BACKEND", isDeployRuntime ? "db" : "local"),
   API_VERSION: "1.0.0",
 };
 
@@ -113,6 +117,7 @@ export const isProd = env.NODE_ENV === "production";
 export const isDev = env.NODE_ENV === "development";
 export const isDeploy = isDeployRuntime;
 
-// Storage backend flags for the upload + attachment services.
-export const storageDisabled = env.STORAGE_BACKEND === "disabled" ||
-  isDeployRuntime;
+// True ONLY when the operator explicitly disabled uploads. An explicit
+// STORAGE_BACKEND=local on Deploy will still try the local FS (and fail
+// with a clear error from the service), so behaviour is always opt-in.
+export const storageDisabled = env.STORAGE_BACKEND === "disabled";

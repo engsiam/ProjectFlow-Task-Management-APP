@@ -117,6 +117,35 @@ export type RouteEntry = {
   middleware: MiddlewareHandler[];
 };
 
+// Public route — no auth middleware. Avatars are static-ish and the
+// browser requests them from <img src> without a Bearer token. The path
+// uses a 24-hex `userId` constraint so it can never shadow `/api/users/me`.
+export const getUserAvatarRoute = createRoute({
+  method: "get",
+  path: "/api/users/:userId/avatar",
+  tags: tag,
+  summary: "Stream a user's avatar image (DB storage only)",
+  description:
+    "Returns the avatar bytes stored in User.avatarData. Returns 404 if the user has no DB-stored avatar (e.g. they use an external URL).",
+  request: {
+    params: z.object({
+      userId: z.string().regex(/^[a-fA-F0-9]{24}$/),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Avatar image bytes",
+      content: {
+        "image/*": { schema: z.string().openapi({ type: "string", format: "binary" }) },
+      },
+    },
+    404: {
+      description: "No DB-stored avatar for this user",
+      content: { "application/json": { schema: ErrorResponseSchema } },
+    },
+  },
+});
+
 export const userRouteEntries: RouteEntry[] = [
   { route: updateMeRoute, handler: userCtrl.updateMe as Handler, middleware: [auth()] },
   { route: searchUsersRoute, handler: userCtrl.searchUsers as Handler, middleware: [auth()] },
@@ -125,5 +154,10 @@ export const userRouteEntries: RouteEntry[] = [
     route: updateUserRoleRoute,
     handler: userCtrl.updateRole as Handler,
     middleware: [auth(), requireGlobalRole("ADMIN")],
+  },
+  {
+    route: getUserAvatarRoute,
+    handler: userCtrl.getAvatar as Handler,
+    middleware: [],
   },
 ];

@@ -1,12 +1,14 @@
-// Attachment service: file metadata CRUD plus on-disk storage helpers.
+// Attachment service: file metadata CRUD plus storage helpers.
 //
-// Storage is platform-aware:
-//   - Local (`STORAGE_BACKEND=local`): writes to UPLOAD_DIR/attachments on
-//     the local filesystem; reads via Deno.readFile.
-//   - Deno Deploy (`STORAGE_BACKEND=disabled`): the create/remove/read
-//     paths return ServiceUnavailableError. The Prisma metadata is still
-//     persisted so an admin can later migrate to object storage without
-//     losing the record trail.
+// Storage is platform-aware via the STORAGE_BACKEND env var:
+//   - "local"    : writes to UPLOAD_DIR/attachments on the local FS.
+//                  Best for dev. NOT supported on Deno Deploy (read-only FS).
+//   - "db"       : stores the file bytes in the Attachment `data` column
+//                  (Prisma `Bytes` → MongoDB Binary). Works on Deno Deploy
+//                  with zero external setup. Subject to MongoDB's 16 MB
+//                  document size limit, so the 10 MB MAX_FILE_SIZE is
+//                  enforced strictly in this mode.
+//   - "disabled" : every create/download call returns 503.
 
 import { prisma } from "../prisma/client.ts";
 import { env, storageDisabled } from "../config/env.ts";
@@ -35,6 +37,11 @@ export const ALLOWED_MIME_SET = new Set(ALLOWED_MIME_TYPES.map((t) => t.mime));
 export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
 export const STORAGE_DIR = `${env.UPLOAD_DIR}/attachments`;
+
+// Persisted alongside each Attachment row so a single column tells the
+// read path where to fetch the bytes from. "local" and "db" are
+// supported today; "r2"/"s3" are reserved for future drivers.
+const STORAGE_TYPE = env.STORAGE_BACKEND === "db" ? "db" : "local";
 
 export const ALLOWED_EXTENSIONS = [".pdf", ".doc", ".docx", ".png", ".jpg", ".jpeg", ".zip"];
 
@@ -217,13 +224,34 @@ export const create = async (
   const ext = validateFile(file);
 
   const safeOriginal = sanitize(file.name);
-  const storedName = `${crypto.randomUUID()}${ext}`;
-  const taskDir = `${STORAGE_DIR}/${taskId}`;
-  await ensureDir(taskDir);
-  const fullPath = `${taskDir}/${storedName}`;
-  await Deno.writeFile(fullPath, new Uint8Array(await file.arrayBuffer()));
-
+  const bytes = new Uint8Array(await file.arrayBuffer());
   const mimeType = file.type || EXT_TO_MIME[ext] || "application/octet-stream";
+
+  // Resolve projectId once for the activity log below; avoid a nested
+  // `await` inside a Prisma data object (which is not async-safe).
+  const taskForLog = await prisma.task.findUnique({
+    where: { id: taskId },
+    select: { projectId: true },
+  });
+
+  let storageType: string;
+  let storagePath: string;
+  let storedName: string;
+  let data: Uint8Array | undefined;
+
+  if (STORAGE_TYPE === "db") {
+    storageType = "db";
+    storagePath = "db";
+    storedName = "db";
+    data = bytes;
+  } else {
+    storageType = "local";
+    storedName = `${crypto.randomUUID()}${ext}`;
+    const taskDir = `${STORAGE_DIR}/${taskId}`;
+    await ensureDir(taskDir);
+    storagePath = `${taskDir}/${storedName}`;
+    await Deno.writeFile(storagePath, bytes);
+  }
 
   const row = await prisma.attachment.create({
     data: {
@@ -233,7 +261,9 @@ export const create = async (
       storedName,
       mimeType,
       fileSize: file.size,
-      storagePath: fullPath,
+      storageType,
+      storagePath,
+      ...(data ? { data } : {}),
     },
     include: { uploadedBy: { select: userSelect } },
   });
@@ -247,11 +277,8 @@ export const create = async (
         entityType: "attachment",
         entityId: row.id,
         taskId,
-        projectId: row.taskId
-          ? (await prisma.task.findUnique({ where: { id: taskId }, select: { projectId: true } }))
-            ?.projectId
-          : undefined,
-        metadata: { fileName: safeOriginal, fileSize: file.size, mimeType },
+        projectId: taskForLog?.projectId,
+        metadata: { fileName: safeOriginal, fileSize: file.size, mimeType, storageType },
       },
     });
   } catch (_err) {
@@ -299,8 +326,9 @@ export const remove = async (
   if (!allowed) throw new ForbiddenError("You cannot delete this attachment");
 
   // Remove the file from disk; ignore errors if it's already gone.
-  // On Deploy this is a no-op (the directory is read-only / ephemeral).
-  if (!storageDisabled) {
+  // For "db" storage the bytes live in the `data` column, so the row
+  // delete below is sufficient — no FS call needed.
+  if (row.storageType === "local") {
     try {
       await Deno.remove(row.storagePath);
     } catch (_err) {
@@ -339,12 +367,22 @@ export const getFileForDownload = async (
   const row = await prisma.attachment.findUnique({ where: { id: attachmentId } });
   if (!row || row.taskId !== taskId) throw new NotFoundError("Attachment not found");
   assertStorage();
+
   let bytes: Uint8Array;
-  try {
-    bytes = await Deno.readFile(row.storagePath);
-  } catch {
-    throw new NotFoundError("File not found on disk");
+  if (row.storageType === "db") {
+    if (!row.data) throw new NotFoundError("File data is missing");
+    // Prisma returns `Bytes` as `Uint8Array` over the MongoDB driver.
+    bytes = row.data instanceof Uint8Array
+      ? row.data
+      : new Uint8Array(row.data as unknown as ArrayBuffer);
+  } else {
+    try {
+      bytes = await Deno.readFile(row.storagePath);
+    } catch {
+      throw new NotFoundError("File not found on disk");
+    }
   }
+
   return {
     file: {
       name: row.fileName,

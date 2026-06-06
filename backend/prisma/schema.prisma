@@ -24,6 +24,10 @@ model User {
   name      String
   username  String   @unique
   avatar    String?
+  // Used when STORAGE_BACKEND=db: the avatar bytes live here and
+  // `avatar` is set to "/api/users/{id}/avatar" (served by GET that route).
+  avatarData Bytes?
+  avatarMime String?
   bio       String?
   googleId  String?
   githubId  String?
@@ -172,10 +176,15 @@ model Attachment {
   uploadedById String   @db.ObjectId
   uploadedBy   User     @relation("AttachmentUploader", fields: [uploadedById], references: [id])
   fileName     String   // original filename
-  storedName   String   // disk filename (UUID + ext)
+  storedName   String   // disk filename (UUID + ext); for db storage this is "db"
   mimeType     String
   fileSize     Int      // bytes
-  storagePath  String   // uploads/attachments/...
+  // "local" = file lives on the local FS at `storagePath`
+  // "db"   = file bytes are stored in the `data` field (no FS access required)
+  // "r2" / "s3" = reserved for future object-storage drivers
+  storageType  String   @default("local")
+  storagePath  String   // uploads/attachments/... (local) or "db" (db)
+  data         Bytes?   // raw file bytes when storageType === "db"
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

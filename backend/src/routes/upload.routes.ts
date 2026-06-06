@@ -4,17 +4,19 @@ import { createRoute } from "@hono/zod-openapi";
 import type { Handler, MiddlewareHandler } from "hono";
 import * as uploadCtrl from "../controllers/upload.controller.ts";
 import { auth } from "../middleware/auth.ts";
-import { bearerAuth, jsonOkResponse, jsonErrorResponses } from "../docs/openapi.ts";
-import { env, isDeploy } from "../config/env.ts";
+import { bearerAuth, jsonErrorResponses, jsonOkResponse } from "../docs/openapi.ts";
+import { env } from "../config/env.ts";
 
 import { z } from "@hono/zod-openapi";
 
 const tag = ["Uploads"];
 const security = [{ bearerAuth: [] }];
 
-const exampleAvatarUrl = isDeploy
-  ? `${env.API_PUBLIC_URL}/uploads/avatars/uuid.jpg`
-  : `http://localhost:${env.PORT}/uploads/avatars/uuid.jpg`;
+// In "db" mode the upload returns "/api/users/{id}/avatar" (relative,
+// resolved by the browser against the current origin). In "local" mode
+// it returns an absolute file URL under /uploads/avatars/. Use a stable
+// relative example so the OpenAPI docs are correct in both modes.
+const exampleAvatarUrl = `/api/users/000000000000000000000000/avatar`;
 
 const uploadAvatarResponse = z.object({
   url: z.string().openapi({ example: exampleAvatarUrl }),

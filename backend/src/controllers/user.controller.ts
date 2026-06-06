@@ -2,7 +2,9 @@
 // validator middleware that OpenAPIHono wires up via zValidator).
 
 import type { Context } from "hono";
+import { prisma } from "../prisma/client.ts";
 import * as userService from "../services/user.service.ts";
+import { NotFoundError } from "../utils/errors.ts";
 import { respondOk } from "../utils/response.ts";
 import { getUser } from "./_helpers.ts";
 import type {
@@ -10,6 +12,7 @@ import type {
   UpdateMeInput,
   UpdateUserRoleInput,
 } from "../validators/user.validator.ts";
+import { isValidObjectId } from "../utils/id.ts";
 
 export const updateMe = async (c: Context) => {
   const user = getUser(c);
@@ -45,4 +48,27 @@ export const updateRole = async (c: Context) => {
     body,
   );
   return respondOk(c, result, "Role updated");
+};
+
+// Public — streams a user's DB-stored avatar. Returns 404 when the user
+// has no avatarData (e.g. they use an external URL like Gravatar or
+// pravatar.cc). The user-service never deletes avatarData on profile
+// update, so an upload always wins until a new upload replaces it.
+export const getAvatar = async (c: Context) => {
+  const userId = c.req.param("userId");
+  if (!isValidObjectId(userId)) throw new NotFoundError("User not found");
+  const row = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { avatarData: true, avatarMime: true },
+  });
+  if (!row || !row.avatarData) {
+    throw new NotFoundError("No DB-stored avatar for this user");
+  }
+  c.header("Content-Type", row.avatarMime ?? "application/octet-stream");
+  c.header("Cache-Control", "private, max-age=300");
+  const bytes = row.avatarData instanceof Uint8Array
+    ? row.avatarData
+    : new Uint8Array(row.avatarData as unknown as ArrayBuffer);
+  c.header("Content-Length", String(bytes.length));
+  return c.body(bytes as unknown as ArrayBuffer);
 };
