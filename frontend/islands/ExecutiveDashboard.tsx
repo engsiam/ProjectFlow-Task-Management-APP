@@ -50,13 +50,13 @@ const ForecastCard = ({ data }: { data: PortfolioDashboard["forecast"] }) => {
   const trendIcon = data.completionTrendDirection === "up"
     ? "↑"
     : data.completionTrendDirection === "down"
-      ? "↓"
-      : "→";
+    ? "↓"
+    : "→";
   const trendCls = data.completionTrendDirection === "up"
     ? "eo-dfc-up"
     : data.completionTrendDirection === "down"
-      ? "eo-dfc-down"
-      : "eo-dfc-flat";
+    ? "eo-dfc-down"
+    : "eo-dfc-flat";
   return (
     <div class="eo-card eo-dfc">
       <h3 class="eo-card-title">📬 Delivery Forecast</h3>
@@ -132,18 +132,18 @@ const deadlineLabel = (s: string) =>
   s === "OVERDUE"
     ? "OVERDUE"
     : s === "AT_RISK"
-      ? "AT_RISK"
-      : s === "ON_TRACK"
-        ? "ON TRACK"
-        : "—";
+    ? "AT_RISK"
+    : s === "ON_TRACK"
+    ? "ON TRACK"
+    : "—";
 const deadlineColor = (s: string) =>
   s === "OVERDUE"
     ? "#ef4444"
     : s === "AT_RISK"
-      ? "#f59e0b"
-      : s === "ON_TRACK"
-        ? "#10b981"
-        : "#94a3b8";
+    ? "#f59e0b"
+    : s === "ON_TRACK"
+    ? "#10b981"
+    : "#94a3b8";
 
 const RiskRow = ({ item }: { item: RiskMatrixItem }) => {
   const clr = riskColor(item.riskLevel);
@@ -233,8 +233,8 @@ const TeamIntelligenceCard = (
   const efficiencyColor = data.teamEfficiency >= 70
     ? "#10b981"
     : data.teamEfficiency >= 40
-      ? "#f59e0b"
-      : "#ef4444";
+    ? "#f59e0b"
+    : "#ef4444";
   return (
     <div class="eo-card eo-ti-card">
       <h3 class="eo-card-title">👥 Team Intelligence</h3>
@@ -360,8 +360,8 @@ export default function ExecutiveDashboard() {
     exec.healthScore >= 70
       ? "ON_TRACK"
       : exec.healthScore >= 40
-        ? "AT_RISK"
-        : "CRITICAL",
+      ? "AT_RISK"
+      : "CRITICAL",
   );
 
   return (

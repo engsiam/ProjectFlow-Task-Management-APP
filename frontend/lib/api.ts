@@ -7,7 +7,7 @@ import {
 } from "./auth.ts";
 import type { ApiResponse } from "./types.ts";
 import { recordApiCall } from "./api-metrics.ts";
-import { startLoader, stopLoader, type LoaderTone } from "./loader.ts";
+import { type LoaderTone, startLoader, stopLoader } from "./loader.ts";
 
 type Query = Record<string, string | number | boolean | undefined | null>;
 type Paginated<T> = {
@@ -90,7 +90,9 @@ function defaultLoaderMessage(method: string, path: string): string {
   const resource = segments[segments.length - 1] ?? "data";
   if (m === "GET") return "Loading…";
   if (m === "POST") {
-    if (resource === "login" || resource === "refresh") return "Signing you in…";
+    if (resource === "login" || resource === "refresh") {
+      return "Signing you in…";
+    }
     if (resource === "signup" || resource === "register") {
       return "Creating your account…";
     }

@@ -6,7 +6,7 @@ import {
   logout,
   saveSession,
 } from "../lib/auth.ts";
-import { API_BASE_URL, SWAGGER_URL } from "../lib/constants.ts";
+import { API_BASE_URL, BACKEND_ORIGIN, SWAGGER_URL } from "../lib/constants.ts";
 import { toast } from "../lib/toast.ts";
 import type { User } from "../lib/types.ts";
 import { Avatar, Button, Icon, Skeleton } from "../components/ui.tsx";
@@ -28,6 +28,12 @@ export default function SettingsClient() {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Resolve relative backend paths so the preview <img> doesn't 404
+  // against the frontend origin. Absolute URLs pass through unchanged.
+  const resolvedAvatarSrc = avatarUrl.startsWith("/")
+    ? `${BACKEND_ORIGIN}${avatarUrl}`
+    : avatarUrl;
 
   useEffect(() => {
     get<User>("/auth/me").then((data) => {
@@ -65,13 +71,27 @@ export default function SettingsClient() {
       const body = await res.json();
       const url = body?.url ?? body?.data?.url ?? body?.avatarUrl ?? "";
       if (!url) throw new Error("Upload did not return a URL");
+
+      // Update preview immediately
       setAvatarUrl(url);
-      toast("Avatar uploaded.", "success");
+
+      // Auto-save to profile so the header avatar updates without a page reload
+      const updated = await patch<User>("/users/me", {
+        name,
+        avatar: url,
+      });
+      setUser(updated);
+      saveSession({ user: updated });
+      setMessage("Profile updated.");
+      toast("Avatar saved to profile.", "success");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Upload failed.";
       setUploadError(msg);
+      toast(msg, "danger");
     } finally {
       setUploading(false);
+      // Reset input so the same file can be re-selected
+      if (inputRef.current) inputRef.current.value = "";
     }
   }
 
@@ -174,7 +194,7 @@ export default function SettingsClient() {
               ? (
                 <div class="avatar-upload-preview">
                   <img
-                    src={avatarUrl}
+                    src={resolvedAvatarSrc}
                     alt="Avatar preview"
                     class="avatar-upload-img"
                   />

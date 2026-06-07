@@ -1,6 +1,6 @@
 // ProjectFlow service worker — cache-first for static assets,
 // network-first for navigations, never cache the API.
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v2";
 const STATIC_CACHE = `projectflow-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `projectflow-runtime-${CACHE_VERSION}`;
 
@@ -15,7 +15,7 @@ const PRECACHE_URLS = [
   "/members",
   "/login",
   "/signup",
-  "/styles.css",
+  "/offline",
   "/favicon.svg",
   "/manifest.webmanifest",
 ];
@@ -61,7 +61,9 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
 
   // Network-first for HTML navigations — fall back to cache when offline.
-  if (req.mode === "navigate" || req.headers.get("accept")?.includes("text/html")) {
+  if (
+    req.mode === "navigate" || req.headers.get("accept")?.includes("text/html")
+  ) {
     event.respondWith(
       fetch(req)
         .then((res) => {
@@ -74,17 +76,28 @@ self.addEventListener("fetch", (event) => {
             cached ||
             caches.match("/dashboard") ||
             caches.match("/") ||
-            new Response(
-              "<h1>Offline</h1><p>ProjectFlow is offline. Reconnect and retry.</p>",
-              { status: 503, headers: { "Content-Type": "text/html" } },
-            )
+            caches.match("/offline")
           )
         ),
     );
     return;
   }
 
-  // Cache-first for everything else (CSS, JS, fonts, images).
+  // Network-first for CSS — always fetch latest styles, fall back to cache offline.
+  if (url.pathname.endsWith(".css")) {
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          const copy = res.clone();
+          caches.open(RUNTIME_CACHE).then((cache) => cache.put(req, copy));
+          return res;
+        })
+        .catch(() => caches.match(req)),
+    );
+    return;
+  }
+
+  // Cache-first for everything else (JS, fonts, images).
   event.respondWith(
     caches.match(req).then((cached) => {
       if (cached) return cached;

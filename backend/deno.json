@@ -2,7 +2,7 @@
   "nodeModulesDir": "auto",
   "lock": false,
   "tasks": {
-    "dev": "deno run -A --watch src/server.ts",
+    "dev": "deno run -A --watch --watch-exclude=src/generated src/server.ts",
     "start": "deno run -A src/server.ts",
     "prisma:generate": "deno run -A npm:prisma@5.22.0 generate && deno run -A --no-lock scripts/patch-prisma-package-json.ts",
     "prisma:push": "deno run -A npm:prisma@5.22.0 db push",

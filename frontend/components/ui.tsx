@@ -5,6 +5,8 @@ import type {
   TaskStatus,
   User,
 } from "../lib/types.ts";
+import { BACKEND_ORIGIN } from "../lib/constants.ts";
+
 
 export function Icon(
   { name, size = 22, style }: {
@@ -78,13 +80,19 @@ export function Avatar(
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
     .join("") || "PF";
+
+  // Resolve relative backend paths (/api/... or /uploads/...) against the
+  // backend origin so the browser doesn't fetch from the frontend port.
+  const rawSrc = user?.avatarUrl ?? user?.avatar ?? "";
+  const src = rawSrc.startsWith("/") ? `${BACKEND_ORIGIN}${rawSrc}` : rawSrc;
+
   return (
     <span class="avatar" style={{ width: `${size}px`, height: `${size}px` }}>
-      {user?.avatarUrl || user?.avatar
+      {src
         ? (
           <img
-            src={user.avatarUrl ?? user.avatar ?? ""}
-            alt={user.name ?? "User"}
+            src={src}
+            alt={user?.name ?? "User"}
           />
         )
         : initials}

@@ -2,16 +2,17 @@ import { useState } from "preact/hooks";
 import { post } from "../lib/api.ts";
 import { toast } from "../lib/toast.ts";
 import { Button, Icon } from "../components/ui.tsx";
-import { validateProjectDates, validateProjectName } from "../lib/validation.ts";
+import {
+  validateProjectDates,
+  validateProjectName,
+} from "../lib/validation.ts";
 
 type FormErrors = Partial<
   Record<"name" | "description" | "startDate" | "deadline", string>
 >;
 
 function inputStyle(hasError: boolean) {
-  return hasError
-    ? "border:1px solid var(--danger);outline:none"
-    : undefined;
+  return hasError ? "border:1px solid var(--danger);outline:none" : undefined;
 }
 
 export default function ProjectCreateModal(
@@ -138,7 +139,11 @@ export default function ProjectCreateModal(
           </p>
         )}
 
-        <label class="label" for="pf-project-desc" style={{ marginTop: "14px" }}>
+        <label
+          class="label"
+          for="pf-project-desc"
+          style={{ marginTop: "14px" }}
+        >
           Description <span style="color:var(--danger)">*</span>
         </label>
         <textarea

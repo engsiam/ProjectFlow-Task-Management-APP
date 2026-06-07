@@ -11,7 +11,18 @@ export const updateMeSchema = z.object({
     .regex(/^[a-z0-9_]+$/i, "Username may only contain letters, numbers, and underscores")
     .transform((v) => v.toLowerCase())
     .optional(),
-  avatar: z.string().url().max(500).nullable().optional(),
+  // Accept absolute URLs (http/https, including localhost) OR relative paths
+  // starting with "/". z.string().url() rejects localhost which breaks local
+  // avatar uploads, so we use a permissive regex instead.
+  avatar: z
+    .string()
+    .max(500)
+    .regex(
+      /^(https?:\/\/.+|\/.*)/,
+      "Avatar must be an http/https URL or a path starting with /",
+    )
+    .nullable()
+    .optional(),
   bio: z.string().max(500).nullable().optional(),
 });
 

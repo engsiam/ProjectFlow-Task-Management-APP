@@ -107,9 +107,7 @@ export default function SearchCommand() {
               subtitle: `${t.status?.replace("_", " ") ?? "todo"} · ${
                 t.project?.name ?? "No project"
               }`,
-              icon: t.priority === "HIGH"
-                ? "priority_high"
-                : "task_alt",
+              icon: t.priority === "HIGH" ? "priority_high" : "task_alt",
               href: `/tasks`,
               iconColor: t.priority === "HIGH"
                 ? "var(--danger)"

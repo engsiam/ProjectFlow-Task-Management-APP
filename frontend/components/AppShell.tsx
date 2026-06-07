@@ -8,6 +8,7 @@ import SearchCommand from "../islands/SearchCommand.tsx";
 import ToastProvider from "../islands/ToastProvider.tsx";
 import ShellUser from "../islands/ShellUser.tsx";
 import GlobalErrorHandler from "../islands/GlobalErrorHandler.tsx";
+import OnlineBanner from "../islands/OnlineBanner.tsx";
 import FullLoader from "../islands/FullLoader.tsx";
 import NavigationGuard from "../islands/NavigationGuard.tsx";
 import { getCurrentUser } from "../lib/auth.ts";
@@ -182,6 +183,7 @@ export function AppShell(
           </div>
         </header>
         <main class="content">
+          <OnlineBanner />
           <ErrorBoundary>{children}</ErrorBoundary>
         </main>
       </div>

@@ -54,9 +54,9 @@ export default function AtRiskWidget() {
   if (data.totalProjects === 0) {
     return (
       <div class="atrisk-widget">
-        <h3>🤖Project Insights</h3>
+        <h3>Project Insights</h3>
         <p class="atrisk-empty">
-          No projects yet. Create one to see AI insights.
+          No projects yet. Create one to see project insights.
         </p>
       </div>
     );
@@ -65,8 +65,8 @@ export default function AtRiskWidget() {
   const scoreColor = data.averageScore >= 70
     ? "#10b981"
     : data.averageScore >= 50
-      ? "#f59e0b"
-      : "#ef4444";
+    ? "#f59e0b"
+    : "#ef4444";
 
   return (
     <div class="atrisk-widget">

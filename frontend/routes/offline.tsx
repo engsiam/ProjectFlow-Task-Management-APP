@@ -1,7 +1,6 @@
-import type { PageProps } from "$fresh/server.ts";
 import { Icon } from "../components/ui.tsx";
 
-export default function NotFound({ url }: PageProps) {
+export default function OfflinePage() {
   return (
     <main class="error-page">
       <div class="error-bg" />
@@ -27,31 +26,31 @@ export default function NotFound({ url }: PageProps) {
         </div>
 
         <div class="error-icon-wrap">
-          <span class="error-icon">🛸</span>
+          <span class="error-icon">📡</span>
         </div>
-        <span class="error-code">404</span>
-        <h2 class="headline error-title">Lost in orbit</h2>
+        <span class="error-code">OFFLINE</span>
+        <h2 class="headline error-title">No connection</h2>
         <p class="error-desc">
-          The page you're looking for drifted off course or was relocated. Let's
-          bring you back to safe ground.
+          You've lost contact with Mission Control. Don't panic — your data is
+          safe. We'll automatically reconnect when the signal returns.
         </p>
 
-        <div class="error-path">
-          <code>{url.pathname}</code>
-        </div>
-
         <div class="error-actions">
-          <a href="/dashboard" class="btn btn-primary">
+          <a href="." class="btn btn-primary">
+            <Icon name="refresh" size={18} /> Try again
+          </a>
+          <a href="/dashboard" class="btn btn-secondary">
             <Icon name="dashboard" size={18} /> Dashboard
-          </a>
-          <a href="/projects" class="btn btn-secondary">
-            <Icon name="folder_open" size={18} /> Projects
-          </a>
-          <a href="/tasks" class="btn btn-secondary">
-            <Icon name="assignment" size={18} /> Tasks
           </a>
         </div>
       </section>
+
+      <script
+        dangerouslySetInnerHTML={{
+          __html:
+            `(function(){function n(){navigator.onLine&&location.reload()}window.addEventListener("online",n)})();`,
+        }}
+      />
     </main>
   );
 }

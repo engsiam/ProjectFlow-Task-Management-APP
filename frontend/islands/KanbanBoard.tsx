@@ -175,83 +175,85 @@ export default function KanbanBoard(
                 const isDone = isCompletedStatus(task.status) ||
                   column.key === "COMPLETED";
                 return (
-                <div
-                  key={task.id}
-                  class={`task-card ${
-                    isDone ? "task-done" : ""
-                  } ${isAssignedToMe ? "task-assigned-to-me" : ""}`}
-                  draggable={mayEditThis && !isDone}
-                  onDragStart={(e) => {
-                    if (!mayEditThis) {
-                      e.preventDefault();
-                      return;
-                    }
-                    const dt = e.dataTransfer;
-                    if (!dt) return;
-                    dt.setData("text/task-id", task.id);
-                    dt.effectAllowed = "move";
-                  }}
-                  onClick={() => setSelected(task)}
-                >
-                  <div class="task-card-inner">
-                    <div class="task-card-header">
-                      <Badge tone={priorityTone(task.priority)}>
-                        {priorityLabel[task.priority] || task.priority}
-                      </Badge>
-                      {mayEditThis && !isDone && (
-                        <span
-                          class="drag-handle"
-                          onMouseDown={(e) => e.stopPropagation()}
-                        >
-                          <Icon name="drag_indicator" size={18} />
-                        </span>
-                      )}
-                    </div>
-                    <p style={{ margin: 0, fontSize: "14px", fontWeight: 500 }}>
-                      {task.title}
-                    </p>
-                    {task.labels && task.labels.length > 0 && (
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: "4px",
-                          flexWrap: "wrap",
-                        }}
-                      >
-                        {task.labels.slice(0, 3).map((label) => (
-                          <span key={label} class="task-label">{label}</span>
-                        ))}
-                      </div>
-                    )}
-                    <div class="task-card-footer">
-                      <div class="task-meta">
-                        <Avatar user={task.assignee} size={24} />
-                        {task.dueDate && (
+                  <div
+                    key={task.id}
+                    class={`task-card ${isDone ? "task-done" : ""} ${
+                      isAssignedToMe ? "task-assigned-to-me" : ""
+                    }`}
+                    draggable={mayEditThis && !isDone}
+                    onDragStart={(e) => {
+                      if (!mayEditThis) {
+                        e.preventDefault();
+                        return;
+                      }
+                      const dt = e.dataTransfer;
+                      if (!dt) return;
+                      dt.setData("text/task-id", task.id);
+                      dt.effectAllowed = "move";
+                    }}
+                    onClick={() => setSelected(task)}
+                  >
+                    <div class="task-card-inner">
+                      <div class="task-card-header">
+                        <Badge tone={priorityTone(task.priority)}>
+                          {priorityLabel[task.priority] || task.priority}
+                        </Badge>
+                        {mayEditThis && !isDone && (
                           <span
-                            class={new Date(task.dueDate) < new Date() &&
-                                !isCompletedStatus(task.status)
-                              ? "overdue"
-                              : ""}
-                            style={{ fontSize: "12px" }}
+                            class="drag-handle"
+                            onMouseDown={(e) => e.stopPropagation()}
                           >
-                            {new Date(task.dueDate) < new Date() &&
-                                !isCompletedStatus(task.status)
-                              ? "Overdue"
-                              : fmtDate(task.dueDate)}
+                            <Icon name="drag_indicator" size={18} />
                           </span>
                         )}
                       </div>
-                      <div class="task-comment-count">
-                        {(task.commentCount ?? 0) > 0 && (
-                          <>
-                            <Icon name="chat_bubble" size={14} />
-                            <span>{task.commentCount}</span>
-                          </>
-                        )}
+                      <p
+                        style={{ margin: 0, fontSize: "14px", fontWeight: 500 }}
+                      >
+                        {task.title}
+                      </p>
+                      {task.labels && task.labels.length > 0 && (
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "4px",
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          {task.labels.slice(0, 3).map((label) => (
+                            <span key={label} class="task-label">{label}</span>
+                          ))}
+                        </div>
+                      )}
+                      <div class="task-card-footer">
+                        <div class="task-meta">
+                          <Avatar user={task.assignee} size={24} />
+                          {task.dueDate && (
+                            <span
+                              class={new Date(task.dueDate) < new Date() &&
+                                  !isCompletedStatus(task.status)
+                                ? "overdue"
+                                : ""}
+                              style={{ fontSize: "12px" }}
+                            >
+                              {new Date(task.dueDate) < new Date() &&
+                                  !isCompletedStatus(task.status)
+                                ? "Overdue"
+                                : fmtDate(task.dueDate)}
+                            </span>
+                          )}
+                        </div>
+                        <div class="task-comment-count">
+                          {(task.commentCount ?? 0) > 0 && (
+                            <>
+                              <Icon name="chat_bubble" size={14} />
+                              <span>{task.commentCount}</span>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
                 );
               })}
               {mayCreateTasks && (

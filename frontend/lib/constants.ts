@@ -21,18 +21,27 @@ declare global {
   var __DEV__: boolean | undefined;
   // deno-lint-ignore no-var
   var __APP_VERSION__: string | undefined;
+  // Injected by _app.tsx at SSR time from Deno.env("API_BASE_URL") so that
+  // browser islands use the correct backend without Deno.env access.
+  // deno-lint-ignore no-var
+  var __API_BASE_URL__: string | undefined;
 }
 
 const isDev = globalThis.__DEV__ === true;
 const appVersion = globalThis.__APP_VERSION__ ?? "1.0.0";
 
-const PRODUCTION_API_BASE_URL = "https://projectflow-backend.engsiam.deno.net/api";
+const PRODUCTION_API_BASE_URL =
+  "https://projectflow-backend.engsiam.deno.net/api";
 
-const RAW_API_BASE_URL =
-  (typeof Deno !== "undefined" && Deno.env.get("API_BASE_URL")) ||
+const RAW_API_BASE_URL: string =
+  // 1. Window global injected by _app.tsx from server-side Deno.env (works in browser islands)
+  globalThis.__API_BASE_URL__ ??
+  // 2. Deno.env — only available server-side / SSR
+  (typeof Deno !== "undefined" ? Deno.env.get("API_BASE_URL") : undefined) ??
+  // 3. Hardcoded production fallback
   PRODUCTION_API_BASE_URL;
 
-const NORMALIZED_API_BASE_URL = RAW_API_BASE_URL.trim().replace(/\/+$/, "");
+const NORMALIZED_API_BASE_URL = (RAW_API_BASE_URL as string).trim().replace(/\/+$/, "");
 
 export const API_BASE_URL = NORMALIZED_API_BASE_URL;
 

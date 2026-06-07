@@ -2,8 +2,8 @@ import { useEffect } from "preact/hooks";
 import {
   isNavBypassed,
   LOADER_EVENT_NAME,
-  NAV_BYPASS_EVENT_NAME,
   type LoaderState,
+  NAV_BYPASS_EVENT_NAME,
 } from "../lib/loader.ts";
 import { toast } from "../lib/toast.ts";
 
@@ -142,8 +142,7 @@ export default function NavigationGuard() {
       if (isNavBypassed()) return;
       const target = event.target as HTMLElement | null;
       const tag = target?.tagName;
-      const isEditable =
-        tag === "INPUT" ||
+      const isEditable = tag === "INPUT" ||
         tag === "TEXTAREA" ||
         tag === "SELECT" ||
         target?.isContentEditable;

@@ -50,10 +50,10 @@ export const uploadAvatar = async (c: Context) => {
   const bytes = new Uint8Array(await file.arrayBuffer());
 
   if (env.STORAGE_BACKEND === "db") {
-    // Persist bytes + mime on the user row. The relative URL is resolved
-    // by the browser against the current origin, so the same string
-    // works in dev (localhost:8001) and in prod (projectflow-frontend…net).
-    const url = `/api/users/${user.id}/avatar`;
+    // Serve from the internal GET /api/users/:id/avatar endpoint. Build
+    // an absolute URL so it passes the z.string().url() validator in
+    // PATCH /users/me (which rejects relative paths).
+    const url = new URL(`/api/users/${user.id}/avatar`, c.req.url).toString();
     await prisma.user.update({
       where: { id: user.id },
       data: {
@@ -65,17 +65,19 @@ export const uploadAvatar = async (c: Context) => {
     return respondOk(c, { url }, "Avatar uploaded");
   }
 
-  // Local FS path — writes under UPLOAD_DIR/avatars and returns a URL
-  // pointing at the static /uploads/* mount.
+  // Local FS path — writes under UPLOAD_DIR/avatars and returns an
+  // absolute URL pointing at the static /uploads/avatars/* mount.
   const uploadDir = `${env.UPLOAD_DIR}/avatars`;
   const ext = extForType(file.type);
   const name = `${crypto.randomUUID()}${ext}`;
-  const path = `${uploadDir}/${name}`;
+  const filePath = `${uploadDir}/${name}`;
 
   await Deno.mkdir(uploadDir, { recursive: true });
-  await Deno.writeFile(path, bytes);
+  await Deno.writeFile(filePath, bytes);
 
-  const url = new URL(c.req.url);
-  url.pathname = `/uploads/${path}`;
-  return respondOk(c, { url: url.toString() }, "Avatar uploaded");
+  // Build an absolute URL using API_PUBLIC_URL so the returned value
+  // always passes the z.string().url() validator in PATCH /users/me.
+  const publicBase = env.API_PUBLIC_URL.replace(/\/$/, "");
+  const url = `${publicBase}/uploads/avatars/${name}`;
+  return respondOk(c, { url }, "Avatar uploaded");
 };

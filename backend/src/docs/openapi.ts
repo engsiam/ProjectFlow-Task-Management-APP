@@ -387,7 +387,10 @@ export const notificationListResponse = z.object({
 export const updateMeBody = z.object({
   name: z.string().min(1).optional(),
   username: z.string().min(3).optional(),
-  avatar: z.string().url().nullable().optional(),
+  avatar: z.string()
+    .regex(/^(https?:\/\/.+|\/.*)/)
+    .nullable()
+    .optional(),
   bio: z.string().nullable().optional(),
 });
 

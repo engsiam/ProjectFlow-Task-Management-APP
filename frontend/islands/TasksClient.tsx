@@ -9,6 +9,7 @@ import {
   getProjectRole,
 } from "../lib/roles.ts";
 import type { Priority, Project, Task, TaskStatus } from "../lib/types.ts";
+import Pagination from "../components/Pagination.tsx";
 import {
   Avatar,
   Badge,
@@ -600,50 +601,18 @@ export default function TasksClient() {
           </div>
         )}
       {sorted.length > 0 && (
-        <section
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: "10px",
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          totalItems={sorted.length}
+          pageSize={pageSize}
+          onPageChange={setPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setPage(1);
           }}
-        >
-          <span style={{ color: "var(--muted)", fontSize: "13px" }}>
-            Showing {(page - 1) * pageSize + 1}–
-            {Math.min(page * pageSize, sorted.length)} of {sorted.length}
-          </span>
-          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-            <select
-              class="select"
-              value={pageSize}
-              onChange={(e) => {
-                setPageSize(Number(e.currentTarget.value));
-                setPage(1);
-              }}
-            >
-              <option value="10">10 / page</option>
-              <option value="20">20 / page</option>
-              <option value="50">50 / page</option>
-              <option value="100">100 / page</option>
-            </select>
-            <Button
-              disabled={page === 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-            >
-              ‹ Prev
-            </Button>
-            <span style={{ fontSize: "13px", color: "var(--muted)" }}>
-              Page {page} of {totalPages}
-            </span>
-            <Button
-              disabled={page === totalPages}
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            >
-              Next ›
-            </Button>
-          </div>
-        </section>
+          pageSizeOptions={[10, 20, 50, 100]}
+        />
       )}
       {open && (
         <TaskCreateModal

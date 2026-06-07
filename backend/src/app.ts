@@ -75,6 +75,38 @@ export const createApp = () => {
   // upload endpoints return 503 via `storageDisabled` and users should
   // configure R2/S3 — see `src/config/env.ts` `STORAGE_BACKEND`.
 
+  // Serve locally-uploaded files (avatars, attachments) from the local FS.
+  // Only active when STORAGE_BACKEND=local and not running on Deno Deploy.
+  if (!isDeploy && env.STORAGE_BACKEND === "local") {
+    app.get("/uploads/*", async (c: Context) => {
+      // Strip the leading /uploads/ prefix to get the relative file path.
+      const relativePath = c.req.path.replace(/^\/uploads\//, "");
+      const filePath = `${env.UPLOAD_DIR}/${relativePath}`;
+      try {
+        const data = await Deno.readFile(filePath);
+        const ext = filePath.split(".").pop()?.toLowerCase() ?? "";
+        const mimeMap: Record<string, string> = {
+          jpg: "image/jpeg",
+          jpeg: "image/jpeg",
+          png: "image/png",
+          webp: "image/webp",
+          gif: "image/gif",
+        };
+        const mime = mimeMap[ext] ?? "application/octet-stream";
+        return new Response(data, {
+          status: 200,
+          headers: {
+            "Content-Type": mime,
+            "Cache-Control": "public, max-age=31536000, immutable",
+            "Content-Length": String(data.length),
+          },
+        });
+      } catch {
+        return c.json({ success: false, message: "File not found" }, 404);
+      }
+    });
+  }
+
   // Register all routes
   const allEntries = [
     ...systemRouteEntries,

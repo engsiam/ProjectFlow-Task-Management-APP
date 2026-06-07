@@ -3,7 +3,7 @@
   "tasks": {
     "check": "deno fmt --check && deno lint && deno check **/*.ts **/*.tsx",
     "fmt": "deno fmt",
-    "start": "deno run -A --watch=static/,routes/,components/,islands/,lib/,types/ dev.ts",
+    "start": "deno run -A --watch=static/,routes/,components/,islands/,lib/,types/ --env dev.ts",
     "build": "deno run -A dev.ts build",
     "preview": "deno run -A main.ts"
   },

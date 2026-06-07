@@ -1,5 +1,9 @@
 import type { AppProps } from "$fresh/server.ts";
 
+const API_BASE_URL_SERVER =
+  Deno.env.get("API_BASE_URL") ??
+  "https://projectflow-backend.engsiam.deno.net/api";
+
 const SITE_NAME = "ProjectFlow";
 const SITE_DESCRIPTION =
   "Plan less. Ship more. Together. The smart project & task collaboration platform for modern teams — real-time kanban boards, granular RBAC, OAuth, and analytics.";
@@ -117,7 +121,15 @@ export default function App({ Component }: AppProps) {
         />
 
         {/* Stylesheet */}
-        <link rel="stylesheet" href="/styles.css?v=20260607" />
+        <link rel="stylesheet" href="/styles.css?v=20260607.2" />
+
+        {/* Inject backend URL so browser islands don't fall back to the
+            hardcoded production URL. Must run before any island JS. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.__API_BASE_URL__=${JSON.stringify(API_BASE_URL_SERVER)};`,
+          }}
+        />
 
         {/* Service worker registration — non-blocking */}
         <script

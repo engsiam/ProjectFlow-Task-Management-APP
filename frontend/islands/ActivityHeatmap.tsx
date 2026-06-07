@@ -25,12 +25,16 @@ export default function ActivityHeatmap({ projectId, compact }: Props) {
         const token = getAccessToken();
         if (!token) return;
         const base = projectId
-          ? `${import.meta.env.API_BASE_URL || ""}/projects/${projectId}/activity`
+          ? `${
+            import.meta.env.API_BASE_URL || ""
+          }/projects/${projectId}/activity`
           : `${import.meta.env.API_BASE_URL || ""}/dashboard/activity`;
         const res = await fetch(`${base}?days=90`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        const activities: { createdAt: string }[] = await res.json().catch(() => []);
+        const activities: { createdAt: string }[] = await res.json().catch(
+          () => [],
+        );
         if (!mounted) return;
 
         const dayMap = new Map<string, number>();
@@ -43,7 +47,9 @@ export default function ActivityHeatmap({ projectId, compact }: Props) {
         }
         for (const act of activities) {
           const key = act.createdAt?.slice(0, 10);
-          if (key && dayMap.has(key)) dayMap.set(key, (dayMap.get(key) ?? 0) + 1);
+          if (key && dayMap.has(key)) {
+            dayMap.set(key, (dayMap.get(key) ?? 0) + 1);
+          }
         }
 
         const days: DayActivity[] = [];
@@ -58,10 +64,15 @@ export default function ActivityHeatmap({ projectId, compact }: Props) {
         const firstDay = days[0]?.weekday ?? 0;
         const weeks: DayActivity[][] = [];
         let current: DayActivity[] = [];
-        for (let i = 0; i < firstDay; i++) current.push({ date: "", count: -1, weekday: i, weekIdx: 0 });
+        for (let i = 0; i < firstDay; i++) {
+          current.push({ date: "", count: -1, weekday: i, weekIdx: 0 });
+        }
         for (const day of days) {
           current.push(day);
-          if (current.length === 7) { weeks.push(current); current = []; }
+          if (current.length === 7) {
+            weeks.push(current);
+            current = [];
+          }
         }
         if (current.length > 0) weeks.push(current);
 
@@ -71,7 +82,9 @@ export default function ActivityHeatmap({ projectId, compact }: Props) {
         if (mounted) setLoading(false);
       }
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [projectId]);
 
   const level = (count: number, max: number): string => {
@@ -92,7 +105,9 @@ export default function ActivityHeatmap({ projectId, compact }: Props) {
       if (day) {
         const m = new Date(day.date).getMonth();
         if (m !== lastMonth) {
-          monthLabels.push(new Date(day.date).toLocaleString("default", { month: "short" }));
+          monthLabels.push(
+            new Date(day.date).toLocaleString("default", { month: "short" }),
+          );
           lastMonth = m;
         } else monthLabels.push("");
       } else monthLabels.push("");
@@ -100,7 +115,11 @@ export default function ActivityHeatmap({ projectId, compact }: Props) {
   }
 
   if (loading) {
-    return <div class="heatmap-container"><div class="heatmap-loading">Loading activity data...</div></div>;
+    return (
+      <div class="heatmap-container">
+        <div class="heatmap-loading">Loading activity data...</div>
+      </div>
+    );
   }
 
   return (
@@ -131,7 +150,9 @@ export default function ActivityHeatmap({ projectId, compact }: Props) {
         </div>
         <div class="heatmap-grid">
           <div class="heatmap-months">
-            {monthLabels.map((m, i) => <span key={i} class="heatmap-month-label">{m}</span>)}
+            {monthLabels.map((m, i) => (
+              <span key={i} class="heatmap-month-label">{m}</span>
+            ))}
           </div>
           <div class="heatmap-weeks">
             {weeks.map((week, wi) => (
@@ -139,8 +160,20 @@ export default function ActivityHeatmap({ projectId, compact }: Props) {
                 {week.map((day, di) => (
                   <div
                     key={di}
-                    class={`heatmap-cell ${level(day.count, Math.max(...weeks.flat().filter(d => d.count >= 0).map(d => d.count), 1))}`}
-                    title={day.date ? `${day.date}: ${day.count} activities` : ""}
+                    class={`heatmap-cell ${
+                      level(
+                        day.count,
+                        Math.max(
+                          ...weeks.flat().filter((d) => d.count >= 0).map((d) =>
+                            d.count
+                          ),
+                          1,
+                        ),
+                      )
+                    }`}
+                    title={day.date
+                      ? `${day.date}: ${day.count} activities`
+                      : ""}
                   />
                 ))}
               </div>

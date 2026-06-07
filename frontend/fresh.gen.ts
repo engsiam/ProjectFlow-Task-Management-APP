@@ -11,6 +11,7 @@ import * as $index from "./routes/index.tsx";
 import * as $login from "./routes/login.tsx";
 import * as $members from "./routes/members.tsx";
 import * as $notifications from "./routes/notifications.tsx";
+import * as $offline from "./routes/offline.tsx";
 import * as $portfolio from "./routes/portfolio.tsx";
 import * as $projects_id_ from "./routes/projects/[id].tsx";
 import * as $projects_index from "./routes/projects/index.tsx";
@@ -38,6 +39,7 @@ import * as $NavigationGuard from "./islands/NavigationGuard.tsx";
 import * as $NotificationDropdown from "./islands/NotificationDropdown.tsx";
 import * as $NotificationsClient from "./islands/NotificationsClient.tsx";
 import * as $OAuthCallbackHandler from "./islands/OAuthCallbackHandler.tsx";
+import * as $OnlineBanner from "./islands/OnlineBanner.tsx";
 import * as $PortfolioClient from "./islands/PortfolioClient.tsx";
 import * as $ProjectAnalyticsTab from "./islands/ProjectAnalyticsTab.tsx";
 import * as $ProjectCreateModal from "./islands/ProjectCreateModal.tsx";
@@ -74,6 +76,7 @@ const manifest = {
     "./routes/login.tsx": $login,
     "./routes/members.tsx": $members,
     "./routes/notifications.tsx": $notifications,
+    "./routes/offline.tsx": $offline,
     "./routes/portfolio.tsx": $portfolio,
     "./routes/projects/[id].tsx": $projects_id_,
     "./routes/projects/index.tsx": $projects_index,
@@ -103,6 +106,7 @@ const manifest = {
     "./islands/NotificationDropdown.tsx": $NotificationDropdown,
     "./islands/NotificationsClient.tsx": $NotificationsClient,
     "./islands/OAuthCallbackHandler.tsx": $OAuthCallbackHandler,
+    "./islands/OnlineBanner.tsx": $OnlineBanner,
     "./islands/PortfolioClient.tsx": $PortfolioClient,
     "./islands/ProjectAnalyticsTab.tsx": $ProjectAnalyticsTab,
     "./islands/ProjectCreateModal.tsx": $ProjectCreateModal,

@@ -2,7 +2,10 @@ import { useState } from "preact/hooks";
 import { patch } from "../lib/api.ts";
 import { toast } from "../lib/toast.ts";
 import { Button, Icon } from "../components/ui.tsx";
-import { validateProjectDates, validateProjectName } from "../lib/validation.ts";
+import {
+  validateProjectDates,
+  validateProjectName,
+} from "../lib/validation.ts";
 import type { Project, ProjectStatus } from "../lib/types.ts";
 
 type FormErrors = Partial<
@@ -10,9 +13,7 @@ type FormErrors = Partial<
 >;
 
 function inputStyle(hasError: boolean) {
-  return hasError
-    ? "border:1px solid var(--danger);outline:none"
-    : undefined;
+  return hasError ? "border:1px solid var(--danger);outline:none" : undefined;
 }
 
 function toDateInput(value?: string | null): string {
@@ -173,9 +174,7 @@ export default function ProjectEditModal(
           }}
           rows={3}
           aria-invalid={Boolean(errors.description)}
-          aria-describedby={errors.description
-            ? "pf-edit-desc-err"
-            : undefined}
+          aria-describedby={errors.description ? "pf-edit-desc-err" : undefined}
           style={inputStyle(Boolean(errors.description))}
         />
         {errors.description && (
@@ -195,7 +194,9 @@ export default function ProjectEditModal(
           class="select"
           value={status}
           onChange={(e) =>
-            setStatus((e.currentTarget as HTMLSelectElement).value as ProjectStatus)}
+            setStatus(
+              (e.currentTarget as HTMLSelectElement).value as ProjectStatus,
+            )}
         >
           {STATUS_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>{o.label}</option>

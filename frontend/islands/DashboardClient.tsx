@@ -15,6 +15,7 @@ import type {
 } from "../lib/types.ts";
 import type { Priority, TaskStatus } from "../lib/types.ts";
 import { isCompletedStatus } from "../lib/types.ts";
+import Pagination from "../components/Pagination.tsx";
 import { Avatar, fmtDate, Icon, Skeleton } from "../components/ui.tsx";
 import ProjectCreateModal from "./ProjectCreateModal.tsx";
 import TaskCreateModal from "./TaskCreateModal.tsx";
@@ -365,20 +366,64 @@ export default function DashboardClient() {
           <div class="ecc-hero-primary">
             <div class="ecc-score-ring">
               <svg width="80" height="80" viewBox="0 0 80 80">
-                <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="5" />
-                <circle cx="40" cy="40" r="34" fill="none" stroke={completionRate >= 70 ? "#10b981" : completionRate >= 40 ? "#f59e0b" : "#ef4444"} strokeWidth="5"
+                <circle
+                  cx="40"
+                  cy="40"
+                  r="34"
+                  fill="none"
+                  stroke="rgba(255,255,255,0.08)"
+                  strokeWidth="5"
+                />
+                <circle
+                  cx="40"
+                  cy="40"
+                  r="34"
+                  fill="none"
+                  stroke={completionRate >= 70
+                    ? "#10b981"
+                    : completionRate >= 40
+                    ? "#f59e0b"
+                    : "#ef4444"}
+                  strokeWidth="5"
                   strokeDasharray={`${2 * Math.PI * 34}`}
-                  strokeDashoffset={`${2 * Math.PI * 34 * (1 - completionRate / 100)}`}
-                  strokeLinecap="round" transform="rotate(-90 40 40)" style="transition:stroke-dashoffset 0.8s ease" />
+                  strokeDashoffset={`${
+                    2 * Math.PI * 34 * (1 - completionRate / 100)
+                  }`}
+                  strokeLinecap="round"
+                  transform="rotate(-90 40 40)"
+                  style="transition:stroke-dashoffset 0.8s ease"
+                />
               </svg>
-              <div class="ecc-score-value" style={`color:${completionRate >= 70 ? "#10b981" : completionRate >= 40 ? "#f59e0b" : "#ef4444"}`}>
+              <div
+                class="ecc-score-value"
+                style={`color:${
+                  completionRate >= 70
+                    ? "#10b981"
+                    : completionRate >= 40
+                    ? "#f59e0b"
+                    : "#ef4444"
+                }`}
+              >
                 {completionRate}%
               </div>
             </div>
             <div class="ecc-hero-info">
               <div class="ecc-hero-title">Workspace Health</div>
-              <div class="ecc-hero-status" style={`color:${completionRate >= 70 ? "#10b981" : completionRate >= 40 ? "#f59e0b" : "#ef4444"}`}>
-                {completionRate >= 70 ? "On Track" : completionRate >= 40 ? "At Risk" : "Critical"}
+              <div
+                class="ecc-hero-status"
+                style={`color:${
+                  completionRate >= 70
+                    ? "#10b981"
+                    : completionRate >= 40
+                    ? "#f59e0b"
+                    : "#ef4444"
+                }`}
+              >
+                {completionRate >= 70
+                  ? "On Track"
+                  : completionRate >= 40
+                  ? "At Risk"
+                  : "Critical"}
               </div>
               <div class="ecc-hero-trend">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="#10b981">
@@ -390,7 +435,10 @@ export default function DashboardClient() {
           </div>
           <div class="ecc-hero-stats">
             <div class="ecc-stat">
-              <div class="ecc-stat-icon" style="background:color-mix(in srgb,var(--primary),transparent 85%);color:var(--primary)">
+              <div
+                class="ecc-stat-icon"
+                style="background:color-mix(in srgb,var(--primary),transparent 85%);color:var(--primary)"
+              >
                 <Icon name="folder" size={16} />
               </div>
               <div class="ecc-stat-body">
@@ -399,7 +447,10 @@ export default function DashboardClient() {
               </div>
             </div>
             <div class="ecc-stat">
-              <div class="ecc-stat-icon" style="background:color-mix(in srgb,var(--info),transparent 85%);color:var(--info)">
+              <div
+                class="ecc-stat-icon"
+                style="background:color-mix(in srgb,var(--info),transparent 85%);color:var(--info)"
+              >
                 <Icon name="task_alt" size={16} />
               </div>
               <div class="ecc-stat-body">
@@ -408,7 +459,10 @@ export default function DashboardClient() {
               </div>
             </div>
             <div class="ecc-stat">
-              <div class="ecc-stat-icon" style="background:color-mix(in srgb,var(--success),transparent 85%);color:var(--success)">
+              <div
+                class="ecc-stat-icon"
+                style="background:color-mix(in srgb,var(--success),transparent 85%);color:var(--success)"
+              >
                 <Icon name="check_circle" size={16} />
               </div>
               <div class="ecc-stat-body">
@@ -417,11 +471,16 @@ export default function DashboardClient() {
               </div>
             </div>
             <div class="ecc-stat">
-              <div class="ecc-stat-icon" style="background:color-mix(in srgb,var(--warning),transparent 85%);color:var(--warning)">
+              <div
+                class="ecc-stat-icon"
+                style="background:color-mix(in srgb,var(--warning),transparent 85%);color:var(--warning)"
+              >
                 <Icon name="warning" size={16} />
               </div>
               <div class="ecc-stat-body">
-                <div class="ecc-stat-value" style="color:var(--warning)">{data?.tasks?.overdue ?? 0}</div>
+                <div class="ecc-stat-value" style="color:var(--warning)">
+                  {data?.tasks?.overdue ?? 0}
+                </div>
                 <div class="ecc-stat-label">At Risk</div>
               </div>
             </div>
@@ -796,42 +855,15 @@ export default function DashboardClient() {
                       })}
                     </tbody>
                   </table>
-                  {totalPages > 1 && (
-                    <div class="dash-pagination">
-                      <button
-                        type="button"
-                        class="dash-page-btn"
-                        disabled={page === 0}
-                        onClick={() => setPage((p) => Math.max(0, p - 1))}
-                      >
-                        <Icon name="chevron_left" size={14} />
-                      </button>
-                      {Array.from(
-                        { length: totalPages },
-                        (_, i) => (
-                          <button
-                            key={i}
-                            type="button"
-                            class={`dash-page-btn ${
-                              i === page ? "active" : ""
-                            }`}
-                            onClick={() => setPage(i)}
-                          >
-                            {i + 1}
-                          </button>
-                        ),
-                      )}
-                      <button
-                        type="button"
-                        class="dash-page-btn"
-                        disabled={page >= totalPages - 1}
-                        onClick={() =>
-                          setPage((p) => Math.min(totalPages - 1, p + 1))}
-                      >
-                        <Icon name="chevron_right" size={14} />
-                      </button>
-                    </div>
-                  )}
+                  <Pagination
+                    page={page}
+                    totalPages={totalPages}
+                    totalItems={sortedTasks.length}
+                    pageSize={PAGE_SIZE}
+                    onPageChange={setPage}
+                    zeroBased
+                    showing={false}
+                  />
                 </>
               )
               : (
@@ -986,7 +1018,9 @@ export default function DashboardClient() {
           <WorkloadBalancer
             members={data?.memberWorkload ?? []}
             tasks={tasks.slice(0, 50).map((t) => ({
-              assignee: t.assignee ? { id: t.assignee.id, name: t.assignee.name } : null,
+              assignee: t.assignee
+                ? { id: t.assignee.id, name: t.assignee.name }
+                : null,
               title: t.title,
             }))}
           />
