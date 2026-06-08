@@ -259,7 +259,7 @@ export default function MembersClient() {
       </div>
 
       {/* ── Table ── */}
-      <div class="card" style="overflow:hidden;padding:0">
+      <div class="card" style="overflow-x:auto;padding:0">
         {filtered.length === 0
           ? (
             <div style="padding:48px 24px;text-align:center">

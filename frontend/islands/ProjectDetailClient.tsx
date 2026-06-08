@@ -193,15 +193,9 @@ export default function ProjectDetailClient(
 
   if (loading) {
     return (
-      <div style={{ display: "grid", gap: "12px" }}>
+      <div class="pd-skeleton">
         <Skeleton height={120} />
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
-            gap: "12px",
-          }}
-        >
+        <div class="pd-skeleton-kpis">
           <Skeleton height={88} />
           <Skeleton height={88} />
           <Skeleton height={88} />

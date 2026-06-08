@@ -135,146 +135,80 @@ export default function SettingsClient() {
   if (loading) return <Skeleton height={360} />;
 
   return (
-    <div style={{ display: "grid", gap: "18px", maxWidth: "860px" }}>
-      <section>
-        <p
-          class="mono"
-          style={{ margin: 0, color: "var(--muted)", fontSize: "11px" }}
-        >
-          ACCOUNT
-        </p>
-        <h2 class="headline" style={{ margin: "4px 0 0", fontSize: "32px" }}>
-          Settings
-        </h2>
-      </section>
-      <section
-        class="card"
-        style={{ padding: "20px", display: "grid", gap: "16px" }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+    <div class="settings-page">
+      <div class="settings-head-section">
+        <p class="mono" style="margin:0;color:var(--muted);font-size:11px;">ACCOUNT</p>
+        <h2 class="headline" style="margin:4px 0 0;font-size:clamp(22px,5vw,32px);">Settings</h2>
+      </div>
+
+      <div class="card" style="padding:clamp(12px,3vw,20px);">
+        <div class="settings-row">
           <Avatar user={{ ...user, name, avatarUrl }} size={48} />
-          <div>
-            <strong>{user?.email}</strong>
-            <p style={{ margin: 0, color: "var(--muted)" }}>
-              Update profile and theme preference
-            </p>
+          <div class="settings-row-text">
+            <strong style="word-break:break-all;overflow-wrap:break-word;">{user?.email}</strong>
+            <p style="margin:0;color:var(--muted);font-size:13px;">Update profile and theme preference</p>
           </div>
         </div>
-        <div>
+
+        <div style="margin-top:16px;">
           <label class="label">Name</label>
-          <input
-            class="input"
-            value={name}
-            onInput={(e) => setName(e.currentTarget.value)}
-          />
+          <input class="input" value={name} onInput={(e) => setName(e.currentTarget.value)} />
         </div>
-        <div>
+
+        <div style="margin-top:16px;">
           <label class="label">Avatar</label>
-          <div
-            class="avatar-upload"
-            onDrop={onDrop}
-            onDragOver={onDragOver}
-            onClick={() => inputRef.current?.click()}
-          >
-            <input
-              ref={inputRef}
-              type="file"
-              accept="image/png,image/jpeg,image/webp,image/gif"
-              class="avatar-upload-input"
-              onChange={onFileChange}
-            />
-            {uploading
-              ? (
-                <div class="avatar-upload-preview">
-                  <div class="spinner" />
-                  <p>Uploading…</p>
-                </div>
-              )
-              : avatarUrl
-              ? (
-                <div class="avatar-upload-preview">
-                  <img
-                    src={resolvedAvatarSrc}
-                    alt="Avatar preview"
-                    class="avatar-upload-img"
-                  />
-                  <p class="avatar-upload-hint">Click or drag to replace</p>
-                </div>
-              )
-              : (
-                <div class="avatar-upload-preview">
-                  <Icon name="add_photo_alternate" size={28} />
-                  <p>Click or drag an image</p>
-                  <p class="avatar-upload-hint">
-                    PNG, JPEG, WebP, GIF · max 2 MB
-                  </p>
-                </div>
-              )}
+          <div class="avatar-upload" onDrop={onDrop} onDragOver={onDragOver} onClick={() => inputRef.current?.click()}>
+            <input ref={inputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" class="avatar-upload-input" onChange={onFileChange} />
+            {uploading ? (
+              <div class="avatar-upload-preview">
+                <div class="spinner" />
+                <p>Uploading…</p>
+              </div>
+            ) : avatarUrl ? (
+              <div class="avatar-upload-preview">
+                <img src={resolvedAvatarSrc} alt="Avatar preview" class="avatar-upload-img" />
+                <p class="avatar-upload-hint">Click or drag to replace</p>
+              </div>
+            ) : (
+              <div class="avatar-upload-preview">
+                <Icon name="add_photo_alternate" size={28} />
+                <p>Click or drag an image</p>
+                <p class="avatar-upload-hint">PNG, JPEG, WebP, GIF · max 2 MB</p>
+              </div>
+            )}
           </div>
-          {uploadError && (
-            <p class="badge badge-danger" style="margin-top:8px">
-              {uploadError}
-            </p>
-          )}
+          {uploadError && <p class="badge badge-danger" style="margin-top:8px;word-break:break-word;">{uploadError}</p>}
         </div>
-        <div
-          class="panel"
-          style={{
-            padding: "14px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <div>
-            <strong>Theme</strong>
-            <p style={{ margin: "2px 0 0", color: "var(--muted)" }}>
-              Light and premium dark workspace modes.
-            </p>
+
+        <div style="margin-top:16px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;">
+          <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;">
+            <div>
+              <strong>Theme</strong>
+              <p style="margin:2px 0 0;color:var(--muted);font-size:13px;">Light and premium dark workspace modes.</p>
+            </div>
+            <ThemeToggle />
           </div>
-          <ThemeToggle />
         </div>
-        {message && <span class="badge badge-success">{message}</span>}
-        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-          <Button variant="primary" onClick={save}>
-            <Icon name="save" size={18} /> Save profile
-          </Button>
-          <a
-            class="btn btn-secondary"
-            href={SWAGGER_URL}
-            target="_blank"
-            rel="noreferrer"
-          >
-            <Icon name="code" size={18} /> Swagger docs
-          </a>
-          <Button variant="danger" onClick={handleLogout}>
-            <Icon name="logout" size={18} /> Logout
-          </Button>
-        </div>
-      </section>
 
-      <hr
-        style={{
-          border: "none",
-          borderTop: "1px solid var(--border)",
-          margin: "12px 0",
-        }}
-      />
+        {message && <span class="badge badge-success" style="margin-top:8px;">{message}</span>}
 
-      <section>
-        <p
-          class="mono"
-          style={{ margin: 0, color: "var(--muted)", fontSize: "11px" }}
-        >
-          DEBUG
-        </p>
-        <h2 class="headline" style={{ margin: "4px 0 16px", fontSize: "24px" }}>
-          API Response Times
-        </h2>
-        <div class="card" style={{ padding: "20px" }}>
-          <ApiMetricsTable />
+        <div style="margin-top:16px;display:flex;flex-wrap:wrap;gap:10px;">
+          <Button variant="primary" onClick={save}><Icon name="save" size={18} /> Save profile</Button>
+          <a class="btn btn-secondary" href={SWAGGER_URL} target="_blank" rel="noreferrer"><Icon name="code" size={18} /> Swagger docs</a>
+          <Button variant="danger" onClick={handleLogout}><Icon name="logout" size={18} /> Logout</Button>
         </div>
-      </section>
+      </div>
+
+      <hr style="border:none;border-top:1px solid var(--border);margin:8px 0;" />
+
+      <div class="settings-head-section">
+        <p class="mono" style="margin:0;color:var(--muted);font-size:11px;">DEBUG</p>
+        <h2 class="headline" style="margin:4px 0 16px;font-size:clamp(18px,4vw,24px);">API Response Times</h2>
+      </div>
+
+      <div class="card" style="padding:clamp(10px,2vw,20px);overflow-x:auto;">
+        <ApiMetricsTable />
+      </div>
     </div>
   );
 }

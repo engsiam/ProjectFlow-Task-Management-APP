@@ -17,6 +17,7 @@ export default function SignupForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
+  const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -28,6 +29,9 @@ export default function SignupForm() {
     if (!email.includes("@")) return setError("Enter a valid email.");
     if (password.length < 8) {
       return setError("Password must be at least 8 characters.");
+    }
+    if (!agreeToTerms) {
+      return setError("You must agree to the Terms & Conditions.");
     }
     setLoading(true);
     setError("");
@@ -115,10 +119,25 @@ export default function SignupForm() {
         </span>
       </div>
 
+      <label class="auth-checkbox" style="margin-top: 4px;">
+        <input
+          type="checkbox"
+          checked={agreeToTerms}
+          onChange={(e) => setAgreeToTerms(e.currentTarget.checked)}
+        />
+        <span class="auth-checkbox-mark" />
+        <span class="auth-checkbox-label">
+          I agree to the{" "}
+          <a href="/terms" class="auth-link" style="font-weight:600;">
+            Terms & Conditions
+          </a>
+        </span>
+      </label>
+
       <Button
         variant="primary"
         type="submit"
-        disabled={loading}
+        disabled={loading || !agreeToTerms}
         class="auth-submit"
       >
         {loading
